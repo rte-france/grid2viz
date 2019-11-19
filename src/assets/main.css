@@ -1,0 +1,25 @@
+.hidden {
+    display: none;
+}
+
+body {
+    background-color: #f7f7f7;
+}
+
+.lineBlock {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: #0FA0CE solid 2px;
+}
+
+.lineBlock > * {
+    display: inline-flex;
+}
+
+.lineBlock > h2 {
+    margin: auto;
+    padding: 5px;
+    writing-mode: vertical-lr;
+    transform: rotate(-180deg);
+    border-left: #0FA0CE solid 2px;
+}

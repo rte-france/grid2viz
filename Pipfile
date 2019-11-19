@@ -6,9 +6,12 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 coverage = "*"
+flake8 = "*"
 
 [packages]
 dash = "*"
+dash-bootstrap-components = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.7"
