@@ -12,6 +12,7 @@ flake8 = "*"
 dash = "*"
 dash-bootstrap-components = "*"
 pandas = "*"
+pipfile = "*"
 
 [requires]
 python_version = "3.7"
