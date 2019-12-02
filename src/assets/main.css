@@ -15,9 +15,12 @@ body {
 }
 
 .lineBlock {
-    margin-top: 5px;
+    margin: 1.5rem!important;
     padding-top: 5px;
-    border-top: #0FA0CE solid 2px;
+    border-top: #0FA0CE solid 10px;
+    display: flex!important;
+    flex-direction: row!important;
+
 }
 
 .lineBlock > * {
@@ -25,7 +28,6 @@ body {
 }
 
 .lineBlock > h2 {
-    margin: auto;
     padding: 5px;
     writing-mode: vertical-lr;
     transform: rotate(-180deg);
