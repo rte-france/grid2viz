@@ -3,26 +3,9 @@ import dash_core_components as dcc
 import dash_table as table
 import plotly.graph_objects as go
 import pandas as pd
-from src.grid2kpi.episode import observation_model
 
-content = html.Div(
-    className='graphCard',
-    children=[
-        dcc.Graph(
-            id="rs_overview",
-            figure={
-                'data': observation_model.get_all_equipment_active_load_ts(),
-                'layout': {
-                    'height': '300',
-                    'width': '500',
-                    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0}
-                }
-            }
-        )
-    ]
-)
-
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
+df = pd.read_csv(
+    'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -34,16 +17,16 @@ indicators_line = html.Div(children=[
     html.Div(children=[
 
         html.Div(className="col-xl-5",
-             children=dcc.Graph(
-                 id="indicator_line_charts",
-                 figure=go.Figure(
-                     layout=layout_def,
-                     data=[
-                         dict(type="scatter")
-                     ]
+                 children=dcc.Graph(
+                     id="indicator_line_charts",
+                     figure=go.Figure(
+                         layout=layout_def,
+                         data=[
+                             dict(type="scatter")
+                         ]
+                     )
                  )
-             )
-        ),
+                 ),
 
         html.Div(children=[dcc.Graph(
             figure=go.Figure(
@@ -84,8 +67,7 @@ summary_line = html.Div(children=[
             html.H2("Environments Time Series"),
             dcc.Dropdown(
                 id='input_env_selector',
-                options=[{'label': 'test', "value": "1"}, {'label': 'test2', "value": "2"}],
-                value="1"
+                options=[{'label': 'Load', "value": "1"}, {'label': 'Production', "value": "2"}],
             ),
             dcc.Graph(id='input_env_charts',
                       figure=go.Figure(
