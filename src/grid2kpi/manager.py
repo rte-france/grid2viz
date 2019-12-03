@@ -1,4 +1,5 @@
 from grid2op.Episode import Episode
+from functools import partial
 
 indx = 1
 path = f"D:/Projets/Package Artelys_DebutPrestationArtelys/20191201_agentslog/nodisc_powerlinegreedy/"
