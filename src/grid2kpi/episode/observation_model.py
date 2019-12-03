@@ -1,6 +1,4 @@
 from ..manager import episode
-import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -12,36 +10,30 @@ def get_episode_active_consumption_ts():
     return ret
 
 
-def get_all_equipment_active_load_ts():
-    # each time step
-    all_ts = {}
-    for time_step in range(episode.observations.shape[0]):
-        obs = episode.get_observation(time_step)
-        if obs.game_over:
-            continue
-        for equipment in range(len(obs.load_p)):
-            equipment_load = obs.load_p[equipment]
-            if equipment not in all_ts:
-                all_ts[equipment] = create_ts_data('equipment', equipment)
-            all_ts[equipment]['x'].append(time_step)
-            all_ts[equipment]['y'].append(equipment_load)
-    return np.asarray(list(all_ts.values()))
+def get_prod():
+    return episode.production
 
 
-def get_all_equipment_active_prod_ts():
-    # each time step
-    all_ts = {}
-    for time_step in range(episode.observations.shape[0]):
-        obs = episode.get_observation(time_step)
-        if obs.game_over:
-            continue
-        for equipment in range(len(obs.prod_p)):
-            equipment_load = obs.prod_p[equipment]
-            if equipment not in all_ts:
-                all_ts[equipment] = create_ts_data('equipment', equipment)
-            all_ts[equipment]['x'].append(time_step)
-            all_ts[equipment]['y'].append(equipment_load)
-    return np.asarray(list(all_ts.values()))
+def get_load():
+    return episode.load
+
+
+def get_prod_trace_per_equipment():
+    return get_df_trace_per_equipment(get_prod())
+
+
+def get_load_trace_per_equipment():
+    return get_df_trace_per_equipment(get_load())
+
+
+def get_df_trace_per_equipment(df):
+    trace = []
+    for equipment in df["equipment"].drop_duplicates():
+        trace.append(go.Scatter(
+            x=df.loc[df["equipment"] == equipment, :]["time"],
+            y=df.loc[df["equipment"] == equipment, :]["value"]
+        ))
+    return trace
 
 
 def create_ts_data(object_type, id):

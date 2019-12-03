@@ -3,6 +3,9 @@ import dash_core_components as dcc
 import dash_table as table
 import plotly.graph_objects as go
 import pandas as pd
+from src.grid2kpi.episode import observation_model
+
+share_prod = observation_model.get_prod()
 
 df = pd.read_csv(
     'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
@@ -32,8 +35,8 @@ indicators_line = html.Div(children=[
             figure=go.Figure(
                 layout=layout_def,
                 data=[go.Pie(
-                    labels=['Oxygen', 'Hydrogen', 'Carbon_Dioxide', 'Nitrogen'],
-                    values=[4500, 2500, 1053, 500]
+                    labels=share_prod["equipment"],
+                    values=share_prod.groupby("equipment")["value"].sum()
                 )]
             ))], className="col-xl-3"),
 

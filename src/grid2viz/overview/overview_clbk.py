@@ -1,6 +1,4 @@
 from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
-import plotly.graph_objects as go
 from src.app import app
 import numpy as np
 from src.grid2kpi.episode import observation_model
@@ -12,8 +10,8 @@ random_y0 = np.random.randn(N) + 5
 random_y1 = np.random.randn(N)
 random_y2 = np.random.randn(N)
 
-active_load = observation_model.get_all_equipment_active_load_ts()
-active_prod = observation_model.get_all_equipment_active_prod_ts()
+active_load_trace = observation_model.get_load_trace_per_equipment()
+active_prod_trace = observation_model.get_prod_trace_per_equipment()
 
 
 def load_indicators_data(data, figure):
@@ -29,9 +27,9 @@ def load_summary_data(value, figure):
     if value is None:
         return figure
     if value is "1":
-        figure["data"] = active_load
+        figure["data"] = active_load_trace
     if value is "2":
-        figure["data"] = active_prod
+        figure["data"] = active_prod_trace
     return figure
 
 
