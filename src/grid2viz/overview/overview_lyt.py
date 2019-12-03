@@ -6,6 +6,8 @@ import pandas as pd
 from src.grid2kpi.episode import observation_model
 
 share_prod = observation_model.get_prod()
+overflow = observation_model.get_total_overflow_trace()
+usage_rate = observation_model.get_usage_rate_trace()
 
 df = pd.read_csv(
     'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
@@ -73,6 +75,7 @@ summary_line = html.Div(children=[
                 id='input_env_selector',
                 options=[{'label': 'Load', "value": "1"}, {
                     'label': 'Production', "value": "2"}],
+                value="1"
             ),
             dcc.Graph(id='input_env_charts',
                       figure=go.Figure(
@@ -83,7 +86,7 @@ summary_line = html.Div(children=[
         ], className="col-xl-5"),
 
         html.Div(children=[
-            html.H3("Usage rate and overview"),
+            html.H3("OverFlow and Usage rate"),
             dcc.Dropdown(
                 id="input_agent_selector", placeholder="select a ref agent",
                 options=[{'label': 'test', 'value': 1},
@@ -96,9 +99,8 @@ summary_line = html.Div(children=[
                     style={'margin-top': '2.5em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=[
-                            dict(type="scatter")
-                        ])
+                        data=overflow
+                    )
                 ),
                 dcc.Graph(
                     id='usage_overview_graph',
@@ -106,9 +108,8 @@ summary_line = html.Div(children=[
                     style={'margin-top': '2.5em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=[
-                            dict(type="scatter")
-                        ])
+                        data=usage_rate
+                    )
                 ),
             ], className="row"),
         ], className="col-xl-6"),
