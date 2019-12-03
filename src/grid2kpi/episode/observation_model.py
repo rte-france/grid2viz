@@ -41,15 +41,16 @@ def get_load_trace_per_equipment():
 
 def get_df_trace_per_equipment(df):
     trace = []
-    for equipment in df["equipment"].drop_duplicates():
+    for equipment in df["equipment_name"].drop_duplicates():
         trace.append(go.Scatter(
-            x=df.loc[df["equipment"] == equipment, :]["time"],
-            y=df.loc[df["equipment"] == equipment, :]["value"]
+            x=df.loc[df["equipment_name"] == equipment, :]["timestamp"],
+            y=df.loc[df["equipment_name"] == equipment, :]["value"],
+            name=equipment
         ))
     return trace
 
 
-def create_ts_data(object_type, id):
+def create_ts_data(object_type, name):
     return {
         'x': [],
         'y': [],

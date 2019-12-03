@@ -3,16 +3,40 @@ import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
 import pandas as pd
-from src.grid2kpi.episode import observation_model
+
+from src.grid2kpi.episode import ( observation_model, env_actions,
+    consumption_profiles
+)
 
 
+
+active_load_trace = observation_model.get_load_trace_per_equipment()
 share_prod = observation_model.get_prod()
+episode = observation_model.episode
+profiles = consumption_profiles(observation_model.episode)
+
+ts_hazards = env_actions(episode, which="hazards", kind="ts", aggr=True)
+ts_hazards = ts_hazards.rename(columns={"value": "Hazards"})
+ts_maintenances = env_actions(
+    episode, which="maintenances", kind="ts", aggr=True)
+ts_maintenances = ts_maintenances.rename(columns={"value": "Maintenances"})
+
+
+table = ts_hazards.merge(ts_maintenances, left_index=True, right_index=True)
+table = table.reset_index()
+table["IsWorkingDay"] = table["timestamp"].dt.weekday < 5
+
+nb_hazards = env_actions(episode, which="hazards", kind="nb", aggr=True)
+
+nb_maintenances = env_actions(
+    episode, which="maintenances", kind="nb", aggr=True)
+
 
 df = pd.read_csv(
     'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
 
 layout_def = {
-    'legend': {'orientation': 'h'},
+    'legend': {'x': 0, 'y':0, 'orientation': 'h'},
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0}
 }
 
@@ -20,44 +44,53 @@ indicators_line = html.Div(children=[
     html.H2("Indicators"),
     html.Div(children=[
         html.Div(className="col-xl-5",
-                 children=dcc.Graph(
-                     id="indicator_line_charts",
-                     figure=go.Figure(
-                         layout=layout_def,
-                         data=[
-                             dict(type="scatter")
-                         ]
-                     )
-                 )
-                 ),
+                 children=[
+                    html.H3("Consumption Profiles"),
+                    dcc.Graph(
+                        id="indicator_line_charts",
+                        style={'margin-top': '1em'},
+                        figure=go.Figure(
+                        layout=layout_def,
+                        data=[go.Scatter(
+                            x=profiles.index, y=profiles[col], name=col
+                        ) for col in profiles.columns]
+                        ),
+                        config=dict(displayModeBar=False)
+                    )
+                 ]
+        ),
 
-        html.Div(children=[dcc.Graph(
-            figure=go.Figure(
-                layout=layout_def,
-                data=[go.Pie(
-                    labels=share_prod["equipment"],
-                    values=share_prod.groupby("equipment")["value"].sum()
-                )]
-            ))], className="col-xl-4"),
+        html.Div(children=[
+            html.H3("Production shares"),
+            dcc.Graph(
+                figure=go.Figure(
+                    layout=layout_def,
+                    data=[go.Pie(
+                        labels=share_prod["equipment_name"],
+                        values=share_prod.groupby("equipment_name")["value"].sum()
+                    )],
+                ),
+                config=dict(displayModeBar=False))], 
+            className="col-xl-4"),
 
         # number summary column
         html.Div(children=[
             html.Div(children=[
                 html.Div(id="nb_steps", className="card text-center p-2 mb-4",
                          children=[html.H5(className="card-title", children="Steps"),
-                                   html.P(className="card-text", children="42")]),
+                                   html.P(className="card-text", children=len(episode.observations))]),
 
                 html.Div(id="nb_maintenance", className="card text-center p-2",
-                         children=[html.H5(className="card-title", children="Maintenance"),
-                                   html.P(className="card-text", children="1")]),
+                         children=[html.H5(className="card-title", children="Maintenances"),
+                                   html.P(className="card-text", children=nb_maintenances)]),
             ], className="col-6"),
             html.Div(children=[
                 html.Div(id="nb_hazard", className="card text-center p-2 mb-4",
-                         children=[html.H5(className="card-title", children="Hazard"),
-                                   html.P(className="card-text", children="3")]),
+                         children=[html.H5(className="card-title", children="Hazards"),
+                                   html.P(className="card-text", children=nb_hazards)]),
 
                 html.Div(id="maintenance_duration", className="card text-center p-2",
-                         children=[html.H5(className="card-title", children="Duration Maintenance"),
+                         children=[html.H5(className="card-title", children="Duration of Maintenances"),
                                    html.P(className="card-text", children="3")])
             ], className="col-6")
         ], className="col-xl-3 row align-self-center")
@@ -71,15 +104,22 @@ summary_line = html.Div(children=[
             html.H3("Environments Time Series"),
             dcc.Dropdown(
                 id='input_env_selector',
-                options=[{'label': 'Load', "value": "1"}, {
-                    'label': 'Production', "value": "2"}],
+                options=[
+                    {'label': 'Load', "value": "1"}, 
+                    {'label': 'Production', "value": "2"},
+                    {'label': 'Hazards', "value": "3"}, 
+                    {'label': 'Maintenances', "value": "4"},
+                ],
+                value="1", 
             ),
             dcc.Graph(id='input_env_charts',
+                      style={'margin-top': '1em'},
                       figure=go.Figure(
                           layout=layout_def,
-                          data=[
-                              dict(type="scatter")
-                          ]))
+                          data=active_load_trace
+                      ),
+                      config=dict(displayModeBar=False)
+            )
         ], className="col-xl-5"),
 
         html.Div(children=[
@@ -93,22 +133,24 @@ summary_line = html.Div(children=[
                 dcc.Graph(
                     id='usage_rate_graph',
                     className="col-6",
-                    style={'margin-top': '2.5em'},
+                    style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
                         data=[
                             dict(type="scatter")
-                        ])
+                        ]),
+                    config=dict(displayModeBar=False)
                 ),
                 dcc.Graph(
                     id='usage_overview_graph',
                     className="col-6",
-                    style={'margin-top': '2.5em'},
+                    style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
                         data=[
                             dict(type="scatter")
-                        ])
+                        ]),
+                    config=dict(displayModeBar=False)
                 ),
             ], className="row"),
         ], className="col-xl-6"),
@@ -118,18 +160,44 @@ summary_line = html.Div(children=[
 ref_agent_line = html.Div(children=[
     html.H2("Inspector"),
     html.Div(children=[
+        html.Div(children=[
+                dcc.DatePickerRange(
+                    start_date=episode.production["timestamp"].dt.date.values[0],
+                    end_date=episode.production["timestamp"].dt.date.values[-1],
+                    display_format='MMM Do, YY',
+                    # start_date_placeholder_text='MMM Do, YY'
+                ),
+                html.H5("Loads"),
+                dcc.Dropdown(
+                    id='select_loads_for_tb',
+                    options=[
+                        {'label': load, "value": load} for load in episode.load_names
+                    ],
+                    # value=episode.load_names[0],
+                    multi=True,
+                    style=dict(marginBottom="1em")),
+                html.H5("Generators"),
+                dcc.Dropdown(
+                    id='select_prods_for_tb',
+                    options=[
+                        {'label': prod, "value": prod} for prod in episode.prod_names
+                    ],
+                    # value=episode.prod_names[0],
+                    multi=True,
+                    style=dict(marginBottom="1em"))
+        ], className="col-xl-2"),
         dt.DataTable(
             id="inspection_table",
-            columns=[{"name": i, "id": i} for i in df.columns],
-            data=df.to_dict('records'),
+            columns=[{"name": i, "id": i} for i in table.columns],
+            data=table.to_dict('records'),
             filter_action="native",
             sort_action="native",
             sort_mode="multi",
             page_action="native",
             page_current=0,
-            page_size=10,
+            page_size=20,
         )
-    ], className="p-2")
+    ], className="col-xl-10 p-2")
 ], className="lineBlock card")
 
 layout = html.Div(id="overview_page", children=[
