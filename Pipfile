@@ -12,8 +12,8 @@ flake8 = "*"
 dash = "*"
 dash-bootstrap-components = "*"
 pandas = "*"
-grid2op = "*"
 jupyter = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.7"
