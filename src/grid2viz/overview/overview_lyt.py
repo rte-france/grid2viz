@@ -71,7 +71,8 @@ summary_line = html.Div(children=[
             html.H3("Environments Time Series"),
             dcc.Dropdown(
                 id='input_env_selector',
-                options=[{'label': 'Load', "value": "1"}, {'label': 'Production', "value": "2"}],
+                options=[{'label': 'Load', "value": "1"}, {
+                    'label': 'Production', "value": "2"}],
             ),
             dcc.Graph(id='input_env_charts',
                       figure=go.Figure(
