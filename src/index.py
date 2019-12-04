@@ -19,7 +19,7 @@ navbar = dbc.NavbarSimple(
     brand="grid2viz",
     brand_href="/episodes",
     sticky="top",
-    color="primary",
+    color="#2196F3",
     dark=True,
     fluid=True
 )

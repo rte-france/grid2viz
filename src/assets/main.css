@@ -17,7 +17,7 @@ body {
 .lineBlock {
     margin: 1.5rem!important;
     padding-top: 5px;
-    border-top: #0FA0CE solid 10px;
+    border-top: #2196F3 solid 5px;
     display: flex!important;
     flex-direction: row!important;
 
@@ -31,5 +31,5 @@ body {
     padding: 5px;
     writing-mode: vertical-lr;
     transform: rotate(-180deg);
-    border-left: #0FA0CE solid 2px;
+    border-left: #2196F3 solid 2px;
 }
