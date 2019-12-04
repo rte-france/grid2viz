@@ -74,25 +74,27 @@ indicators_line = html.Div(children=[
 
         # number summary column
         html.Div(children=[
-            html.Div(children=[
-                html.Div(id="nb_steps", className="card text-center p-2 mb-4",
-                         children=[html.H5(className="card-title", children="Steps"),
-                                   html.P(className="card-text", children=len(episode.observations))]),
 
-                html.Div(id="nb_maintenance", className="card text-center p-2",
-                         children=[html.H5(className="card-title", children="Maintenances"),
-                                   html.P(className="card-text", children=nb_maintenances)]),
-            ], className="col-6"),
-            html.Div(children=[
-                html.Div(id="nb_hazard", className="card text-center p-2 mb-4",
-                         children=[html.H5(className="card-title", children="Hazards"),
-                                   html.P(className="card-text", children=nb_hazards)]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
+                           children=len(episode.observations)),
+                    html.P(className="text-muted", children="Steps")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
+                           children=nb_maintenances),
+                    html.P(className="text-muted", children="Maintenances")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children=nb_hazards),
+                    html.P(className="text-muted", children="Hazards")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children="NaN"),
+                    html.P(className="text-muted", children="Duration of Maintenances")
+                ])
 
-                html.Div(id="maintenance_duration", className="card text-center p-2",
-                         children=[html.H5(className="card-title", children="Duration of Maintenances"),
-                                   html.P(className="card-text", children="3")])
-            ], className="col-6")
-        ], className="col-xl-3 row align-self-center")
+        ], className="col-xl-3 align-self-center")
     ], className="card-body row"),
 ], className="lineBlock card")
 
