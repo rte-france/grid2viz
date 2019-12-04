@@ -74,7 +74,6 @@ indicators_line = html.Div(children=[
 
         # number summary column
         html.Div(children=[
-
                 html.Div(className="mb-4", children=[
                     html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
                            children=len(episode.observations)),
@@ -93,7 +92,6 @@ indicators_line = html.Div(children=[
                     html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children="NaN"),
                     html.P(className="text-muted", children="Duration of Maintenances")
                 ])
-
         ], className="col-xl-3 align-self-center")
     ], className="card-body row"),
 ], className="lineBlock card")
