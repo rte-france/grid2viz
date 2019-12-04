@@ -24,7 +24,7 @@ def get_episode_active_consumption_ts():
     return [sum(obs.load_p) for obs in episode.observations]
 
 
-def get_total_overflow_ts():
+def get_total_overflow_ts(episode):
     df = pd.DataFrame(index=range(len(episode.observations)),
                       columns=["time", "value"])
     for (time_step, obs) in enumerate(episode.observations):
@@ -32,8 +32,8 @@ def get_total_overflow_ts():
     return df
 
 
-def get_total_overflow_trace():
-    df = get_total_overflow_ts()
+def get_total_overflow_trace(episode):
+    df = get_total_overflow_ts(episode)
     return [go.Scatter(
         x=df["time"],
         y=df["value"]
@@ -48,7 +48,7 @@ def get_load():
     return episode.load
 
 
-def get_rho():
+def get_rho(episode):
     return episode.rho
 
 
@@ -69,8 +69,8 @@ def quantile90(df):
     return df.quantile(0.90)
 
 
-def get_usage_rate():
-    rho = get_rho()
+def get_usage_rate(episode):
+    rho = get_rho(episode)
     # return rho
     median_rho = rho.groupby("time").aggregate(["median", quantile10, quantile25, quantile75, quantile90])[
         ["value"]].reset_index()
@@ -104,8 +104,8 @@ def get_load_trace_per_equipment():
     return get_df_trace_per_equipment(get_load())
 
 
-def get_usage_rate_trace():
-    df = get_usage_rate()
+def get_usage_rate_trace(episode):
+    df = get_usage_rate(episode)
     line = {
         "shape": "spline",
         "width": 0,

@@ -2,6 +2,8 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
+from src.grid2kpi.manager import agents, agent_ref, episode
+from src.grid2kpi.episode import observation_model
 
 layout_def = {
     'legend': {'x': 0, 'y': 0, 'orientation': 'h'},
@@ -38,26 +40,26 @@ indicators_line = html.Div(id="temporaryid", children=[
 
         # number summary column
         html.Div(children=[
-                html.Div(className="mb-4", children=[
-                    html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
-                           children=""),
-                    html.P(className="text-muted", children="Steps")
-                ]),
-                html.Div(className="mb-4", children=[
-                    html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
-                           children=""),
-                    html.P(className="text-muted", children="Hazards")
-                ]),
-                html.Div(className="mb-4", children=[
-                    html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
-                           children=""),
-                    html.P(className="text-muted", children="Maintenances")
-                ]),
-                html.Div(className="mb-4", children=[
-                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
-                           children="NaN"),
-                    html.P(className="text-muted", children="Duration of Maintenances")
-                ])
+            html.Div(className="mb-4", children=[
+                html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
+                       children=""),
+                html.P(className="text-muted", children="Steps")
+            ]),
+            html.Div(className="mb-4", children=[
+                html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
+                       children=""),
+                html.P(className="text-muted", children="Hazards")
+            ]),
+            html.Div(className="mb-4", children=[
+                html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
+                       children=""),
+                html.P(className="text-muted", children="Maintenances")
+            ]),
+            html.Div(className="mb-4", children=[
+                html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
+                       children="NaN"),
+                html.P(className="text-muted", children="Duration of Maintenances")
+            ])
         ], className="col-xl-3 align-self-center")
     ], className="card-body row"),
 ], className="lineBlock card")
@@ -90,8 +92,8 @@ summary_line = html.Div(children=[
             html.H3("OverFlow and Usage rate"),
             dcc.Dropdown(
                 id="input_agent_selector", placeholder="select a ref agent",
-                options=[{'label': 'test', 'value': 1},
-                         {'label': 'test1', 'value': 2}]
+                options=[{'label': agent, 'value': agent} for agent in agents],
+                value=agent_ref
             ),
             html.Div(children=[
                 dcc.Graph(
@@ -99,7 +101,8 @@ summary_line = html.Div(children=[
                     className="col-6",
                     style={'margin-top': '1em'},
                     figure=go.Figure(
-                        layout=layout_def
+                        layout=layout_def,
+                        data=observation_model.get_usage_rate_trace(episode)
                     ),
                     config=dict(displayModeBar=False)
                 ),
@@ -108,7 +111,8 @@ summary_line = html.Div(children=[
                     className="col-6",
                     style={'margin-top': '1em'},
                     figure=go.Figure(
-                        layout=layout_def
+                        layout=layout_def,
+                        data=observation_model.get_total_overflow_trace(episode)
                     ),
                     config=dict(displayModeBar=False)
                 ),

@@ -1,10 +1,12 @@
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from src.app import app
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+
 from src.grid2kpi.episode import observation_model, env_actions, consumption_profiles
-from src.grid2kpi.manager import episode
+from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
 
 
 @app.callback(
@@ -102,23 +104,17 @@ def update_card_hazard(children):
 
 
 @app.callback(
-    Output("overflow_graph", "figure"),
-    [Input('temporaryid', 'children')],
-    [State("overflow_graph", "figure")]
+    [Output("overflow_graph", "figure"), Output("usage_rate_graph", "figure")],
+    [Input('input_agent_selector', 'value')],
+    [State("overflow_graph", "figure"), State("usage_rate_graph", "figure")]
 )
-def update_overflow_graph(children, figure):
-    figure["data"] = observation_model.get_total_overflow_trace()
-    return figure
-
-
-@app.callback(
-    Output("usage_rate_graph", "figure"),
-    [Input('temporaryid', 'children')],
-    [State("usage_rate_graph", "figure")]
-)
-def update_usage_rate_graph(children, figure):
-    figure["data"] = observation_model.get_usage_rate_trace()
-    return figure
+def update_agent_ref_graph(value, figure_overflow, figure_usage):
+    if value == agent_ref:
+        raise PreventUpdate
+    new_episode = make_episode(base_dir, value, indx)
+    figure_overflow["data"] = observation_model.get_total_overflow_trace(new_episode)
+    figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
+    return figure_overflow, figure_usage
 
 
 @app.callback(
