@@ -36,29 +36,85 @@ def get_rho():
     return episode.rho
 
 
+# quantiles utilities
+def quantile10(df):
+    return df.quantile(0.1)
+
+
+def quantile25(df):
+    return df.quantile(0.25)
+
+
+def quantile75(df):
+    return df.quantile(0.75)
+
+
+def quantile90(df):
+    return df.quantile(0.90)
+
+
 def get_usage_rate():
     rho = get_rho()
-    return rho
-    # return rho.groupby("time").aggregate("mean")[["value"]].reset_index()
+    # return rho
+    median_rho = rho.groupby("time").aggregate(["median", quantile10, quantile25, quantile75, quantile90])[
+        ["value"]].reset_index()
+    return median_rho
 
 
 def get_prod_trace_per_equipment():
     return get_df_trace_per_equipment(get_prod())
 
 
-def get_usage_rate_trace():
-    return get_df_trace_two_dimension(get_usage_rate())
-
-
 def get_load_trace_per_equipment():
     return get_df_trace_per_equipment(get_load())
 
 
-def get_df_trace_two_dimension(df):
-    return go.Scatter(
+def get_usage_rate_trace():
+    df = get_usage_rate()
+    line = {
+        "shape": "spline",
+        "width": 0,
+        "smoothing": 1
+    }
+    trace = [go.Scatter(
         x=df["time"],
-        y=df["value"]
-    )
+        y=df["value"]["quantile10"],
+        name="quantile 10",
+        line=line
+    ), go.Scatter(
+        x=df["time"],
+        y=df["value"]["quantile25"],
+        name="quantile 25",
+        fill="tonexty",
+        fillcolor="rgba(159, 197, 232, 0.63)",
+        line=line
+    ), go.Scatter(
+        x=df["time"],
+        y=df["value"]["median"],
+        name="median",
+        fill="tonexty",
+        fillcolor="rgba(31, 119, 180, 0.5)",
+        line={
+            "color": "rgb(31, 119, 180)",
+            "shape": "spline",
+            "smoothing": 1
+        }
+    ), go.Scatter(
+        x=df["time"],
+        y=df["value"]["quantile75"],
+        name="quantile 75",
+        fill="tonexty",
+        fillcolor="rgba(31, 119, 180, 0.5)",
+        line=line
+    ), go.Scatter(
+        x=df["time"],
+        y=df["value"]["quantile90"],
+        name="quantile 90",
+        fill="tonexty",
+        fillcolor="rgba(159, 197, 232, 0.63)",
+        line=line
+    )]
+    return trace
 
 
 def get_df_trace_per_equipment(df):
