@@ -9,6 +9,9 @@ layout_def = {
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
 }
 
+
+
+
 df = pd.read_csv(
     'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
 
@@ -28,11 +31,11 @@ indicator_line = html.Div(className="lineBlock card", children=[
                 html.P(className="text-muted", children="Score")
             ]),
             html.Div(className="m-2", children=[
-                html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children="NaN"),
+                html.P(id="indicator_nb_overflow", className="border-bottom h3 mb-0 text-right", children="NaN"),
                 html.P(className="text-muted", children="Number of Overflow")
             ]),
             html.Div(className="m-2", children=[
-                html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children="NaN"),
+                html.P(id="indicator_nb_action", className="border-bottom h3 mb-0 text-right", children="NaN"),
                 html.P(className="text-muted ", children="Number of Action")
             ])
         ]),
