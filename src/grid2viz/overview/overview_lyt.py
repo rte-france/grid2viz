@@ -181,17 +181,19 @@ ref_agent_line = html.Div(children=[
                 multi=True,
                 style=dict(marginBottom="1em"))
         ], className="col-xl-2"),
-        dt.DataTable(
-            id="inspection_table",
-            columns=[{"name": i, "id": i} for i in table.columns],
-            data=table.to_dict('records'),
-            filter_action="native",
-            sort_action="native",
-            sort_mode="multi",
-            page_action="native",
-            page_current=0,
-            page_size=20,
-        )
+        html.Div(children=[
+            dt.DataTable(
+                id="inspection_table",
+                columns=[{"name": i, "id": i} for i in table.columns],
+                data=table.to_dict('records'),
+                filter_action="native",
+                sort_action="native",
+                sort_mode="multi",
+                page_action="native",
+                page_current=0,
+                page_size=20,
+            )
+        ], className="col-xl-10")
     ], className="col-xl-10 p-2")
 ], className="lineBlock card")
 

@@ -33,3 +33,8 @@ body {
     transform: rotate(-180deg);
     border-left: #0FA0CE solid 2px;
 }
+
+/*this only concern the height size of the listview in macro_lyt overview line*/
+#timeseries_table {
+    height: 100%;
+}

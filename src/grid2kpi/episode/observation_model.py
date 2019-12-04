@@ -12,13 +12,13 @@ def get_total_overflow_ts():
     df = pd.DataFrame(index=range(len(episode.observations)),
                       columns=["time", "value"])
     for (time_step, obs) in enumerate(episode.observations):
-        df.loc[time_step, :] = [time_step, obs.timestep_overflow.sum()]
+        df.loc[time_step, :] = [time_step, (obs.timestep_overflow > 0).sum()]
     return df
 
 
 def get_total_overflow_trace():
     df = get_total_overflow_ts()
-    return go.Bar(
+    return go.Scatter(
         x=df["time"],
         y=df["value"]
     )
