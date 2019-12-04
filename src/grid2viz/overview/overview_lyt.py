@@ -2,7 +2,6 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
-import pandas as pd
 
 from src.grid2kpi.episode import (observation_model, env_actions,
                                   consumption_profiles
@@ -32,8 +31,6 @@ nb_maintenances = env_actions(
 overflow = observation_model.get_total_overflow_trace()
 usage_rate = observation_model.get_usage_rate_trace()
 
-df = pd.read_csv(
-    'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
 
 layout_def = {
     'legend': {'x': 0, 'y': 0, 'orientation': 'h'},
