@@ -80,13 +80,13 @@ indicators_line = html.Div(children=[
                     html.P(className="text-muted", children="Steps")
                 ]),
                 html.Div(className="mb-4", children=[
+                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children=nb_hazards),
+                    html.P(className="text-muted", children="Hazards")
+                ]),
+                html.Div(className="mb-4", children=[
                     html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
                            children=nb_maintenances),
                     html.P(className="text-muted", children="Maintenances")
-                ]),
-                html.Div(className="mb-4", children=[
-                    html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children=nb_hazards),
-                    html.P(className="text-muted", children="Hazards")
                 ]),
                 html.Div(className="mb-4", children=[
                     html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right", children="NaN"),
