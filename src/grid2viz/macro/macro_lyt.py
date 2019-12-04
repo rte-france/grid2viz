@@ -96,14 +96,14 @@ overview_line = html.Div(className="lineBlock card", children=[
 
         html.Div(className="col-xl-4 row", children=[
             html.Div(className="col-12", children=[dcc.Graph(
-                id="usage_rate",
+                id="usage_rate_chart",
                 figure=go.Figure(
                     layout=layout_def,
                     data=[dict(type="scatter")]
                 )
             )]),
             html.Div(className="col-12", children=[dcc.Graph(
-                id="usage_overflow",
+                id="usage_overflow_chart",
                 figure=go.Figure(
                     layout=layout_def,
                     data=[dict(type="scatter")]
@@ -113,8 +113,46 @@ overview_line = html.Div(className="lineBlock card", children=[
     ])
 ])
 
+inspector_line = html.Div(className="lineBlock card", children=[
+    html.H2("Inspector"),
+    html.Div(className="card-body row", children=[
+        html.Div(className="col-xl-6", children=[dt.DataTable(
+            id="inspector_datable",
+            columns=[{"name": i, "id": i} for i in df.columns],
+            data=df.to_dict('records'),
+            style_table={
+                'overflow': 'auto',
+                'width': 'auto',
+                'height': '100%'
+            },
+        )]),
+        html.Div(className="col-xl-6 row", children=[
+            html.Div(className="col-12", children=[
+                dcc.Graph(
+                    id="distribution_substation_action_chart",
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="bar")]
+                    )
+                ),
+                html.H6(className="text-center", children="Distribution of Substation action")
+            ]),
+            html.Div(className="col-12", children=[
+                dcc.Graph(
+                    id="distribution_line_action_chart",
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="bar")]
+                    )
+                ),
+                html.H6(className="text-center", children="Distribution of line action")
+            ]),
+        ]),
+    ])
+])
+
 layout = html.Div(id="overview_page", children=[
     indicator_line,
     overview_line,
-    # inspector_line
+    inspector_line
 ])
