@@ -2,6 +2,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
+import argparse
 
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
@@ -42,7 +43,7 @@ def display_page(pathname):
     if pathname == "/episodes":
         return episodes_lyt
     elif pathname == "/overview" or pathname == "/":
-        return overview_lyt
+        return overview_lyt()
     elif pathname == "/macro":
         return macro_lyt
     elif pathname == "/micro":
@@ -51,6 +52,5 @@ def display_page(pathname):
         return 404
 
 
-server = app.server
 if __name__ == "__main__":
-    app.run_server(port=8050, debug=True)
+    app.run_server(port=8050, debug=False)
