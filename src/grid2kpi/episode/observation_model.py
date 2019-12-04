@@ -2,6 +2,22 @@ from ..manager import episode
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from .env_actions import env_actions
+
+
+def get_prod_and_conso():
+    productions = pd.pivot_table(
+        episode.production, index="timestamp", values="value",
+        columns=["equipment_name"]
+    )
+
+    loads = pd.pivot_table(
+        episode.load, index="timestamp", values="value",
+        columns=["equipment_name"]
+    )
+
+    prods_and_loads = productions.merge(loads, left_index=True, right_index=True)
+    return prods_and_loads
 
 
 def get_episode_active_consumption_ts():
@@ -18,10 +34,10 @@ def get_total_overflow_ts():
 
 def get_total_overflow_trace():
     df = get_total_overflow_ts()
-    return go.Scatter(
+    return [go.Scatter(
         x=df["time"],
         y=df["value"]
-    )
+    )]
 
 
 def get_prod():
@@ -59,6 +75,25 @@ def get_usage_rate():
     median_rho = rho.groupby("time").aggregate(["median", quantile10, quantile25, quantile75, quantile90])[
         ["value"]].reset_index()
     return median_rho
+
+
+def get_hazard_trace():
+    ts_hazards_by_line = env_actions(
+        episode, which="hazards", kind="ts", aggr=False)
+    trace = [go.Scatter(x=ts_hazards_by_line.index, y=ts_hazards_by_line[line],
+                        name=line)
+             for line in ts_hazards_by_line.columns]
+    return trace
+
+
+def get_maintenance_trace():
+    ts_maintenances_by_line = env_actions(
+        episode, which="maintenances", kind="ts", aggr=False)
+    trace = [go.Scatter(x=ts_maintenances_by_line.index,
+                        y=ts_maintenances_by_line[line],
+                        name=line)
+             for line in ts_maintenances_by_line.columns]
+    return trace
 
 
 def get_prod_trace_per_equipment():
@@ -126,3 +161,14 @@ def get_df_trace_per_equipment(df):
             name=equipment
         ))
     return trace
+
+
+def init_table_inspection_data():
+    ts_hazards = env_actions(episode, which="hazards", kind="ts", aggr=True)
+    ts_hazards = ts_hazards.rename(columns={"value": "Hazards"})
+    ts_maintenances = env_actions(episode, which="maintenances", kind="ts", aggr=True)
+    ts_maintenances = ts_maintenances.rename(columns={"value": "Maintenances"})
+    table = ts_hazards.merge(ts_maintenances, left_index=True, right_index=True)
+    table = table.reset_index()
+    table["IsWorkingDay"] = table["timestamp"].dt.weekday < 5
+    return table

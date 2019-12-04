@@ -3,40 +3,8 @@ from src.app import app
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from src.grid2kpi.episode import observation_model, env_actions
-
-# TODO remove this when callback created
-N = 100
-random_x = np.linspace(0, 1, N)
-random_y0 = np.random.randn(N) + 5
-random_y1 = np.random.randn(N)
-random_y2 = np.random.randn(N)
-
-episode = observation_model.episode
-
-active_load_trace = observation_model.get_load_trace_per_equipment()
-active_prod_trace = observation_model.get_prod_trace_per_equipment()
-
-productions = pd.pivot_table(
-    episode.production, index="timestamp", values="value", 
-    columns=["equipment_name"]
-)
-
-loads = pd.pivot_table(
-    episode.load, index="timestamp", values="value", 
-    columns=["equipment_name"]
-)
-
-prods_and_loads = productions.merge(loads, left_index=True, right_index=True)
-
-ts_hazards_by_line = env_actions(
-    episode, which="hazards", kind="ts", aggr=False) 
-ts_maintenances_by_line = env_actions(
-    episode, which="maintenances", kind="ts", aggr=False)
-
-
-def load_indicators_data(data, figure):
-    pass
+from src.grid2kpi.episode import observation_model, env_actions, consumption_profiles
+from src.grid2kpi.manager import episode
 
 
 @app.callback(
@@ -48,34 +16,52 @@ def load_summary_data(value, figure):
     if value is None:
         return figure
     if value is "1":
-        figure["data"] = active_load_trace
+        figure["data"] = observation_model.get_load_trace_per_equipment()
     if value is "2":
-        figure["data"] = active_prod_trace
+        figure["data"] = observation_model.get_prod_trace_per_equipment()
     if value is "3":
-        figure["data"] = [
-            go.Scatter(x=ts_hazards_by_line.index, y=ts_hazards_by_line[line],
-                       name=line)
-            for line in ts_hazards_by_line.columns            
-    ]
+        figure["data"] = observation_model.get_hazard_trace()
     if value is "4":
-        figure["data"] = [
-            go.Scatter(x=ts_maintenances_by_line.index, 
-                       y=ts_maintenances_by_line[line],
-                       name=line)
-            for line in ts_maintenances_by_line.columns            
-    ]
+        figure["data"] = observation_model.get_maintenance_trace()
     return figure
 
 
 @app.callback(
-    [Output("inspection_table", "columns"), Output("inspection_table", "data")], 
-    [Input("select_loads_for_tb", "value"), 
-     Input("select_prods_for_tb", "value"),],
+    Output("select_loads_for_tb", "options"),
+    [Input('temporaryid', 'children')]
+)
+def update_select_loads(children):
+    return [
+        {'label': load, "value": load} for load in observation_model.episode.load_names
+    ]
+
+
+@app.callback(
+    Output("select_prods_for_tb", "options"),
+    [Input('temporaryid', 'children')]
+)
+def update_select_prods(children):
+    return [
+        {'label': prod, "value": prod} for prod in observation_model.episode.prod_names
+    ]
+
+
+@app.callback(
+    [Output("inspection_table", "columns"), Output("inspection_table", "data")],
+    [Input("select_loads_for_tb", "value"),
+     Input("select_prods_for_tb", "value"),
+     Input("temporaryid", "children")
+     ],
     [State("inspection_table", "data")]
 )
-def update_table(loads, prods, data):
-    if loads is None: loads = []
-    if prods is None: prods = []
+def update_table(loads, prods, children, data):
+    if data is None:
+        table = observation_model.init_table_inspection_data()
+        return [{"name": i, "id": i} for i in table.columns], table.to_dict('records')
+    if loads is None:
+        loads = []
+    if prods is None:
+        prods = []
     df = pd.DataFrame.from_records(data)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     cols_to_drop = []
@@ -86,9 +72,85 @@ def update_table(loads, prods, data):
     df = df.drop(cols_to_drop, axis=1)
     if cols_to_add:
         df = df.merge(
-            prods_and_loads[cols_to_add], left_on="timestamp", right_index=True)
+            observation_model.get_prod_and_conso()[cols_to_add], left_on="timestamp", right_index=True)
     cols = [{"name": i, "id": i} for i in df.columns]
     return cols, df.to_dict('records')
+
+
+@app.callback(
+    Output("nb_steps_card", "children"),
+    [Input('temporaryid', 'children')]
+)
+def update_card_step(children):
+    return len(observation_model.episode.observations)
+
+
+@app.callback(
+    Output("nb_maintenance_card", "children"),
+    [Input('temporaryid', 'children')]
+)
+def update_card_maintenance(children):
+    return env_actions(observation_model.episode, which="hazards", kind="nb", aggr=True)
+
+
+@app.callback(
+    Output("nb_hazard_card", "children"),
+    [Input('temporaryid', 'children')]
+)
+def update_card_hazard(children):
+    return env_actions(observation_model.episode, which="maintenances", kind="nb", aggr=True)
+
+
+@app.callback(
+    Output("overflow_graph", "figure"),
+    [Input('temporaryid', 'children')],
+    [State("overflow_graph", "figure")]
+)
+def update_overflow_graph(children, figure):
+    figure["data"] = observation_model.get_total_overflow_trace()
+    return figure
+
+
+@app.callback(
+    Output("usage_rate_graph", "figure"),
+    [Input('temporaryid', 'children')],
+    [State("usage_rate_graph", "figure")]
+)
+def update_usage_rate_graph(children, figure):
+    figure["data"] = observation_model.get_usage_rate_trace()
+    return figure
+
+
+@app.callback(
+    Output("indicator_line_charts", "figure"),
+    [Input('temporaryid', 'children')],
+    [State("indicator_line_charts", "figure")]
+)
+def update_profile_conso_graph(children, figure):
+    profiles = consumption_profiles(observation_model.episode)
+    figure["data"] = [go.Scatter(x=profiles.index, y=profiles[col], name=col) for col in profiles.columns]
+    return figure
+
+
+@app.callback(
+    Output("production_share_graph", "figure"),
+    [Input('temporaryid', 'children')],
+    [State("production_share_graph", "figure")]
+)
+def update_production_share_graph(children, figure):
+    share_prod = observation_model.get_prod()
+    figure["data"] = [
+        go.Pie(labels=share_prod["equipment_name"], values=share_prod.groupby("equipment_name")["value"].sum())]
+    return figure
+
+
+@app.callback(
+    [Output("date_range", "start_date"), Output("date_range", "end_date")],
+    [Input('temporaryid', 'children')]
+)
+def update_date_range(children):
+    return observation_model.episode.production["timestamp"].dt.date.values[0], \
+           observation_model.episode.production["timestamp"].dt.date.values[-1]
 
 
 def load_ref_agent_data():
