@@ -16,7 +16,8 @@ def get_prod_and_conso():
         columns=["equipment_name"]
     )
 
-    prods_and_loads = productions.merge(loads, left_index=True, right_index=True)
+    prods_and_loads = productions.merge(
+        loads, left_index=True, right_index=True)
     return prods_and_loads
 
 
@@ -28,7 +29,8 @@ def get_total_overflow_ts(episode):
     df = pd.DataFrame(index=range(len(episode.observations)),
                       columns=["time", "value"])
     for (time_step, obs) in enumerate(episode.observations):
-        df.loc[time_step, :] = [time_step, (obs.timestep_overflow > 0).sum()]
+        tstamp = episode.timestamp(obs)
+        df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
     return df
 
 
@@ -36,7 +38,8 @@ def get_total_overflow_trace(episode):
     df = get_total_overflow_ts(episode)
     return [go.Scatter(
         x=df["time"],
-        y=df["value"]
+        y=df["value"],
+        name="Nb of overflows"
     )]
 
 
@@ -72,7 +75,7 @@ def quantile90(df):
 def get_usage_rate(episode):
     rho = get_rho(episode)
     # return rho
-    median_rho = rho.groupby("time").aggregate(["median", quantile10, quantile25, quantile75, quantile90])[
+    median_rho = rho.groupby("timestamp").aggregate(["median", quantile10, quantile25, quantile75, quantile90])[
         ["value"]].reset_index()
     return median_rho
 
@@ -112,19 +115,19 @@ def get_usage_rate_trace(episode):
         "smoothing": 1
     }
     trace = [go.Scatter(
-        x=df["time"],
+        x=df["timestamp"],
         y=df["value"]["quantile10"],
         name="quantile 10",
         line=line
     ), go.Scatter(
-        x=df["time"],
+        x=df["timestamp"],
         y=df["value"]["quantile25"],
         name="quantile 25",
         fill="tonexty",
         fillcolor="rgba(159, 197, 232, 0.63)",
         line=line
     ), go.Scatter(
-        x=df["time"],
+        x=df["timestamp"],
         y=df["value"]["median"],
         name="median",
         fill="tonexty",
@@ -135,14 +138,14 @@ def get_usage_rate_trace(episode):
             "smoothing": 1
         }
     ), go.Scatter(
-        x=df["time"],
+        x=df["timestamp"],
         y=df["value"]["quantile75"],
         name="quantile 75",
         fill="tonexty",
         fillcolor="rgba(31, 119, 180, 0.5)",
         line=line
     ), go.Scatter(
-        x=df["time"],
+        x=df["timestamp"],
         y=df["value"]["quantile90"],
         name="quantile 90",
         fill="tonexty",
@@ -166,9 +169,11 @@ def get_df_trace_per_equipment(df):
 def init_table_inspection_data():
     ts_hazards = env_actions(episode, which="hazards", kind="ts", aggr=True)
     ts_hazards = ts_hazards.rename(columns={"value": "Hazards"})
-    ts_maintenances = env_actions(episode, which="maintenances", kind="ts", aggr=True)
+    ts_maintenances = env_actions(
+        episode, which="maintenances", kind="ts", aggr=True)
     ts_maintenances = ts_maintenances.rename(columns={"value": "Maintenances"})
-    table = ts_hazards.merge(ts_maintenances, left_index=True, right_index=True)
+    table = ts_hazards.merge(
+        ts_maintenances, left_index=True, right_index=True)
     table = table.reset_index()
     table["IsWorkingDay"] = table["timestamp"].dt.weekday < 5
     return table

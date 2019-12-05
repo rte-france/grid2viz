@@ -49,7 +49,8 @@ def update_select_prods(children):
 
 
 @app.callback(
-    [Output("inspection_table", "columns"), Output("inspection_table", "data")],
+    [Output("inspection_table", "columns"),
+     Output("inspection_table", "data")],
     [Input("select_loads_for_tb", "value"),
      Input("select_prods_for_tb", "value"),
      Input("temporaryid", "children")
@@ -110,9 +111,11 @@ def update_card_hazard(children):
 )
 def update_agent_ref_graph(value, figure_overflow, figure_usage):
     if value == agent_ref:
-        raise PreventUpdate
-    new_episode = make_episode(base_dir, value, indx)
-    figure_overflow["data"] = observation_model.get_total_overflow_trace(new_episode)
+        new_episode = episode
+    else:
+        new_episode = make_episode(base_dir, value, indx)
+    figure_overflow["data"] = observation_model.get_total_overflow_trace(
+        new_episode)
     figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
     return figure_overflow, figure_usage
 
@@ -124,7 +127,8 @@ def update_agent_ref_graph(value, figure_overflow, figure_usage):
 )
 def update_profile_conso_graph(children, figure):
     profiles = consumption_profiles(observation_model.episode)
-    figure["data"] = [go.Scatter(x=profiles.index, y=profiles[col], name=col) for col in profiles.columns]
+    figure["data"] = [go.Scatter(
+        x=profiles.index, y=profiles[col], name=col) for col in profiles.columns]
     return figure
 
 
@@ -146,7 +150,7 @@ def update_production_share_graph(children, figure):
 )
 def update_date_range(children):
     return observation_model.episode.production["timestamp"].dt.date.values[0], \
-           observation_model.episode.production["timestamp"].dt.date.values[-1]
+        observation_model.episode.production["timestamp"].dt.date.values[-1]
 
 
 def load_ref_agent_data():

@@ -6,8 +6,17 @@ from src.grid2kpi.manager import agents, agent_ref, episode
 from src.grid2kpi.episode import observation_model
 
 layout_def = {
-    'legend': {'x': 0, 'y': 0, 'orientation': 'h'},
-    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0}
+    'legend': {'orientation': 'h'},
+    "showlegend": True,
+    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
+}
+
+layout_pie = {
+    'legend': {'orientation': 'h'},
+    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
+    'paper_bgcolor': 'rgba(0,0,0,0)',
+    'plot_bgcolor': 'rgba(0,0,0,0)'
+
 }
 
 indicators_line = html.Div(id="temporaryid", children=[
@@ -33,7 +42,7 @@ indicators_line = html.Div(id="temporaryid", children=[
             dcc.Graph(
                 id="production_share_graph",
                 figure=go.Figure(
-                    layout=layout_def
+                    layout=layout_pie
                 ),
                 config=dict(displayModeBar=False))],
             className="col-xl-4"),
@@ -58,7 +67,8 @@ indicators_line = html.Div(id="temporaryid", children=[
             html.Div(className="mb-4", children=[
                 html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
                        children="NaN"),
-                html.P(className="text-muted", children="Duration of Maintenances")
+                html.P(className="text-muted",
+                       children="Duration of Maintenances")
             ])
         ], className="col-xl-3 align-self-center")
     ], className="card-body row"),
@@ -112,7 +122,8 @@ summary_line = html.Div(children=[
                     style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=observation_model.get_total_overflow_trace(episode)
+                        data=observation_model.get_total_overflow_trace(
+                            episode)
                     ),
                     config=dict(displayModeBar=False)
                 ),
