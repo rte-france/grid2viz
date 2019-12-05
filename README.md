@@ -2,7 +2,7 @@
 
 This tool provides visualization views to help analyse reinforcement learning of agents in the grid2op challenge.
 
-##Getting started
+## Getting started
 
 In order to use this tool, you need to have serialized the RL process of grid2op. The expected file system is :
 - root_dir
