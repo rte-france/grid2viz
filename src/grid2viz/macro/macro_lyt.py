@@ -16,7 +16,7 @@ df = pd.read_csv(
     'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
 
 indicator_line = html.Div(className="lineBlock card", children=[
-    html.H2("Indicators"),
+    html.H4("Indicators"),
     html.Div(className="card-body row", children=[
 
         html.Div(className="col-xl-2", children=[
@@ -66,7 +66,7 @@ indicator_line = html.Div(className="lineBlock card", children=[
 ])
 
 overview_line = html.Div(className="lineBlock card", children=[
-    html.H2("Overview"),
+    html.H4("Overview"),
     html.Div(className="card-body row", children=[
 
         html.Div(className="col-xl-2", children=[dt.DataTable(
@@ -131,7 +131,7 @@ overview_line = html.Div(className="lineBlock card", children=[
 ])
 
 inspector_line = html.Div(className="lineBlock card", children=[
-    html.H2("Inspector"),
+    html.H4("Inspector"),
     html.Div(className="card-body row", children=[
 
         html.Div(className="col-xl-6", children=[dt.DataTable(

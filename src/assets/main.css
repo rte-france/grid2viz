@@ -27,9 +27,18 @@ body {
     display: inline-flex;
 }
 
-.lineBlock > h2 {
+.lineBlock > h4 {
     padding: 5px;
     writing-mode: vertical-lr;
     transform: rotate(-180deg);
     border-left: #2196F3 solid 2px;
+}
+
+.reminder {
+    margin-right: 5px;
+}
+
+.nav_menu {
+    position: absolute;
+    right: 0;
 }

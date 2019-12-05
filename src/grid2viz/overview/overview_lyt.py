@@ -20,12 +20,12 @@ layout_pie = {
 }
 
 indicators_line = html.Div(id="temporaryid", children=[
-    html.H2("Indicators"),
+    html.H4("Indicators"),
     html.Div(children=[
 
         html.Div(className="col-xl-5",
                  children=[
-                     html.H3("Consumption Profiles"),
+                     html.H5("Consumption Profiles"),
                      dcc.Graph(
                          id="indicator_line_charts",
                          style={'margin-top': '1em'},
@@ -38,7 +38,7 @@ indicators_line = html.Div(id="temporaryid", children=[
                  ),
 
         html.Div(children=[
-            html.H3("Production shares"),
+            html.H5("Production shares"),
             dcc.Graph(
                 id="production_share_graph",
                 figure=go.Figure(
@@ -75,10 +75,10 @@ indicators_line = html.Div(id="temporaryid", children=[
 ], className="lineBlock card")
 
 summary_line = html.Div(children=[
-    html.H2("Summary"),
+    html.H4("Summary"),
     html.Div(children=[
         html.Div(children=[
-            html.H3("Environments Time Series"),
+            html.H5("Environments Time Series"),
             dcc.Dropdown(
                 id='input_env_selector',
                 options=[
@@ -99,7 +99,7 @@ summary_line = html.Div(children=[
         ], className="col-xl-5"),
 
         html.Div(children=[
-            html.H3("OverFlow and Usage rate"),
+            html.H5("OverFlow and Usage rate"),
             dcc.Dropdown(
                 id="input_agent_selector", placeholder="select a ref agent",
                 options=[{'label': agent, 'value': agent} for agent in agents],
@@ -133,7 +133,7 @@ summary_line = html.Div(children=[
 ], className="lineBlock card")
 
 ref_agent_line = html.Div(children=[
-    html.H2("Inspector"),
+    html.H4("Inspector"),
     html.Div(children=[
         html.Div(children=[
             dcc.DatePickerRange(
