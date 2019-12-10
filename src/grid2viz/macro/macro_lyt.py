@@ -4,6 +4,9 @@ import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
 
+from src.grid2kpi.episode import observation_model
+from src.grid2kpi.manager import episode
+
 layout_def = {
     'legend': {'orientation': 'h'},
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
@@ -65,7 +68,7 @@ indicator_line = html.Div(className="lineBlock card", children=[
     ]),
 ])
 
-overview_line = html.Div(className="lineBlock card", children=[
+overview_line = html.Div(id="overview_line_id", className="lineBlock card", children=[
     html.H4("Overview"),
     html.Div(className="card-body row", children=[
 
@@ -89,7 +92,7 @@ overview_line = html.Div(className="lineBlock card", children=[
                     id="cumulated_rewards_timeserie",
                     figure=go.Figure(
                         layout=layout_def,
-                        data=[dict(type="scatter")]
+                        data=observation_model.get_df_rewards_trace(episode)
                     )
                 )
             ]),

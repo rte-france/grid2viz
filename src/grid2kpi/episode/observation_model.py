@@ -55,6 +55,10 @@ def get_rho(episode):
     return episode.rho
 
 
+def get_df_computed_reward(episode):
+    return episode.computed_reward
+
+
 # quantiles utilities
 def quantile10(df):
     return df.quantile(0.1)
@@ -177,3 +181,10 @@ def init_table_inspection_data():
     table = table.reset_index()
     table["IsWorkingDay"] = table["timestamp"].dt.weekday < 5
     return table
+
+
+def get_df_rewards_trace(episode):
+    df = get_df_computed_reward(episode)
+    trace = [go.Scatter(x=df["timestep"], y=df["rewards"], name="rewards"),
+             go.Scatter(x=df["timestep"], y=df["cum_rewards"], name="cum_rewards")]
+    return trace
