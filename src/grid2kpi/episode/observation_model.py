@@ -184,7 +184,8 @@ def init_table_inspection_data():
 
 
 def get_df_rewards_trace(episode):
+    trace = []
     df = get_df_computed_reward(episode)
-    trace = [go.Scatter(x=df["timestep"], y=df["rewards"], name="rewards"),
-             go.Scatter(x=df["timestep"], y=df["cum_rewards"], name="cum_rewards")]
+    trace.append(go.Scatter(x=df["timestep"], y=df["rewards"], name="rewards"))
+    trace.append(go.Scatter(x=df["timestep"], y=df["cum_rewards"], name="cum_rewards", yaxis='y2'))
     return trace

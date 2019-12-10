@@ -12,4 +12,5 @@ from src.grid2kpi.episode import observation_model
 )
 def load_reward_data_scatter(children, figure):
     figure['data'] = observation_model.get_df_rewards_trace(observation_model.episode)
+    figure['layout'] = {**figure['layout'], 'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
