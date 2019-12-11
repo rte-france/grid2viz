@@ -138,9 +138,8 @@ def update_profile_conso_graph(children, figure):
     [State("production_share_graph", "figure")]
 )
 def update_production_share_graph(children, figure):
-    share_prod = observation_model.get_prod()
-    figure["data"] = [
-        go.Pie(labels=share_prod["equipment_name"], values=share_prod.groupby("equipment_name")["value"].sum())]
+    share_prod = observation_model.get_prod_share_trace()
+    figure["data"] = share_prod
     return figure
 
 

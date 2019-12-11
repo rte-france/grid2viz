@@ -1,4 +1,4 @@
-from ..manager import episode
+from ..manager import episode, prod_types
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -43,6 +43,31 @@ def get_total_overflow_trace(episode):
     )]
 
 
+def get_prod_share_trace():
+    share_prod = get_prod()
+    df = share_prod.groupby("equipment_name")["value"].sum()
+    unique_prod_types = np.unique(list(prod_types.values()))
+
+    labels = [*df.index.values, *np.unique(list(prod_types.values()))]
+
+    parents = [prod_types.get(name) for name in df.index.values]
+    values = list(df)
+    for prod_type in unique_prod_types:
+        parents.append("")
+        value = 0
+        for gen in df.index.values:
+            if prod_types.get(gen) == prod_type:
+                value = value + df.get(gen)
+        values.append(value)
+    return [
+        go.Sunburst(labels=labels,
+                    values=values,
+                    parents=parents,
+                    branchvalues="total",
+                    )
+    ]
+
+
 def get_prod():
     return episode.production
 
@@ -79,7 +104,7 @@ def quantile90(df):
 def get_usage_rate(episode):
     rho = get_rho(episode)
     # return rho
-    median_rho = rho.groupby("timestamp").aggregate(["median", quantile10, quantile25, quantile75, quantile90])[
+    median_rho = rho.groupby("timestamp").aggregate(["median", quantile10, quantile25, quantile75, quantile90, "max"])[
         ["value"]].reset_index()
     return median_rho
 
@@ -155,6 +180,15 @@ def get_usage_rate_trace(episode):
         fill="tonexty",
         fillcolor="rgba(159, 197, 232, 0.63)",
         line=line
+    ), go.Scatter(
+        x=df["timestamp"],
+        y=df["value"]["max"],
+        name="Max",
+        line={
+            "shape": "spline",
+            "smoothing": 1,
+            "color": "rgba(255,0,0,0.5)"
+        }
     )]
     return trace
 
