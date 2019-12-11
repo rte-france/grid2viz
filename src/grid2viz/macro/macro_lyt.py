@@ -5,7 +5,7 @@ import dash_table as dt
 import pandas as pd
 
 from src.grid2kpi.episode import observation_model
-from src.grid2kpi.manager import episode
+from src.grid2kpi.manager import episode, agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -25,7 +25,7 @@ indicator_line = html.Div(className="lineBlock card", children=[
         html.Div(className="col-xl-2", children=[
             dcc.Dropdown(
                 id='agent_log_selector',
-                options=[{'label': 'test', "value": "1"}, {'label': 'test2', "value": "2"}],
+                options=[{'label': agent, 'value': agent} for agent in agents],
                 placeholder="Agent log"
             ),
 
@@ -112,7 +112,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
             html.Div(className="col-12", children=[
                 html.H6(className="text-center", children="Usage Rate"),
                 dcc.Graph(
-                    id="usage_rate_chart",
+                    id="usage_rate_graph_study",
                     figure=go.Figure(
                         layout=layout_def,
                         data=[dict(type="scatter")]
@@ -122,7 +122,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
             html.Div(className="col-12", children=[
                 html.H6(className="text-center", children="Usage Overflow"),
                 dcc.Graph(
-                    id="usage_overflow_chart",
+                    id="overflow_graph_study",
                     figure=go.Figure(
                         layout=layout_def,
                         data=[dict(type="scatter")]

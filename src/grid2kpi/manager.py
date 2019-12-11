@@ -3,12 +3,19 @@ import os
 import configparser
 import csv
 
+store = {}
 
-def make_episode(base_dir, agent_ref, indx):
-    path = base_dir + agent_ref
-    return Episode.fromdisk(
+
+def make_episode(base_dir, agent, indx):
+    id = agent + indx
+    if id in store:
+        return store[id]
+    path = base_dir + agent
+    episode_loaded = Episode.fromdisk(
         path, indx
     )
+    store[id] = episode_loaded
+    return episode_loaded
 
 
 path = os.path.join(
