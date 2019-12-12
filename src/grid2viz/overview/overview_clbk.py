@@ -5,26 +5,60 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from src.grid2kpi.episode import observation_model, env_actions, consumption_profiles
+from src.grid2kpi.episode import observation_model, env_actions, profiles_traces
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
 
 
 @app.callback(
-    Output("input_env_charts", "figure"),
-    [Input("input_env_selector", "value")],
-    [State("input_env_charts", "figure")]
+    [Output("input_assets_selector", "options"),
+     Output("input_assets_selector", "value")],
+    [Input("scen_overview_ts_switch", "value")]
 )
-def load_summary_data(value, figure):
-    if value is None:
+def update_ts_graph_avail_assets(kind):
+    if kind in ["Hazards", "Maintenances"]:
+        options, value = [{'label': line_name, 'value': line_name}
+                          for line_name in episode.line_names], episode.line_names[0]
+    elif kind == 'Production':
+        options = [{'label': prod_name,
+                    'value': prod_name}
+                   for prod_name in episode.prod_names]
+        value = episode.prod_names[0]
+    else:
+        options = [{'label': load_name,
+                    'value': load_name}
+                   for load_name in episode.load_names]
+        value = episode.load_names[0]
+
+    return options, value
+
+
+@app.callback(
+    Output("input_env_charts", "figure"),
+    [Input("input_assets_selector", "value"),
+     Input('temporaryid', 'children')],
+    [State("input_env_charts", "figure"),
+     State("scen_overview_ts_switch", "value")]
+)
+def load_summary_data(equipments, children, figure, kind):
+    if kind is None:
         return figure
-    if value is "1":
-        figure["data"] = observation_model.get_load_trace_per_equipment()
-    if value is "2":
-        figure["data"] = observation_model.get_prod_trace_per_equipment()
-    if value is "3":
-        figure["data"] = observation_model.get_hazard_trace()
-    if value is "4":
-        figure["data"] = observation_model.get_maintenance_trace()
+    if isinstance(equipments, str):
+        equipments = [equipments]  # to make pd.series.isin() work
+    if kind == "Load":
+        figure["data"] = observation_model.get_load_trace_per_equipment(
+            equipments)
+    if kind == "Production":
+        figure["data"] = observation_model.get_prod_trace_per_equipment(
+            equipments
+        )
+    if kind == "Hazards":
+        figure["data"] = observation_model.get_hazard_trace(
+            equipments
+        )
+    if kind == "Maintenances":
+        figure["data"] = observation_model.get_maintenance_trace(
+            equipments
+        )
     return figure
 
 
@@ -71,7 +105,7 @@ def update_table(loads, prods, children, data):
     for col in df.columns[4:]:
         if col not in loads and col not in prods:
             cols_to_drop.append(col)
-    cols_to_add = loads + prods
+    cols_to_add = [col for col in loads + prods if col not in df.columns]
     df = df.drop(cols_to_drop, axis=1)
     if cols_to_add:
         df = df.merge(
@@ -126,9 +160,7 @@ def update_agent_ref_graph(value, figure_overflow, figure_usage):
     [State("indicator_line_charts", "figure")]
 )
 def update_profile_conso_graph(children, figure):
-    profiles = consumption_profiles(observation_model.episode)
-    figure["data"] = [go.Scatter(
-        x=profiles.index, y=profiles[col], name=col) for col in profiles.columns]
+    figure["data"] = profiles_traces(observation_model.episode, freq="30T")
     return figure
 
 

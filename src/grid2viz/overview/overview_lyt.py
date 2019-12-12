@@ -1,3 +1,4 @@
+import dash_antd_components as dac
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_table as dt
@@ -26,27 +27,33 @@ indicators_line = html.Div(id="temporaryid", children=[
         html.Div(className="col-xl-5",
                  children=[
                      html.H5("Consumption Profiles"),
-                     dcc.Graph(
-                         id="indicator_line_charts",
-                         style={'margin-top': '1em'},
-                         figure=go.Figure(
-                             layout=layout_def
-                         ),
-                         config=dict(displayModeBar=False)
+                     dcc.Loading(
+                         id="overview_loading_profiles",
+                         children=dcc.Graph(
+                             id="indicator_line_charts",
+                             style={'margin-top': '1em'},
+                             figure=go.Figure(
+                                 layout=layout_def
+                             ),
+                             config=dict(displayModeBar=False)
+                         )
                      )
                  ]
                  ),
 
         html.Div(children=[
             html.H5("Production shares"),
-            dcc.Graph(
-                id="production_share_graph",
-                figure=go.Figure(
-                    layout=layout_pie
-                ),
-                config=dict(displayModeBar=False))],
+            dcc.Loading(
+                id="overview_loading_prod_shares",
+                children=dcc.Graph(
+                    id="production_share_graph",
+                    figure=go.Figure(
+                        layout=layout_pie
+                    ),
+                    config=dict(displayModeBar=False)
+                )
+            )],
             className="col-xl-4"),
-
         # number summary column
         html.Div(children=[
             html.Div(className="mb-4", children=[
@@ -79,23 +86,37 @@ summary_line = html.Div(children=[
     html.Div(children=[
         html.Div(children=[
             html.H5("Environments Time Series"),
-            dcc.Dropdown(
-                id='input_env_selector',
-                options=[
-                    {'label': 'Load', "value": "1"},
-                    {'label': 'Production', "value": "2"},
-                    {'label': 'Hazards', "value": "3"},
-                    {'label': 'Maintenances', "value": "4"},
-                ],
-                value="1",
+            dac.Radio(options=[
+                {'label': 'Load', "value": "Load"},
+                {'label': 'Production', "value": "Production"},
+                {'label': 'Hazards', "value": "Hazards"},
+                {'label': 'Maintenances', "value": "Maintenances"},
+            ],
+                value="Load",
+                # name="scen_overview_ts_switch",
+                id="scen_overview_ts_switch",
+                buttonStyle="solid"
             ),
-            dcc.Graph(id='input_env_charts',
-                      style={'margin-top': '1em'},
-                      figure=go.Figure(
-                          layout=layout_def
-                      ),
-                      config=dict(displayModeBar=False)
-                      )
+            dac.Select(
+                id='input_assets_selector',
+                options=[{'label': load_name,
+                          'value': load_name}
+                         for load_name in episode.load_names],
+                value=episode.load_names[0],
+                mode='multiple',
+                showArrow=True
+            ),
+            dcc.Loading(
+                id="overview_ts_loading",
+                children=dcc.Graph(id='input_env_charts',
+                                   style={'margin-top': '1em'},
+                                   figure=go.Figure(
+                                       layout=layout_def
+                                   ),
+                                   config=dict(displayModeBar=False)
+                                   )
+            ),
+
         ], className="col-xl-5"),
 
         html.Div(children=[

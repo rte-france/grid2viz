@@ -68,12 +68,18 @@ def get_prod_share_trace():
     ]
 
 
-def get_prod():
-    return episode.production
+def get_prod(equipments=None):
+    if equipments is None:
+        return episode.production
+    else:
+        return episode.production.loc[episode.production.equipment_name.isin(equipments), :]
 
 
-def get_load():
-    return episode.load
+def get_load(equipments=None):
+    if equipments is None:
+        return episode.load
+    else:
+        return episode.load.loc[episode.load.equipment_name.isin(equipments), :]
 
 
 def get_rho(episode):
@@ -109,18 +115,22 @@ def get_usage_rate(episode):
     return median_rho
 
 
-def get_hazard_trace():
+def get_hazard_trace(equipments=None):
     ts_hazards_by_line = env_actions(
         episode, which="hazards", kind="ts", aggr=False)
+    if equipments is not None:
+        ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
     trace = [go.Scatter(x=ts_hazards_by_line.index, y=ts_hazards_by_line[line],
                         name=line)
              for line in ts_hazards_by_line.columns]
     return trace
 
 
-def get_maintenance_trace():
+def get_maintenance_trace(equipments=None):
     ts_maintenances_by_line = env_actions(
         episode, which="maintenances", kind="ts", aggr=False)
+    if equipments is not None:
+        ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
     trace = [go.Scatter(x=ts_maintenances_by_line.index,
                         y=ts_maintenances_by_line[line],
                         name=line)
@@ -128,12 +138,12 @@ def get_maintenance_trace():
     return trace
 
 
-def get_prod_trace_per_equipment():
-    return get_df_trace_per_equipment(get_prod())
+def get_prod_trace_per_equipment(equipments):
+    return get_df_trace_per_equipment(get_prod(equipments))
 
 
-def get_load_trace_per_equipment():
-    return get_df_trace_per_equipment(get_load())
+def get_load_trace_per_equipment(equipements):
+    return get_df_trace_per_equipment(get_load(equipements))
 
 
 def get_usage_rate_trace(episode):
@@ -221,5 +231,6 @@ def get_df_rewards_trace(episode):
     trace = []
     df = get_df_computed_reward(episode)
     trace.append(go.Scatter(x=df["timestep"], y=df["rewards"], name="rewards"))
-    trace.append(go.Scatter(x=df["timestep"], y=df["cum_rewards"], name="cum_rewards", yaxis='y2'))
+    trace.append(go.Scatter(
+        x=df["timestep"], y=df["cum_rewards"], name="cum_rewards", yaxis='y2'))
     return trace

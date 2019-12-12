@@ -42,3 +42,10 @@ body {
     position: absolute;
     right: 0;
 }
+
+.ant-select-selection--multiple .ant-select-selection__choice {
+    background-color: rgba(33, 150, 243, 0.1);
+    color:#2196F3;
+    border-color:#2196F3;
+    border-width: 0.5px;
+  }
