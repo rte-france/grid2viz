@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
 from src.grid2kpi.episode import observation_model
+from src.grid2kpi.episode import actions_model
 
 
 @app.callback(
@@ -49,3 +50,17 @@ def update_agent_log_action_table(cur_agent_log, data):
     new_episode = make_episode(base_dir, cur_agent_log, indx)
     table = new_episode.action_data
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
+
+
+@app.callback(
+    [Output("distribution_substation_action_chart", "figure"), Output("distribution_line_action_chart", "figure")],
+    [Input('store', 'cur_agent_log')],
+    [State("distribution_substation_action_chart", "figure"), State("distribution_line_action_chart", "figure")]
+)
+def update_agent_log_action_graphs(cur_agent_log, figure_sub, figure_switch_line):
+    new_episode = make_episode(base_dir, cur_agent_log, indx)
+    figure_sub["data"] = actions_model.get_action_set_topo_trace(new_episode)
+    # figure_line["data"] = actions_model.get_action_set_line_trace(new_episode)
+    # figure_bus["data"] = actions_model.get_action_change_bus_trace(new_episode)
+    figure_switch_line["data"] = actions_model.get_action_switch_line_trace(new_episode)
+    return figure_sub, figure_switch_line

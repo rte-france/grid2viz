@@ -69,7 +69,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card contai
     html.H4("Overview"),
     html.Div(className="card-body row", children=[
 
-        html.Div(className="col-xl-2", children=[
+        html.Div(className="col row", children=[
             dt.DataTable(
                 id="timeseries_table",
                 columns=[{"name": i, "id": i} for i in df.columns],
@@ -84,8 +84,8 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card contai
             )
         ]),
 
-        html.Div(className="col-xl-6 row", children=[
-            html.Div(className="col-12", children=[
+        html.Div(className="col row", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Instant and Cumulated Reward"),
                 dcc.Graph(
                     id="cumulated_rewards_timeserie",
@@ -95,7 +95,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card contai
                     )
                 )
             ]),
-            html.Div(className="col-xl-12", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Actions"),
                 dcc.Graph(
                     id="action_timeserie",
@@ -107,8 +107,8 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card contai
             ]),
         ]),
 
-        html.Div(className="col-xl-4 row", children=[
-            html.Div(className="col-12", children=[
+        html.Div(className="col row", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Usage Rate"),
                 dcc.Graph(
                     id="usage_rate_graph_study",
@@ -118,7 +118,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card contai
                     )
                 )
             ]),
-            html.Div(className="col-12", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Usage Overflow"),
                 dcc.Graph(
                     id="overflow_graph_study",
