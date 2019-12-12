@@ -12,9 +12,6 @@ layout_def = {
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
 }
 
-
-
-
 df = pd.read_csv(
     'https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')  # TODO remove with backend working
 
@@ -68,25 +65,27 @@ indicator_line = html.Div(className="lineBlock card", children=[
     ]),
 ])
 
-overview_line = html.Div(id="overview_line_id", className="lineBlock card", children=[
+overview_line = html.Div(id="overview_line_id", className="lineBlock card container", children=[
     html.H4("Overview"),
     html.Div(className="card-body row", children=[
 
-        html.Div(className="col-xl-2", children=[dt.DataTable(
-            id="timeseries_table",
-            columns=[{"name": i, "id": i} for i in df.columns],
-            data=df.to_dict('records'),
-            style_as_list_view=True,
-            row_deletable=True,
-            style_table={
-                'overflow': 'auto',
-                'width': 'auto',
-                'height': '100%'
-            },
-        )]),
+        html.Div(className="col row", children=[
+            dt.DataTable(
+                id="timeseries_table",
+                columns=[{"name": i, "id": i} for i in df.columns],
+                data=df.to_dict('records'),
+                style_as_list_view=True,
+                row_deletable=True,
+                style_table={
+                    'overflow': 'auto',
+                    'width': 'auto',
+                    'height': '100%'
+                },
+            )
+        ]),
 
-        html.Div(className="col-xl-6 row", children=[
-            html.Div(className="col-12", children=[
+        html.Div(className="col row", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Instant and Cumulated Reward"),
                 dcc.Graph(
                     id="cumulated_rewards_timeserie",
@@ -96,7 +95,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
                     )
                 )
             ]),
-            html.Div(className="col-xl-12", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Actions"),
                 dcc.Graph(
                     id="action_timeserie",
@@ -108,8 +107,8 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
             ]),
         ]),
 
-        html.Div(className="col-xl-4 row", children=[
-            html.Div(className="col-12", children=[
+        html.Div(className="col row", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Usage Rate"),
                 dcc.Graph(
                     id="usage_rate_graph_study",
@@ -119,7 +118,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
                     )
                 )
             ]),
-            html.Div(className="col-12", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Usage Overflow"),
                 dcc.Graph(
                     id="overflow_graph_study",
@@ -133,22 +132,24 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
     ])
 ])
 
-inspector_line = html.Div(className="lineBlock card", children=[
+inspector_line = html.Div(className="lineBlock card ", children=[
     html.H4("Inspector"),
-    html.Div(className="card-body row", children=[
+    html.Div(className="card-body col row", children=[
 
-        html.Div(className="col-xl-6", children=[dt.DataTable(
-            id="inspector_datable",
-            columns=[{"name": i, "id": i} for i in df.columns],
-            data=df.to_dict('records'),
-            style_table={
-                'overflow': 'auto',
-                'width': 'auto',
-                'height': '100%'
-            },
-        )]),
-        html.Div(className="col-xl-6 row", children=[
-            html.Div(className="col-12", children=[
+        html.Div(className="col row", children=[
+            dt.DataTable(
+                id="inspector_datable",
+                columns=[{"name": i, "id": i} for i in df.columns],
+                data=df.to_dict('records'),
+                style_table={
+                    'overflow': 'auto',
+                    'width': '100%',
+                    'max-width': '100%',
+                    'height': '200px'
+                },
+            )]),
+        html.Div(className="col-xl-12 row", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Distribution of Substation action"),
                 dcc.Graph(
                     id="distribution_substation_action_chart",
@@ -158,7 +159,7 @@ inspector_line = html.Div(className="lineBlock card", children=[
                     )
                 )
             ]),
-            html.Div(className="col-12", children=[
+            html.Div(className="col", children=[
                 html.H6(className="text-center", children="Distribution of line action"),
                 dcc.Graph(
                     id="distribution_line_action_chart",
