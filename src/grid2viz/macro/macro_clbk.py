@@ -38,3 +38,14 @@ def update_agent_log_graph(cur_agent_log, figure_overflow, figure_usage):
         new_episode)
     figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
     return figure_overflow, figure_usage
+
+
+@app.callback(
+    [Output("inspector_datable", "columns"), Output("inspector_datable", "data")],
+    [Input('store', 'cur_agent_log')],
+    [State("inspector_datable", "data")]
+)
+def update_agent_log_action_table(cur_agent_log, data):
+    new_episode = make_episode(base_dir, cur_agent_log, indx)
+    table = new_episode.action_data
+    return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")

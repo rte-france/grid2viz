@@ -32,6 +32,7 @@ body {
     writing-mode: vertical-lr;
     transform: rotate(-180deg);
     border-left: #2196F3 solid 2px;
+    max-width: 100%;
 }
 
 .reminder {
