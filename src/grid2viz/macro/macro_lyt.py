@@ -75,7 +75,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
     html.H4("Overview"),
     html.Div(className="card-body row", children=[
 
-        html.Div(className="col row", children=[
+        html.Div(className="col-2", children=[
             dcc.Loading(
                 dt.DataTable(
                     id="timeseries_table",
@@ -94,65 +94,67 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
 
         ]),
 
-        html.Div(className="col row", children=[
-            html.Div(className="col", children=[
-                html.H6(className="text-center",
-                        children="Instant and Cumulated Reward"),
-                dcc.Loading(
-                    dcc.Graph(
-                        id="cumulated_rewards_timeserie",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            # data=observation_model.get_df_rewards_trace(
-                            #     episode)
+        html.Div(className="col-10", children=[
+            html.Div(className="row", children=[
+                html.Div(className="col", children=[
+                    html.H6(className="text-center",
+                            children="Instant and Cumulated Reward"),
+                    dcc.Loading(
+                        dcc.Graph(
+                            id="cumulated_rewards_timeserie",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                # data=observation_model.get_df_rewards_trace(
+                                #     episode)
+                            )
                         )
                     )
-                )
 
-            ]),
-            html.Div(className="col", children=[
-                html.H6(className="text-center", children="Actions"),
-                dcc.Loading(
-                    dcc.Graph(
-                        id="action_timeserie",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="scatter")]
-                        ),
-                    )
-                )
-
-            ]),
-        ]),
-
-        html.Div(className="col row", children=[
-            html.Div(className="col", children=[
-                html.H6(className="text-center", children="Usage Rate"),
-                dcc.Loading(
-                    dcc.Graph(
-                        id="usage_rate_graph_study",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="scatter")]
+                ]),
+                html.Div(className="col", children=[
+                    html.H6(className="text-center", children="Usage Overflow"),
+                    dcc.Loading(
+                        dcc.Graph(
+                            id="overflow_graph_study",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
                         )
                     )
-                )
 
+                ]),
             ]),
-            html.Div(className="col", children=[
-                html.H6(className="text-center", children="Usage Overflow"),
-                dcc.Loading(
-                    dcc.Graph(
-                        id="overflow_graph_study",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="scatter")]
+
+            html.Div(className="row", children=[
+                html.Div(className="col", children=[
+                    html.H6(className="text-center", children="Actions"),
+                    dcc.Loading(
+                        dcc.Graph(
+                            id="action_timeserie",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            ),
                         )
                     )
-                )
 
+                ]),
+                html.Div(className="col", children=[
+                    html.H6(className="text-center", children="Usage Rate"),
+                    dcc.Loading(
+                        dcc.Graph(
+                            id="usage_rate_graph_study",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
+                        )
+                    )
+
+                ]),
             ]),
-        ]),
+        ])
     ])
 ])
 
