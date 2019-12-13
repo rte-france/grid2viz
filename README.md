@@ -52,5 +52,6 @@ In the config.ini of this repo, change the `base_dir` option to your root_dir of
 Changing this file will require a restart of the server to update.
 
 To launch the server :
-- Set the environment variable `FLASK_APP=/paht/to/src/index.py`
-- In the grid2viz folder, run `pipenv run ./src/index.py`'
+- Set the environment variable `export FLASK_APP=/path/to/src/index.py`
+- In the grid2viz folder, run `pipenv shell`'
+- Run `flask run`
