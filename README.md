@@ -51,8 +51,6 @@ Each of the scenario_* files have to contain all files given by serialisation of
 In the config.ini of this repo, change the `base_dir` option to your root_dir of data, and pick a `scenario` and `agent_ref` to visualize.
 Changing this file will require a restart of the server to update.
 
-To launch the development server, run `index.py` :
-
-`$ cd Grid2Viz`
-
-`.../Grid2Viz$ pipenv run ./src/index.py`
+To launch the server :
+- Set the environment variable `FLASK_APP=/paht/to/src/index.py`
+- In the grid2viz folder, run `pipenv run ./src/index.py`'
