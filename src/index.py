@@ -70,6 +70,11 @@ def display_page(pathname):
 def update_ref_agent_label(agent):
     return agent
 
+@app.callback(Output("study_ag_lbl", "children"),
+              [Input("agent_log_selector", "value")])
+def update_study_agent_label(agent):
+    return agent
+
 
 server = app.server
 if __name__ == "__main__":
