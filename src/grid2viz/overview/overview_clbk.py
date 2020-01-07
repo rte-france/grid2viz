@@ -26,7 +26,7 @@ def update_ts_graph_avail_assets(kind):
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in episode.load_names]
+                   for load_name in [*episode.load_names, 'total']]
         value = episode.load_names[0]
 
     return options, value
@@ -68,7 +68,7 @@ def load_summary_data(equipments, children, figure, kind):
 )
 def update_select_loads(children):
     return [
-        {'label': load, "value": load} for load in observation_model.episode.load_names
+        {'label': load, "value": load} for load in [*observation_model.episode.load_names, 'total']
     ]
 
 

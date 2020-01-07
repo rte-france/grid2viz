@@ -44,7 +44,6 @@ def get_total_overflow_trace(episode):
 
 
 def get_prod_share_trace():
-
     prod_type_values = list(prod_types.values()) if len(prod_types.values()) > 0 else []
 
     share_prod = get_prod()
@@ -146,7 +145,18 @@ def get_prod_trace_per_equipment(equipments):
 
 
 def get_load_trace_per_equipment(equipements):
-    return get_df_trace_per_equipment(get_load(equipements))
+    load_equipments = get_load(equipements)
+
+    if 'total' in equipements:
+        load_equipments = load_equipments.append(pd.DataFrame({
+            'equipement_id': ['nan' for i in episode.load.groupby('timestep').size()],
+            'equipment_name': ['total' for i in episode.load.groupby('timestep').size()],
+            'timestamp': [timestamp for timestamp in episode.load['timestamp'].unique()],
+            'timestep': [timestep for timestep in episode.load['timestep'].unique()],
+            'value': [value for value in episode.load.groupby('timestep')['value'].sum()]
+        }))
+
+    return get_df_trace_per_equipment(load_equipments)
 
 
 def get_usage_rate_trace(episode):
