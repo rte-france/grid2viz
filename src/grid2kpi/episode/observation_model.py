@@ -118,13 +118,21 @@ def get_usage_rate(episode):
 
 
 def get_hazard_trace(equipments=None):
-    ts_hazards_by_line = env_actions(
-        episode, which="hazards", kind="ts", aggr=False)
+    ts_hazards_by_line = env_actions(episode, which="hazards", kind="ts", aggr=False)
     if equipments is not None:
         ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
-    trace = [go.Scatter(x=ts_hazards_by_line.index, y=ts_hazards_by_line[line],
-                        name=line)
-             for line in ts_hazards_by_line.columns]
+
+    if 'total' in equipments:
+        ts_hazards_by_line = ts_hazards_by_line.assign(
+            total=episode.hazards.groupby('timestamp', as_index=True)['value'].sum()
+        )
+
+    trace = [go.Scatter(
+            x=ts_hazards_by_line.index,
+            y=ts_hazards_by_line[line],
+            name=line)
+        for line in ts_hazards_by_line.columns]
+
     return trace
 
 

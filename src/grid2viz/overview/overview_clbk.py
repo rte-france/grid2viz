@@ -17,7 +17,7 @@ from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_re
 def update_ts_graph_avail_assets(kind):
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in episode.line_names], episode.line_names[0]
+                          for line_name in [*episode.line_names, 'total']], episode.line_names[0]
     elif kind == 'Production':
         options = [{'label': prod_name,
                     'value': prod_name}
