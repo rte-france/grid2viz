@@ -44,11 +44,14 @@ def get_total_overflow_trace(episode):
 
 
 def get_prod_share_trace():
+
+    prod_type_values = list(prod_types.values()) if len(prod_types.values()) > 0 else []
+
     share_prod = get_prod()
     df = share_prod.groupby("equipment_name")["value"].sum()
-    unique_prod_types = np.unique(list(prod_types.values()))
+    unique_prod_types = np.unique(prod_type_values)
 
-    labels = [*df.index.values, *np.unique(list(prod_types.values()))]
+    labels = [*df.index.values, *np.unique(prod_type_values)]
 
     parents = [prod_types.get(name) for name in df.index.values]
     values = list(df)
