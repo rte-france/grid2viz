@@ -61,6 +61,7 @@ def get_prod_share_trace():
             if prod_types.get(gen) == prod_type:
                 value = value + df.get(gen)
         values.append(value)
+
     return [
         go.Sunburst(labels=labels,
                     values=values,
@@ -128,9 +129,9 @@ def get_hazard_trace(equipments=None):
         )
 
     trace = [go.Scatter(
-            x=ts_hazards_by_line.index,
-            y=ts_hazards_by_line[line],
-            name=line)
+        x=ts_hazards_by_line.index,
+        y=ts_hazards_by_line[line],
+        name=line)
         for line in ts_hazards_by_line.columns]
 
     return trace
@@ -155,20 +156,36 @@ def get_maintenance_trace(equipments=None):
     return trace
 
 
-def get_prod_trace_per_equipment(equipments):
-    return get_df_trace_per_equipment(get_prod(equipments))
+def get_all_prod_trace(selection):
+    prod_with_type = get_prod().assign(
+        prod_type=[prod_types.get(equipment_name) for equipment_name in get_prod()['equipment_name']]
+    )
+    prod_type_names = prod_types.values()
+    prod_type_trace = []
+    for name in prod_type_names:
+        if name in selection:
+            prod_type_trace.append(go.Scatter(
+                x=prod_with_type[prod_with_type.prod_type.values == name]['timestamp'],
+                y=prod_with_type[prod_with_type.prod_type.values == name].groupby(['timestamp'])['value'].sum(),
+                name=name
+            ))
+            selection.remove(name)  # remove prod type from selection to avoid misscomprehension in get_def_trace_per_equipment()
+
+    return [*prod_type_trace, *get_df_trace_per_equipment(get_prod(selection))]
+
 
 
 def get_load_trace_per_equipment(equipements):
+    all_equipements = get_load()
     load_equipments = get_load(equipements)
 
     if 'total' in equipements:
         load_equipments = load_equipments.append(pd.DataFrame({
-            'equipement_id': ['nan' for i in episode.load.groupby('timestep').size()],
-            'equipment_name': ['total' for i in episode.load.groupby('timestep').size()],
-            'timestamp': [timestamp for timestamp in episode.load['timestamp'].unique()],
-            'timestep': [timestep for timestep in episode.load['timestep'].unique()],
-            'value': [value for value in episode.load.groupby('timestep')['value'].sum()]
+            'equipement_id': ['nan' for i in all_equipements.groupby('timestep').size()],
+            'equipment_name': ['total' for i in all_equipements.groupby('timestep').size()],
+            'timestamp': [timestamp for timestamp in all_equipements['timestamp'].unique()],
+            'timestep': [timestep for timestep in all_equipements['timestep'].unique()],
+            'value': [value for value in all_equipements.groupby('timestep')['value'].sum()]
         }))
 
     return get_df_trace_per_equipment(load_equipments)
