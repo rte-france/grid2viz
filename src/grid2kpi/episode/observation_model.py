@@ -177,10 +177,10 @@ def get_all_prod_trace(selection):
                 y=prod_with_type[prod_with_type.prod_type.values == name].groupby(['timestamp'])['value'].sum(),
                 name=name
             ))
-            selection.remove(name)  # remove prod type from selection to avoid misscomprehension in get_def_trace_per_equipment()
+            selection.remove(
+                name)  # remove prod type from selection to avoid misunderstanding in get_def_trace_per_equipment()
 
     return [*trace, *get_df_trace_per_equipment(get_prod(selection))]
-
 
 
 def get_load_trace_per_equipment(equipements):
@@ -280,10 +280,18 @@ def init_table_inspection_data():
     return table
 
 
-def get_df_rewards_trace(episode):
+def get_ref_agent_rewards_trace(ref_episode):
+    return get_df_rewards_trace(ref_episode, "ref_rewards", "ref_cum_rewards")
+
+
+def get_studied_agent_reward_trace(studied_episode):
+    return get_df_rewards_trace(studied_episode, "studied_rewards", "studied_cum_rewards")
+
+
+def get_df_rewards_trace(episode, reward_line_title="rewards", cum_line_title="cum_rewards"):
     trace = []
     df = get_df_computed_reward(episode)
-    trace.append(go.Scatter(x=df["timestep"], y=df["rewards"], name="rewards"))
+    trace.append(go.Scatter(x=df["timestep"], y=df["rewards"], name=reward_line_title))
     trace.append(go.Scatter(
-        x=df["timestep"], y=df["cum_rewards"], name="cum_rewards", yaxis='y2'))
+        x=df["timestep"], y=df["cum_rewards"], name=cum_line_title, yaxis='y2'))
     return trace

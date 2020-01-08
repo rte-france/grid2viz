@@ -13,9 +13,11 @@ from src.grid2kpi.episode import actions_model
     [State("cumulated_rewards_timeserie", "figure")]
 )
 def load_reward_data_scatter(cur_agent_log, figure):
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
-    figure['data'] = observation_model.get_df_rewards_trace(
-        new_episode)
+    ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(episode)
+    studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
+        make_episode(base_dir, cur_agent_log, indx))
+
+    figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace]
     figure['layout'] = {**figure['layout'],
                         'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
