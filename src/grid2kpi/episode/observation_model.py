@@ -139,8 +139,15 @@ def get_hazard_trace(equipments=None):
 def get_maintenance_trace(equipments=None):
     ts_maintenances_by_line = env_actions(
         episode, which="maintenances", kind="ts", aggr=False)
+
     if equipments is not None:
         ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
+
+    if 'total' in equipments:
+        ts_maintenances_by_line = ts_maintenances_by_line.assign(
+            total=episode.maintenances.groupby('timestamp', as_index=True)['value'].sum()
+        )
+
     trace = [go.Scatter(x=ts_maintenances_by_line.index,
                         y=ts_maintenances_by_line[line],
                         name=line)
