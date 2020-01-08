@@ -21,7 +21,7 @@ def update_ts_graph_avail_assets(kind):
     elif kind == 'Production':
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in [*episode.prod_names, *prod_types.values()]]
+                   for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
         value = episode.prod_names[0]
     else:
         options = [{'label': load_name,
