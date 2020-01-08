@@ -161,17 +161,25 @@ def get_all_prod_trace(selection):
         prod_type=[prod_types.get(equipment_name) for equipment_name in get_prod()['equipment_name']]
     )
     prod_type_names = prod_types.values()
-    prod_type_trace = []
+    trace = []
+    if 'total' in selection:
+        trace.append(
+            go.Scatter(
+                x=prod_with_type['timestamp'].unique(),
+                y=prod_with_type.groupby('timestamp')['value'].sum(),
+                name='total'
+            )
+        )
     for name in prod_type_names:
         if name in selection:
-            prod_type_trace.append(go.Scatter(
-                x=prod_with_type[prod_with_type.prod_type.values == name]['timestamp'],
+            trace.append(go.Scatter(
+                x=prod_with_type[prod_with_type.prod_type.values == name]['timestamp'].unique(),
                 y=prod_with_type[prod_with_type.prod_type.values == name].groupby(['timestamp'])['value'].sum(),
                 name=name
             ))
             selection.remove(name)  # remove prod type from selection to avoid misscomprehension in get_def_trace_per_equipment()
 
-    return [*prod_type_trace, *get_df_trace_per_equipment(get_prod(selection))]
+    return [*trace, *get_df_trace_per_equipment(get_prod(selection))]
 
 
 
