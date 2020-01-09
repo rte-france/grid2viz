@@ -122,7 +122,13 @@ def update_actions_graph(cur_agent_log, figure):
                    y=actions_ts["Nb Actions"], name=cur_agent_log),
         go.Scatter(x=ref_agent_actions_ts.index,
                    y=ref_agent_actions_ts["Nb Actions"], name=agent_ref),
+        go.Scatter(x=actions_ts.index,
+                   y=new_episode.action_data["distance"], name=cur_agent_log + " distance", yaxis='y2'),
+        go.Scatter(x=ref_agent_actions_ts.index,
+                   y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
+    figure['layout'] = {**figure['layout'],
+                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
 
 
