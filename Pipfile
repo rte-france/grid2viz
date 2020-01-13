@@ -16,6 +16,7 @@ jupyter = "*"
 matplotlib = "*"
 pylint = "*"
 dash-antd-components = {path = "./dash_antd_components-0.0.1.tar.gz"}
+tqdm = "*"
 
 [requires]
 python_version = "3.7"

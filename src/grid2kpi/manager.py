@@ -46,13 +46,14 @@ scenarios = set(scenarios)
 prod_types = {}
 try:
     prod_types_file = parser.get("DEFAULT", "prod_types")
-    with open(base_dir + prod_types_file) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=",")
-        line = 0
-        for row in csv_reader:
-            if line == 0:
-                line = line + 1
-            else:
-                prod_types[row[1]] = row[2]
+    if prod_types_file is not None:
+        with open(base_dir + prod_types_file) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=",")
+            line = 0
+            for row in csv_reader:
+                if line == 0:
+                    line = line + 1
+                else:
+                    prod_types[row[1]] = row[2]
 except configparser.NoOptionError:
     pass  # ignoring this error
