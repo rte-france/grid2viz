@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.grid2kpi.episode import observation_model, env_actions, profiles_traces
-from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
+from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
 
 
 @app.callback(
@@ -17,16 +17,16 @@ from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_re
 def update_ts_graph_avail_assets(kind):
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in episode.line_names], episode.line_names[0]
+                          for line_name in [*episode.line_names, 'total']], episode.line_names[0]
     elif kind == 'Production':
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in episode.prod_names]
+                   for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
         value = episode.prod_names[0]
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in episode.load_names]
+                   for load_name in [*episode.load_names, 'total']]
         value = episode.load_names[0]
 
     return options, value
@@ -48,7 +48,7 @@ def load_summary_data(equipments, children, figure, kind):
         figure["data"] = observation_model.get_load_trace_per_equipment(
             equipments)
     if kind == "Production":
-        figure["data"] = observation_model.get_prod_trace_per_equipment(
+        figure["data"] = observation_model.get_all_prod_trace(
             equipments
         )
     if kind == "Hazards":
@@ -68,7 +68,7 @@ def load_summary_data(equipments, children, figure, kind):
 )
 def update_select_loads(children):
     return [
-        {'label': load, "value": load} for load in observation_model.episode.load_names
+        {'label': load, "value": load} for load in [*observation_model.episode.load_names, 'total']
     ]
 
 
