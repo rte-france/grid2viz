@@ -1,10 +1,12 @@
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from src.app import app
 import plotly.graph_objects as go
 
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
 from src.grid2kpi.episode import observation_model
 from src.grid2kpi.episode import actions_model
+from src.grid2viz.utils.graph_utils import get_axis_relayout
 
 
 @app.callback(
@@ -13,7 +15,8 @@ from src.grid2kpi.episode import actions_model
     [State("cumulated_rewards_timeserie", "figure")]
 )
 def load_reward_data_scatter(cur_agent_log, figure):
-    ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(episode)
+    ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
+        episode)
     studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
         make_episode(base_dir, cur_agent_log, indx))
 
@@ -95,11 +98,19 @@ def update_agent_log(value):
 @app.callback(
     [Output("overflow_graph_study", "figure"), Output(
         "usage_rate_graph_study", "figure")],
-    [Input('store', 'cur_agent_log')],
+    [Input('store', 'cur_agent_log'),
+     Input('cumulated_rewards_timeserie', 'relayoutData')],
     [State("overflow_graph_study", "figure"),
      State("usage_rate_graph_study", "figure")]
 )
-def update_agent_log_graph(cur_agent_log, figure_overflow, figure_usage):
+def update_agent_log_graph(cur_agent_log, relayout_data, figure_overflow, figure_usage):
+    if relayout_data is not None and relayout_data != {'autosize': True}:
+        layout_usage = figure_usage["layout"]
+        new_axis_layout = get_axis_relayout(figure_usage, relayout_data)
+        if new_axis_layout is not None:
+            layout_usage.update(new_axis_layout)
+            figure_overflow["layout"].update(new_axis_layout)
+            return figure_overflow, figure_usage
     new_episode = make_episode(base_dir, cur_agent_log, indx)
     figure_overflow["data"] = observation_model.get_total_overflow_trace(
         new_episode)
@@ -109,16 +120,26 @@ def update_agent_log_graph(cur_agent_log, figure_overflow, figure_usage):
 
 @app.callback(
     Output("action_timeserie", "figure"),
-    [Input('store', 'cur_agent_log')],
+    [Input('store', 'cur_agent_log'),
+     Input('cumulated_rewards_timeserie', 'relayoutData')],
     [State("action_timeserie", "figure")]
 )
-def update_actions_graph(cur_agent_log, figure):
+def update_actions_graph(cur_agent_log, relayout_data, figure):
+    if relayout_data is not None and relayout_data != {'autosize': True}:
+        layout = figure["layout"]
+        new_axis_layout = get_axis_relayout(figure, relayout_data)
+        if new_axis_layout is not None:
+            layout.update(new_axis_layout)
+            return figure
+
     new_episode = make_episode(base_dir, cur_agent_log, indx)
-    actions_ts = new_episode.action_data[['action_line', 'action_subs']].sum(
-        axis=1).to_frame(name="Nb Actions")
+    actions_ts = new_episode.action_data.set_index("timestamp")[[
+        'action_line', 'action_subs'
+    ]].sum(axis=1).to_frame(name="Nb Actions")
     ref_episode = make_episode(base_dir, agent_ref, indx)
-    ref_agent_actions_ts = ref_episode.action_data[['action_line', 'action_subs']].sum(
-        axis=1).to_frame(name="Nb Actions")
+    ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
+        'action_line', 'action_subs'
+    ]].sum(axis=1).to_frame(name="Nb Actions")
     figure["data"] = [
         go.Scatter(x=actions_ts.index,
                    y=actions_ts["Nb Actions"], name=cur_agent_log),
@@ -133,7 +154,6 @@ def update_actions_graph(cur_agent_log, figure):
      Output("inspector_datable", "data")],
     [Input('store', 'cur_agent_log')],
     [State("inspector_datable", "data")]
-
 )
 def update_agent_log_action_table(cur_agent_log, data):
     new_episode = make_episode(base_dir, cur_agent_log, indx)
