@@ -141,11 +141,17 @@ def update_actions_graph(cur_agent_log, relayout_data, figure):
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
     figure["data"] = [
-        go.Scatter(x=actions_ts.index,
+        go.Scatter(x=new_episode.action_data.timestamp,
                    y=actions_ts["Nb Actions"], name=cur_agent_log),
-        go.Scatter(x=ref_agent_actions_ts.index,
+        go.Scatter(x=new_episode.action_data.timestamp,
                    y=ref_agent_actions_ts["Nb Actions"], name=agent_ref),
+        go.Scatter(x=new_episode.action_data.timestamp,
+                   y=new_episode.action_data["distance"], name=cur_agent_log + " distance", yaxis='y2'),
+        go.Scatter(x=new_episode.action_data.timestamp,
+                   y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
+    figure['layout'] = {**figure['layout'],
+                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
 
 
@@ -157,7 +163,7 @@ def update_actions_graph(cur_agent_log, relayout_data, figure):
 )
 def update_agent_log_action_table(cur_agent_log, data):
     new_episode = make_episode(base_dir, cur_agent_log, indx)
-    table = new_episode.action_data
+    table = actions_model.get_action_table_data(new_episode)
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
 
 
@@ -170,7 +176,7 @@ def update_agent_log_action_table(cur_agent_log, data):
 )
 def update_agent_log_action_graphs(cur_agent_log, figure_sub, figure_switch_line):
     new_episode = make_episode(base_dir, cur_agent_log, indx)
-    figure_sub["data"] = actions_model.get_action_set_topo_trace(new_episode)
+    figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     # figure_line["data"] = actions_model.get_action_set_line_trace(new_episode)
     # figure_bus["data"] = actions_model.get_action_change_bus_trace(new_episode)
     figure_switch_line["data"] = actions_model.get_action_switch_line_trace(
