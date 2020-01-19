@@ -65,21 +65,16 @@ def load_summary_data(equipments, children, relayout_data_store, figure, kind):
         return figure
     if isinstance(equipments, str):
         equipments = [equipments]  # to make pd.series.isin() work
+
     if kind == "Load":
-        figure["data"] = observation_model.get_load_trace_per_equipment(
-            equipments)
+        figure["data"] = observation_model.get_load_trace_per_equipment(equipments)
     if kind == "Production":
-        figure["data"] = observation_model.get_all_prod_trace(
-            equipments
-        )
+        figure["data"] = observation_model.get_all_prod_trace(equipments)
     if kind == "Hazards":
-        figure["data"] = observation_model.get_hazard_trace(
-            equipments
-        )
+        figure["data"] = observation_model.get_hazard_trace(equipments)
     if kind == "Maintenances":
-        figure["data"] = observation_model.get_maintenance_trace(
-            equipments
-        )
+        figure["data"] = observation_model.get_maintenance_trace(equipments)
+
     return figure
 
 
@@ -220,7 +215,3 @@ def update_production_share_graph(children, figure):
 def update_date_range(children):
     return observation_model.episode.production["timestamp"].dt.date.values[0], \
         observation_model.episode.production["timestamp"].dt.date.values[-1]
-
-
-def load_ref_agent_data():
-    pass

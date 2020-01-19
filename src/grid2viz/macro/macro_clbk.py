@@ -13,6 +13,10 @@ from src.grid2kpi.episode.maintenances import (
     nb_maintenances, duration_maintenances, hist_duration_maintenances)
 
 
+# TODO add contant color code for ref and studied agent
+# studied_color = {'primary': #color, 'secondary': #color}
+# ref_color = {'primary': #color, 'secondary': #color}
+
 @app.callback(
     Output("cumulated_rewards_timeserie", "figure"),
     [Input('store', 'cur_agent_log'),
@@ -166,11 +170,16 @@ def update_actions_graph(cur_agent_log, relayout_data_store, figure):
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
+    ref_action_details = action_tooltip(ref_episode.actions)
+    new_action_details = action_tooltip(new_episode.actions)
     figure["data"] = [
         go.Scatter(x=new_episode.action_data.timestamp,
-                   y=actions_ts["Nb Actions"], name=cur_agent_log),
+                   y=actions_ts["Nb Actions"], name=cur_agent_log,
+                   text=new_action_details),
         go.Scatter(x=new_episode.action_data.timestamp,
-                   y=ref_agent_actions_ts["Nb Actions"], name=agent_ref),
+                   y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
+                   text=ref_action_details),
+
         go.Scatter(x=new_episode.action_data.timestamp,
                    y=new_episode.action_data["distance"], name=cur_agent_log + " distance", yaxis='y2'),
         go.Scatter(x=new_episode.action_data.timestamp,
@@ -179,6 +188,66 @@ def update_actions_graph(cur_agent_log, relayout_data_store, figure):
     figure['layout'] = {**figure['layout'],
                         'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
+
+
+def action_tooltip(episode_actions):
+    tooltip = []
+    no_action_text = 'Do nothing'
+
+    for action in episode_actions:
+        impact_on_action = []
+        detail = action.impact_on_objects()
+
+        if detail['has_impact']:
+            if detail['injection']['changed']:
+                for injection in detail:
+                    impact_on_action.append('\n injection set {} to {}'.format(
+                        injection['set'], injection['to']))
+
+            if detail['force_line']['changed']:
+                reconnections_count = detail['force_line']['reconnections']['count']
+                if reconnections_count > 0:
+                    impact_on_action.append('\n force reconnection of {} powerlines'
+                                            .format(reconnections_count))
+
+                disconnections_count = detail['force_line']['disconnections']['count']
+                if disconnections_count > 0:
+                    impact_on_action.append('\n force disconnection of {} powerlines'
+                                            .format(disconnections_count))
+
+            if detail['switch_line']['changed']:
+                impact_on_action.append('switch status of {} powerlines'
+                                        .format(detail['switch_line']['count']))
+
+            if detail['topology']['changed']:
+                bus_switchs = detail['topology']['bus_switch']
+                assigned_bus = detail['topology']['assigned_bus']
+                disconnected_bus = detail['topology']['disconnect_bus']
+
+                if len(bus_switchs) > 0:
+                    for bus_switch in bus_switchs:
+                        impact_on_action.append('\n switch bus of {} {} on substation {}'
+                                                .format(bus_switch['object_type'],
+                                                        bus_switch['object_id'],
+                                                        bus_switch['substation']))
+                if len(assigned_bus) > 0:
+                    for assigned in assigned_bus:
+                        impact_on_action.append('\n assign bus {} to {} {} on substation {}'
+                                                .format(assigned['bus'], assigned['object_type'],
+                                                        assigned['object_id'], assigned['substation']))
+                if len(disconnected_bus) > 0:
+                    for disconnected in disconnected_bus:
+                        impact_on_action.append('\n disconnect bus {} {} on substation {}'
+                                                .format(disconnected['object_type'],
+                                                        disconnected['object_id'],
+                                                        disconnected['substation']))
+
+            tooltip.append(''.join(impact_on_action))
+
+        else:
+            tooltip.append(no_action_text)
+
+    return tooltip
 
 
 @app.callback(
