@@ -2,6 +2,21 @@ from grid2op.Episode import Episode
 import os
 import configparser
 import csv
+import pandas as pd
+
+# TEMPORARY: should be moved to a proper class
+
+
+def get_total_overflow_ts(episode):
+    df = pd.DataFrame(index=range(len(episode.observations)),
+                      columns=["time", "value"])
+    for (time_step, obs) in enumerate(episode.observations):
+        tstamp = episode.timestamp(obs)
+        print(tstamp)
+        tstamp = episode.timestamps[time_step]
+        df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
+    return df
+
 
 store = {}
 
@@ -15,6 +30,11 @@ def make_episode(base_dir, agent, indx):
         path, indx
     )
     store[id] = episode_loaded
+
+    # TEMPORARY: should be moved to a proper class
+    setattr(episode_loaded, "total_overflow_ts",
+            get_total_overflow_ts(episode_loaded))
+
     return episode_loaded
 
 

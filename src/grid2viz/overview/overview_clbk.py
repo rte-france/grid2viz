@@ -5,8 +5,21 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode import observation_model, env_actions, profiles_traces
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
+from src.grid2kpi.episode.maintenances import duration_maintenances, nb_maintenances
+
+
+@app.callback(
+    Output("relayoutStoreOverview", "data"),
+    [Input("input_env_charts", "relayoutData"),
+     Input("usage_rate_graph", "relayoutData"),
+     Input("overflow_graph", "relayoutData")],
+    [State("relayoutStoreOverview", "data")]
+)
+def relayout_store_overview(*args):
+    return relayout_callback(*args)
 
 
 @app.callback(
@@ -35,11 +48,19 @@ def update_ts_graph_avail_assets(kind):
 @app.callback(
     Output("input_env_charts", "figure"),
     [Input("input_assets_selector", "value"),
-     Input('temporaryid', 'children')],
+     Input('temporaryid', 'children'),
+     Input("relayoutStoreOverview", "data")],
     [State("input_env_charts", "figure"),
      State("scen_overview_ts_switch", "value")]
 )
-def load_summary_data(equipments, children, figure, kind):
+def load_summary_data(equipments, children, relayout_data_store, figure, kind):
+    if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        relayout_data = relayout_data_store["relayout_data"]
+        layout = figure["layout"]
+        new_axis_layout = get_axis_relayout(figure, relayout_data)
+        if new_axis_layout is not None:
+            layout.update(new_axis_layout)
+            return figure
     if kind is None:
         return figure
     if isinstance(equipments, str):
@@ -127,7 +148,7 @@ def update_card_step(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_maintenance(children):
-    return env_actions(observation_model.episode, which="hazards", kind="nb", aggr=True)
+    return nb_maintenances(observation_model.episode)
 
 
 @app.callback(
@@ -135,15 +156,32 @@ def update_card_maintenance(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_hazard(children):
-    return env_actions(observation_model.episode, which="maintenances", kind="nb", aggr=True)
+    return env_actions(observation_model.episode, which="hazards", kind="nb", aggr=True)
+
+
+@app.callback(
+    Output("duration_maintenance_card", "children"),
+    [Input('temporaryid', 'children')]
+)
+def update_card_duration_maintenances(children):
+    return duration_maintenances(observation_model.episode)
 
 
 @app.callback(
     [Output("overflow_graph", "figure"), Output("usage_rate_graph", "figure")],
-    [Input('input_agent_selector', 'value')],
+    [Input('input_agent_selector', 'value'),
+     Input("relayoutStoreOverview", "data")],
     [State("overflow_graph", "figure"), State("usage_rate_graph", "figure")]
 )
-def update_agent_ref_graph(value, figure_overflow, figure_usage):
+def update_agent_ref_graph(value, relayout_data_store, figure_overflow, figure_usage):
+    if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        relayout_data = relayout_data_store["relayout_data"]
+        layout_usage = figure_usage["layout"]
+        new_axis_layout = get_axis_relayout(figure_usage, relayout_data)
+        if new_axis_layout is not None:
+            layout_usage.update(new_axis_layout)
+            figure_overflow["layout"].update(new_axis_layout)
+            return figure_overflow, figure_usage
     if value == agent_ref:
         new_episode = episode
     else:

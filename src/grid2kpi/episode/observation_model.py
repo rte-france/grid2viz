@@ -25,17 +25,8 @@ def get_episode_active_consumption_ts():
     return [sum(obs.load_p) for obs in episode.observations]
 
 
-def get_total_overflow_ts(episode):
-    df = pd.DataFrame(index=range(len(episode.observations)),
-                      columns=["time", "value"])
-    for (time_step, obs) in enumerate(episode.observations):
-        tstamp = episode.timestamp(obs)
-        df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
-    return df
-
-
 def get_total_overflow_trace(episode):
-    df = get_total_overflow_ts(episode)
+    df = episode.total_overflow_ts
     return [go.Scatter(
         x=df["time"],
         y=df["value"],
@@ -44,7 +35,8 @@ def get_total_overflow_trace(episode):
 
 
 def get_prod_share_trace():
-    prod_type_values = list(prod_types.values()) if len(prod_types.values()) > 0 else []
+    prod_type_values = list(prod_types.values()) if len(
+        prod_types.values()) > 0 else []
 
     share_prod = get_prod()
     df = share_prod.groupby("equipment_name")["value"].sum()
@@ -119,13 +111,15 @@ def get_usage_rate(episode):
 
 
 def get_hazard_trace(equipments=None):
-    ts_hazards_by_line = env_actions(episode, which="hazards", kind="ts", aggr=False)
+    ts_hazards_by_line = env_actions(
+        episode, which="hazards", kind="ts", aggr=False)
     if equipments is not None:
         ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
 
     if 'total' in equipments:
         ts_hazards_by_line = ts_hazards_by_line.assign(
-            total=episode.hazards.groupby('timestamp', as_index=True)['value'].sum()
+            total=episode.hazards.groupby('timestamp', as_index=True)[
+                'value'].sum()
         )
 
     trace = [go.Scatter(
@@ -146,7 +140,8 @@ def get_maintenance_trace(equipments=None):
 
     if 'total' in equipments:
         ts_maintenances_by_line = ts_maintenances_by_line.assign(
-            total=episode.maintenances.groupby('timestamp', as_index=True)['value'].sum()
+            total=episode.maintenances.groupby(
+                'timestamp', as_index=True)['value'].sum()
         )
 
     trace = [go.Scatter(x=ts_maintenances_by_line.index,
@@ -158,7 +153,8 @@ def get_maintenance_trace(equipments=None):
 
 def get_all_prod_trace(selection):
     prod_with_type = get_prod().assign(
-        prod_type=[prod_types.get(equipment_name) for equipment_name in get_prod()['equipment_name']]
+        prod_type=[prod_types.get(equipment_name)
+                   for equipment_name in get_prod()['equipment_name']]
     )
     prod_type_names = prod_types.values()
     trace = []
@@ -173,8 +169,10 @@ def get_all_prod_trace(selection):
     for name in prod_type_names:
         if name in selection:
             trace.append(go.Scatter(
-                x=prod_with_type[prod_with_type.prod_type.values == name]['timestamp'].unique(),
-                y=prod_with_type[prod_with_type.prod_type.values == name].groupby(['timestamp'])['value'].sum(),
+                x=prod_with_type[prod_with_type.prod_type.values ==
+                                 name]['timestamp'].unique(),
+                y=prod_with_type[prod_with_type.prod_type.values == name].groupby(['timestamp'])[
+                    'value'].sum(),
                 name=name
             ))
             selection.remove(
@@ -291,7 +289,8 @@ def get_studied_agent_reward_trace(studied_episode):
 def get_df_rewards_trace(episode, reward_line_title="rewards", cum_line_title="cum_rewards"):
     trace = []
     df = get_df_computed_reward(episode)
-    trace.append(go.Scatter(x=df["timestep"], y=df["rewards"], name=reward_line_title))
+    trace.append(go.Scatter(x=df["timestep"],
+                            y=df["rewards"], name=reward_line_title))
     trace.append(go.Scatter(
         x=df["timestep"], y=df["cum_rewards"], name=cum_line_title, yaxis='y2'))
     return trace

@@ -26,22 +26,27 @@ indicator_line = html.Div(className="lineBlock card", children=[
                 value=agent_ref,
                 placeholder="Agent log"
             ),
-
-            html.Div(className="m-2", children=[
-                html.P(id="indicator_score_output",
-                       className="border-bottom h3 mb-0 text-right", children="NaN"),
-                html.P(className="text-muted", children="Score")
-            ]),
-            html.Div(className="m-2", children=[
-                html.P(id="indicator_nb_overflow",
-                       className="border-bottom h3 mb-0 text-right", children="NaN"),
-                html.P(className="text-muted", children="Number of Overflow")
-            ]),
-            html.Div(className="m-2", children=[
-                html.P(id="indicator_nb_action",
-                       className="border-bottom h3 mb-0 text-right", children="NaN"),
-                html.P(className="text-muted ", children="Number of Action")
-            ])
+            dcc.Loading(
+                [
+                    html.Div(className="m-2", children=[
+                        html.P(id="indicator_score_output",
+                               className="border-bottom h3 mb-0 text-right", children="NaN"),
+                        html.P(className="text-muted", children="Score")
+                    ]),
+                    html.Div(className="m-2", children=[
+                        html.P(id="indicator_nb_overflow",
+                               className="border-bottom h3 mb-0 text-right", children="NaN"),
+                        html.P(className="text-muted",
+                               children="Number of Overflow")
+                    ]),
+                    html.Div(className="m-2", children=[
+                        html.P(id="indicator_nb_action",
+                               className="border-bottom h3 mb-0 text-right", children="NaN"),
+                        html.P(className="text-muted ",
+                               children="Number of Action")
+                    ])
+                ]
+            )
         ]),
 
         html.Div(className="col-xl-3", children=[
@@ -62,6 +67,7 @@ indicator_line = html.Div(className="lineBlock card", children=[
             html.H6(className="text-center",
                     children="Action Maintenance Duration"),
             dcc.Loading(dcc.Graph(
+                id="maintenance_duration",
                 figure=go.Figure(
                     layout=layout_def,
                     data=[dict(type="bar")]
@@ -162,7 +168,13 @@ inspector_line = html.Div(className="lineBlock card ", children=[
                     'max-width': '100%',
                     'height': '200px'
                 },
-            )]),
+            ),
+        ]),
+        html.Label(className="col",
+                   children=[
+                       'The documentation for the filtering syntax can be found ',
+                       html.A('here.', href='https://dash.plot.ly/datatable/filtering',
+                              target="_blank")]),
         html.Div(className="col-xl-12 row", children=[
             html.Div(className="col", children=[
                 html.H6(className="text-center",
@@ -197,6 +209,7 @@ inspector_line = html.Div(className="lineBlock card ", children=[
 ])
 
 layout = html.Div(id="overview_page", children=[
+    dcc.Store(id='relayoutStoreMacro'),
     indicator_line,
     overview_line,
     inspector_line

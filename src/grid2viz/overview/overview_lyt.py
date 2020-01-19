@@ -72,7 +72,7 @@ indicators_line = html.Div(id="temporaryid", children=[
                 html.P(className="text-muted", children="Maintenances")
             ]),
             html.Div(className="mb-4", children=[
-                html.P(id="indicator_score_output", className="border-bottom h3 mb-0 text-right",
+                html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
                        children="NaN"),
                 html.P(className="text-muted",
                        children="Duration of Maintenances")
@@ -106,15 +106,11 @@ summary_line = html.Div(children=[
                 mode='multiple',
                 showArrow=True
             ),
-            dcc.Loading(
-                id="overview_ts_loading",
-                children=dcc.Graph(id='input_env_charts',
-                                   style={'margin-top': '1em'},
-                                   figure=go.Figure(
-                                       layout=layout_def
-                                   ),
-                                   config=dict(displayModeBar=False)
-                                   )
+            dcc.Graph(
+                id='input_env_charts',
+                style={'margin-top': '1em'},
+                figure=go.Figure(layout=layout_def),
+                config=dict(displayModeBar=False)
             ),
 
         ], className="col-xl-5"),
@@ -183,12 +179,20 @@ ref_agent_line = html.Div(children=[
                 page_action="native",
                 page_current=0,
                 page_size=20,
-            )
+            ),
+            html.Label(
+                # className="col row",
+                children=[
+                    'The documentation for the filtering syntax can be found ',
+                    html.A('here.', href='https://dash.plot.ly/datatable/filtering',
+                           target="_blank")]
+            ),
         ], className="col-xl-10")
     ], className="col-xl-10 p-2")
 ], className="lineBlock card")
 
 layout = html.Div(id="overview_page", children=[
+    dcc.Store(id="relayoutStoreOverview"),
     indicators_line,
     summary_line,
     ref_agent_line

@@ -1,20 +1,34 @@
+from collections import Counter
+
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from src.app import app
 import plotly.graph_objects as go
 
+from src.app import app
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
 from src.grid2kpi.episode import observation_model
 from src.grid2kpi.episode import actions_model
-from src.grid2viz.utils.graph_utils import get_axis_relayout
+from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
+from src.grid2kpi.episode.maintenances import (
+    nb_maintenances, duration_maintenances, hist_duration_maintenances)
 
 
 @app.callback(
     Output("cumulated_rewards_timeserie", "figure"),
-    [Input('store', 'cur_agent_log')],
+    [Input('store', 'cur_agent_log'),
+     Input('relayoutStoreMacro', 'data')],
     [State("cumulated_rewards_timeserie", "figure")]
 )
-def load_reward_data_scatter(cur_agent_log, figure):
+def load_reward_data_scatter(cur_agent_log, relayout_data_store, figure):
+
+    if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        relayout_data = relayout_data_store["relayout_data"]
+        layout = figure["layout"]
+        new_axis_layout = get_axis_relayout(figure, relayout_data)
+        if new_axis_layout is not None:
+            layout.update(new_axis_layout)
+            return figure
+
     ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
         episode)
     studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
@@ -31,12 +45,25 @@ def load_reward_data_scatter(cur_agent_log, figure):
     [Input('store', 'cur_agent_log')],
     [State("agent_study_pie_chart", "figure")]
 )
-def load_reward_data_scatter(cur_agent_log, figure):
+def load_pie_chart(cur_agent_log, figure):
     new_episode = make_episode(base_dir, cur_agent_log, indx)
     nb_actions = new_episode.action_data[['action_line', 'action_subs']].sum()
     figure['data'] = [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
         values=[nb_actions["action_line"], nb_actions["action_subs"]]
+    )]
+    return figure
+
+
+@app.callback(
+    Output("maintenance_duration", "figure"),
+    [Input('store', 'cur_agent_log')],
+    [State("maintenance_duration", "figure")]
+)
+def maintenance_duration_hist(cur_agent_log, figure):
+    new_episode = make_episode(base_dir, cur_agent_log, indx)
+    figure['data'] = [go.Histogram(
+        x=hist_duration_maintenances(new_episode)
     )]
     return figure
 
@@ -56,17 +83,15 @@ def add_timestamp(clickData, data):
 
 
 @app.callback(
-    [Output("usage_rate_graph_study", "relayoutData"),
-     Output("action_timeserie", "relayoutData"),
-     Output("overflow_graph_study", "relayoutData"), ],
-    [Input("cumulated_rewards_timeserie", "relayoutData")]
+    Output("relayoutStoreMacro", "data"),
+    [Input("usage_rate_graph_study", "relayoutData"),
+     Input("action_timeserie", "relayoutData"),
+     Input("overflow_graph_study", "relayoutData"),
+     Input("cumulated_rewards_timeserie", "relayoutData")],
+    [State("relayoutStoreMacro", "data")]
 )
-def relayout_graphs(relayout_data):
-    # filter out the second yaxis
-    relayout_other_figures = {
-        key: value for key, value in relayout_data.items() if "2" not in key}
-
-    return relayout_other_figures, relayout_other_figures, relayout_other_figures
+def relayout_store(*args):
+    return relayout_callback(*args)
 
 
 @app.callback(
@@ -78,8 +103,7 @@ def relayout_graphs(relayout_data):
 def update_nbs(cur_agent_log):
     new_episode = make_episode(base_dir, cur_agent_log, indx)
     score = new_episode.meta["cumulative_reward"]
-    nb_overflow = observation_model.get_total_overflow_ts(new_episode)[
-        "value"].sum()
+    nb_overflow = new_episode.total_overflow_ts["value"].sum()
     nb_action = new_episode.action_data[['action_line', 'action_subs']].sum(
         axis=1).sum()
     return round(score), nb_overflow, nb_action
@@ -99,12 +123,13 @@ def update_agent_log(value):
     [Output("overflow_graph_study", "figure"), Output(
         "usage_rate_graph_study", "figure")],
     [Input('store', 'cur_agent_log'),
-     Input('cumulated_rewards_timeserie', 'relayoutData')],
+     Input('relayoutStoreMacro', 'data')],
     [State("overflow_graph_study", "figure"),
      State("usage_rate_graph_study", "figure")]
 )
-def update_agent_log_graph(cur_agent_log, relayout_data, figure_overflow, figure_usage):
-    if relayout_data is not None and relayout_data != {'autosize': True}:
+def update_agent_log_graph(cur_agent_log, relayout_data_store, figure_overflow, figure_usage):
+    if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        relayout_data = relayout_data_store["relayout_data"]
         layout_usage = figure_usage["layout"]
         new_axis_layout = get_axis_relayout(figure_usage, relayout_data)
         if new_axis_layout is not None:
@@ -121,11 +146,12 @@ def update_agent_log_graph(cur_agent_log, relayout_data, figure_overflow, figure
 @app.callback(
     Output("action_timeserie", "figure"),
     [Input('store', 'cur_agent_log'),
-     Input('cumulated_rewards_timeserie', 'relayoutData')],
+     Input('relayoutStoreMacro', 'data')],
     [State("action_timeserie", "figure")]
 )
-def update_actions_graph(cur_agent_log, relayout_data, figure):
-    if relayout_data is not None and relayout_data != {'autosize': True}:
+def update_actions_graph(cur_agent_log, relayout_data_store, figure):
+    if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
         new_axis_layout = get_axis_relayout(figure, relayout_data)
         if new_axis_layout is not None:
