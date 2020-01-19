@@ -1,6 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_antd_components as dac
+import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
@@ -16,8 +17,32 @@ layout_def = {
 indicator_line = html.Div(className="lineBlock card", children=[
     html.H4("Indicators"),
     html.Div(className="card-body row", children=[
-
-        html.Div(className="col-xl-6", children=[
+        html.Div(
+            className="col-xl-2",
+            children=[
+                dt.DataTable(
+                    id="timeseries_table_micro",
+                    columns=[{"name": "Timestamps", "id": "Timestamps"}],
+                    style_as_list_view=True,
+                    row_deletable=False,
+                    filter_action="native",
+                    sort_action="native"
+                ),
+                dbc.Button(
+                    id="enlarge_left",
+                    children="+5 left",
+                    color="primary",
+                    className="mr-1"
+                ),
+                dbc.Button(
+                    id="enlarge_right",
+                    children="+5 right",
+                    color="primary",
+                    className="mr-1"
+                )
+            ]
+        ),
+        html.Div(className="col-xl-5", children=[
             html.H6(className="text-center",
                     children="Rewards instant + cumulated for 2 agent"),
             dcc.Loading(
@@ -29,10 +54,9 @@ indicator_line = html.Div(className="lineBlock card", children=[
                     )
                 )
             )
-
         ]),
 
-        html.Div(className="col-xl-6", children=[
+        html.Div(className="col-xl-5", children=[
             html.H6(className="text-center",
                     children="Actions"),
             dcc.Loading(
@@ -138,6 +162,7 @@ all_info_line = html.Div(className="lineBlock card ", children=[
 ])
 
 layout = html.Div(id="micro_page", children=[
+    dcc.Store(id="relayoutStoreMicro"),
     indicator_line,
     flux_inspector_line,
     context_inspector_line,
