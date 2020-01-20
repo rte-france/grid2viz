@@ -81,73 +81,78 @@ indicators_line = html.Div(id="temporaryid", children=[
     ], className="card-body row"),
 ], className="lineBlock card")
 
-summary_line = html.Div(children=[
-    html.H4("Summary"),
-    html.Div(children=[
-        html.Div(children=[
-            html.H5("Environments Time Series"),
-            dac.Radio(options=[
-                {'label': 'Load', "value": "Load"},
-                {'label': 'Production', "value": "Production"},
-                {'label': 'Hazards', "value": "Hazards"},
-                {'label': 'Maintenances', "value": "Maintenances"},
-            ],
-                value="Load",
-                # name="scen_overview_ts_switch",
-                id="scen_overview_ts_switch",
-                buttonStyle="solid"
-            ),
-            dac.Select(
-                id='input_assets_selector',
-                options=[{'label': load_name,
-                          'value': load_name}
-                         for load_name in episode.load_names],
-                value=episode.load_names[0],
-                mode='multiple',
-                showArrow=True
-            ),
-            dcc.Graph(
-                id='input_env_charts',
-                style={'margin-top': '1em'},
-                figure=go.Figure(layout=layout_def),
-                config=dict(displayModeBar=False)
-            ),
 
-        ], className="col-xl-5"),
-
+def summary_line(ref_agent=agent_ref):
+    return html.Div(children=[
+        html.H4("Summary"),
         html.Div(children=[
-            html.H5("OverFlow and Usage rate"),
-            dcc.Dropdown(
-                id="input_agent_selector", placeholder="select a ref agent",
-                options=[{'label': agent, 'value': agent} for agent in agents],
-                value=agent_ref
-            ),
             html.Div(children=[
-                dcc.Graph(
-                    id='usage_rate_graph',
-                    className="col-6",
-                    style={'margin-top': '1em'},
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=observation_model.get_usage_rate_trace(episode)
-                    ),
-                    config=dict(displayModeBar=False)
+                html.H5("Environments Time Series"),
+                dac.Radio(options=[
+                    {'label': 'Load', "value": "Load"},
+                    {'label': 'Production', "value": "Production"},
+                    {'label': 'Hazards', "value": "Hazards"},
+                    {'label': 'Maintenances', "value": "Maintenances"},
+                ],
+                    value="Load",
+                    # name="scen_overview_ts_switch",
+                    id="scen_overview_ts_switch",
+                    buttonStyle="solid"
+                ),
+                dac.Select(
+                    id='input_assets_selector',
+                    options=[{'label': load_name,
+                              'value': load_name}
+                             for load_name in episode.load_names],
+                    value=episode.load_names[0],
+                    mode='multiple',
+                    showArrow=True
                 ),
                 dcc.Graph(
-                    id='overflow_graph',
-                    className="col-6",
+                    id='input_env_charts',
                     style={'margin-top': '1em'},
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=observation_model.get_total_overflow_trace(
-                            episode)
-                    ),
+                    figure=go.Figure(layout=layout_def),
                     config=dict(displayModeBar=False)
                 ),
-            ], className="row"),
-        ], className="col-xl-6"),
-    ], className="card-body row"),
-], className="lineBlock card")
+
+            ], className="col-xl-5"),
+
+            html.Div(children=[
+                html.H5("OverFlow and Usage rate"),
+                dcc.Dropdown(
+                    id="input_agent_selector", placeholder="select a ref agent",
+                    options=[{'label': agent, 'value': agent}
+                             for agent in agents],
+                    value=ref_agent
+                ),
+                html.Div(children=[
+                    dcc.Graph(
+                        id='usage_rate_graph',
+                        className="col-6",
+                        style={'margin-top': '1em'},
+                        figure=go.Figure(
+                            layout=layout_def,
+                            data=observation_model.get_usage_rate_trace(
+                                episode)
+                        ),
+                        config=dict(displayModeBar=False)
+                    ),
+                    dcc.Graph(
+                        id='overflow_graph',
+                        className="col-6",
+                        style={'margin-top': '1em'},
+                        figure=go.Figure(
+                            layout=layout_def,
+                            data=observation_model.get_total_overflow_trace(
+                                episode)
+                        ),
+                        config=dict(displayModeBar=False)
+                    ),
+                ], className="row"),
+            ], className="col-xl-6"),
+        ], className="card-body row"),
+    ], className="lineBlock card")
+
 
 ref_agent_line = html.Div(children=[
     html.H4("Inspector"),
@@ -191,13 +196,11 @@ ref_agent_line = html.Div(children=[
     ], className="col-xl-10 p-2")
 ], className="lineBlock card")
 
-layout = html.Div(id="overview_page", children=[
-    dcc.Store(id="relayoutStoreOverview"),
-    indicators_line,
-    summary_line,
-    ref_agent_line
-])
 
-
-def get_layout():
-    return layout
+def layout(ref_agent=agent_ref):
+    return html.Div(id="overview_page", children=[
+        dcc.Store(id="relayoutStoreOverview"),
+        indicators_line,
+        summary_line(ref_agent),
+        ref_agent_line
+    ])

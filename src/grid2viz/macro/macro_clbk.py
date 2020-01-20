@@ -19,11 +19,11 @@ from src.grid2kpi.episode.maintenances import (
 
 @app.callback(
     Output("cumulated_rewards_timeserie", "figure"),
-    [Input('store', 'cur_agent_log'),
+    [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
     [State("cumulated_rewards_timeserie", "figure")]
 )
-def load_reward_data_scatter(cur_agent_log, relayout_data_store, figure):
+def load_reward_data_scatter(study_agent, relayout_data_store, figure):
 
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
@@ -36,7 +36,7 @@ def load_reward_data_scatter(cur_agent_log, relayout_data_store, figure):
     ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
         episode)
     studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
-        make_episode(base_dir, cur_agent_log, indx))
+        make_episode(base_dir, study_agent, indx))
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace]
     figure['layout'] = {**figure['layout'],
@@ -46,11 +46,11 @@ def load_reward_data_scatter(cur_agent_log, relayout_data_store, figure):
 
 @app.callback(
     Output("agent_study_pie_chart", "figure"),
-    [Input('store', 'cur_agent_log')],
+    [Input('agent_study', 'data')],
     [State("agent_study_pie_chart", "figure")]
 )
-def load_pie_chart(cur_agent_log, figure):
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+def load_pie_chart(study_agent, figure):
+    new_episode = make_episode(base_dir, study_agent, indx)
     nb_actions = new_episode.action_data[['action_line', 'action_subs']].sum()
     figure['data'] = [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
@@ -61,11 +61,11 @@ def load_pie_chart(cur_agent_log, figure):
 
 @app.callback(
     Output("maintenance_duration", "figure"),
-    [Input('store', 'cur_agent_log')],
+    [Input('agent_study', 'data')],
     [State("maintenance_duration", "figure")]
 )
-def maintenance_duration_hist(cur_agent_log, figure):
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+def maintenance_duration_hist(study_agent, figure):
+    new_episode = make_episode(base_dir, study_agent, indx)
     figure['data'] = [go.Histogram(
         x=hist_duration_maintenances(new_episode)
     )]
@@ -102,10 +102,10 @@ def relayout_store(*args):
     [Output("indicator_score_output", "children"),
      Output("indicator_nb_overflow", "children"),
      Output("indicator_nb_action", "children")],
-    [Input('store', 'cur_agent_log')]
+    [Input('agent_study', 'data')]
 )
-def update_nbs(cur_agent_log):
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+def update_nbs(study_agent):
+    new_episode = make_episode(base_dir, study_agent, indx)
     score = new_episode.meta["cumulative_reward"]
     nb_overflow = new_episode.total_overflow_ts["value"].sum()
     nb_action = new_episode.action_data[['action_line', 'action_subs']].sum(
@@ -114,24 +114,22 @@ def update_nbs(cur_agent_log):
 
 
 @app.callback(
-    Output("store", "cur_agent_log"),
+    Output("agent_study", "data"),
     [Input('agent_log_selector', 'value')],
 )
-def update_agent_log(value):
-    # hack to make sure the episode is loaded before all other callbcks descending agent_log_selector
-    episode = make_episode(base_dir, value, indx)
-    return value
+def update_study_agent(study_agent):
+    return study_agent
 
 
 @app.callback(
     [Output("overflow_graph_study", "figure"), Output(
         "usage_rate_graph_study", "figure")],
-    [Input('store', 'cur_agent_log'),
+    [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
     [State("overflow_graph_study", "figure"),
      State("usage_rate_graph_study", "figure")]
 )
-def update_agent_log_graph(cur_agent_log, relayout_data_store, figure_overflow, figure_usage):
+def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, figure_usage):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout_usage = figure_usage["layout"]
@@ -140,7 +138,7 @@ def update_agent_log_graph(cur_agent_log, relayout_data_store, figure_overflow, 
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+    new_episode = make_episode(base_dir, study_agent, indx)
     figure_overflow["data"] = observation_model.get_total_overflow_trace(
         new_episode)
     figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
@@ -149,11 +147,11 @@ def update_agent_log_graph(cur_agent_log, relayout_data_store, figure_overflow, 
 
 @app.callback(
     Output("action_timeserie", "figure"),
-    [Input('store', 'cur_agent_log'),
+    [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
     [State("action_timeserie", "figure")]
 )
-def update_actions_graph(cur_agent_log, relayout_data_store, figure):
+def update_actions_graph(study_agent, relayout_data_store, figure):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -162,7 +160,7 @@ def update_actions_graph(cur_agent_log, relayout_data_store, figure):
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+    new_episode = make_episode(base_dir, study_agent, indx)
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -174,14 +172,14 @@ def update_actions_graph(cur_agent_log, relayout_data_store, figure):
     new_action_details = action_tooltip(new_episode.actions)
     figure["data"] = [
         go.Scatter(x=new_episode.action_data.timestamp,
-                   y=actions_ts["Nb Actions"], name=cur_agent_log,
+                   y=actions_ts["Nb Actions"], name=study_agent,
                    text=new_action_details),
         go.Scatter(x=new_episode.action_data.timestamp,
                    y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
                    text=ref_action_details),
 
         go.Scatter(x=new_episode.action_data.timestamp,
-                   y=new_episode.action_data["distance"], name=cur_agent_log + " distance", yaxis='y2'),
+                   y=new_episode.action_data["distance"], name=study_agent + " distance", yaxis='y2'),
         go.Scatter(x=new_episode.action_data.timestamp,
                    y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
@@ -193,7 +191,7 @@ def update_actions_graph(cur_agent_log, relayout_data_store, figure):
 def action_tooltip(episode_actions):
     tooltip = []
     actions_impact = [action.impact_on_objects() for action in episode_actions]
-    
+
     for action in actions_impact:
         if action['has_impact']:
             impact_detail = []
@@ -204,7 +202,8 @@ def action_tooltip(episode_actions):
 
             if injection['changed']:
                 for detail in injection['impacted']:
-                    impact_detail.append(" injection set {} to {} <br>".format(detail['set'], detail['to']))
+                    impact_detail.append(" injection set {} to {} <br>".format(
+                        detail['set'], detail['to']))
 
             if force_line['changed']:
                 reconnections = force_line['reconnections']
@@ -252,11 +251,11 @@ def action_tooltip(episode_actions):
 @app.callback(
     [Output("inspector_datable", "columns"),
      Output("inspector_datable", "data")],
-    [Input('store', 'cur_agent_log')],
+    [Input('agent_study', 'data')],
     [State("inspector_datable", "data")]
 )
-def update_agent_log_action_table(cur_agent_log, data):
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+def update_agent_log_action_table(study_agent, data):
+    new_episode = make_episode(base_dir, study_agent, indx)
     table = actions_model.get_action_table_data(new_episode)
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
 
@@ -264,12 +263,12 @@ def update_agent_log_action_table(cur_agent_log, data):
 @app.callback(
     [Output("distribution_substation_action_chart", "figure"),
      Output("distribution_line_action_chart", "figure")],
-    [Input('store', 'cur_agent_log')],
+    [Input('agent_study', 'data')],
     [State("distribution_substation_action_chart", "figure"),
      State("distribution_line_action_chart", "figure")]
 )
-def update_agent_log_action_graphs(cur_agent_log, figure_sub, figure_switch_line):
-    new_episode = make_episode(base_dir, cur_agent_log, indx)
+def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
+    new_episode = make_episode(base_dir, study_agent, indx)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     # figure_line["data"] = actions_model.get_action_set_line_trace(new_episode)
     # figure_bus["data"] = actions_model.get_action_change_bus_trace(new_episode)

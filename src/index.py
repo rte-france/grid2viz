@@ -1,7 +1,7 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
@@ -44,21 +44,30 @@ body = html.Div([
 ])
 
 app.layout = html.Div([
-    dcc.Store(id="store"),
+    dcc.Store(id="agent_ref", storage_type='memory'),
+    dcc.Store(id="agent_study", storage_type='memory'),
     navbar,
     body
 ])
 
 
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
-def display_page(pathname):
+@app.callback(
+    Output('page-content', 'children'),
+    [Input('url', 'pathname')],
+    [State("agent_ref", "data"),
+     State("agent_study", "data")]
+)
+def display_page(pathname, ref_agent, study_agent):
+    if ref_agent is None:
+        ref_agent = agent_ref
+    if study_agent is None:
+        study_agent = agent_ref
     if pathname == "/episodes":
         return episodes_lyt
     elif pathname == "/overview" or pathname == "/":
-        return overview_lyt()
+        return overview_lyt(ref_agent)
     elif pathname == "/macro":
-        return macro_lyt
+        return macro_lyt(study_agent)
     elif pathname == "/micro":
         return micro_lyt
     else:
@@ -66,12 +75,12 @@ def display_page(pathname):
 
 
 @app.callback(Output("ref_ag_lbl", "children"),
-              [Input("input_agent_selector", "value")])
+              [Input("agent_ref", "data")])
 def update_ref_agent_label(agent):
     return agent
 
 @app.callback(Output("study_ag_lbl", "children"),
-              [Input("agent_log_selector", "value")])
+              [Input("agent_study", "data")])
 def update_study_agent_label(agent):
     return agent
 

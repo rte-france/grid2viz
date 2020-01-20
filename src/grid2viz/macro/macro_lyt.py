@@ -12,67 +12,71 @@ layout_def = {
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
 }
 
-indicator_line = html.Div(className="lineBlock card", children=[
-    html.H4("Indicators"),
-    html.Div(className="card-body row", children=[
 
-        html.Div(className="col-xl-2", children=[
-            dcc.Dropdown(
-                id='agent_log_selector',
-                options=[{'label': agent, 'value': agent} for agent in agents],
-                value=agent_ref,
-                placeholder="Agent log"
-            ),
-            dcc.Loading(
-                [
-                    html.Div(className="m-2", children=[
-                        html.P(id="indicator_score_output",
-                               className="border-bottom h3 mb-0 text-right", children="NaN"),
-                        html.P(className="text-muted", children="Score")
-                    ]),
-                    html.Div(className="m-2", children=[
-                        html.P(id="indicator_nb_overflow",
-                               className="border-bottom h3 mb-0 text-right", children="NaN"),
-                        html.P(className="text-muted",
-                               children="Number of Overflow")
-                    ]),
-                    html.Div(className="m-2", children=[
-                        html.P(id="indicator_nb_action",
-                               className="border-bottom h3 mb-0 text-right", children="NaN"),
-                        html.P(className="text-muted ",
-                               children="Number of Action")
-                    ])
-                ]
-            )
-        ]),
+def indicator_line(study_agent=agent_ref):
+    return html.Div(className="lineBlock card", children=[
+        html.H4("Indicators"),
+        html.Div(className="card-body row", children=[
 
-        html.Div(className="col-xl-3", children=[
-            html.H6(className="text-center",
-                    children="Type Action Repartition"),
-            dcc.Loading(
-                dcc.Graph(
-                    id="agent_study_pie_chart",
-                    figure=go.Figure(
-                        layout=layout_def,
+            html.Div(className="col-xl-2", children=[
+                dcc.Dropdown(
+                    id='agent_log_selector',
+                    options=[{'label': agent, 'value': agent}
+                             for agent in agents],
+                    value=study_agent,
+                    placeholder="Agent log"
+                ),
+                dcc.Loading(
+                    [
+                        html.Div(className="m-2", children=[
+                            html.P(id="indicator_score_output",
+                                   className="border-bottom h3 mb-0 text-right", children="NaN"),
+                            html.P(className="text-muted", children="Score")
+                        ]),
+                        html.Div(className="m-2", children=[
+                            html.P(id="indicator_nb_overflow",
+                                   className="border-bottom h3 mb-0 text-right", children="NaN"),
+                            html.P(className="text-muted",
+                                   children="Number of Overflow")
+                        ]),
+                        html.Div(className="m-2", children=[
+                            html.P(id="indicator_nb_action",
+                                   className="border-bottom h3 mb-0 text-right", children="NaN"),
+                            html.P(className="text-muted ",
+                                   children="Number of Action")
+                        ])
+                    ]
+                )
+            ]),
+
+            html.Div(className="col-xl-3", children=[
+                html.H6(className="text-center",
+                        children="Type Action Repartition"),
+                dcc.Loading(
+                    dcc.Graph(
+                        id="agent_study_pie_chart",
+                        figure=go.Figure(
+                            layout=layout_def,
+                        )
                     )
                 )
-            )
 
+            ]),
+
+            html.Div(className="col-xl-7", children=[
+                html.H6(className="text-center",
+                        children="Action Maintenance Duration"),
+                dcc.Loading(dcc.Graph(
+                    id="maintenance_duration",
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="bar")]
+                    )
+                ))
+            ])
         ]),
+    ])
 
-        html.Div(className="col-xl-7", children=[
-            html.H6(className="text-center",
-                    children="Action Maintenance Duration"),
-            dcc.Loading(dcc.Graph(
-                id="maintenance_duration",
-                figure=go.Figure(
-                    layout=layout_def,
-                    data=[dict(type="bar")]
-                )
-            ))
-        ])
-    ]),
-])
 
 overview_line = html.Div(id="overview_line_id", className="lineBlock card", children=[
     html.H4("Overview"),
@@ -203,9 +207,11 @@ inspector_line = html.Div(className="lineBlock card ", children=[
     ])
 ])
 
-layout = html.Div(id="overview_page", children=[
-    dcc.Store(id='relayoutStoreMacro'),
-    indicator_line,
-    overview_line,
-    inspector_line
-])
+
+def layout(study_agent=agent_ref):
+    return html.Div(id="overview_page", children=[
+        dcc.Store(id='relayoutStoreMacro'),
+        indicator_line(study_agent),
+        overview_line,
+        inspector_line
+    ])
