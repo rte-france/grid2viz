@@ -155,8 +155,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
 inspector_line = html.Div(className="lineBlock card ", children=[
     html.H4("Inspector"),
     html.Div(className="card-body col row", children=[
-
-        html.Div(className="col row", children=[
+        html.Div(className="col", children=[
             dt.DataTable(
                 id="inspector_datable",
                 style_table={
@@ -166,12 +165,11 @@ inspector_line = html.Div(className="lineBlock card ", children=[
                     'height': '200px'
                 },
             ),
+            html.Label(children=[
+                'The documentation for the filtering syntax can be found ',
+                html.A('here.', href='https://dash.plot.ly/datatable/filtering', target="_blank")]),
         ]),
-        html.Label(className="col",
-                   children=[
-                       'The documentation for the filtering syntax can be found ',
-                       html.A('here.', href='https://dash.plot.ly/datatable/filtering',
-                              target="_blank")]),
+
         html.Div(className="col-xl-12 row", children=[
             html.Div(className="col", children=[
                 html.H6(className="text-center",

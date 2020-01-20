@@ -192,60 +192,59 @@ def update_actions_graph(cur_agent_log, relayout_data_store, figure):
 
 def action_tooltip(episode_actions):
     tooltip = []
-    no_action_text = 'Do nothing'
+    actions_impact = [action.impact_on_objects() for action in episode_actions]
+    
+    for action in actions_impact:
+        if action['has_impact']:
+            impact_detail = []
+            injection = action['injection']
+            force_line = action['force_line']
+            switch_line = action['switch_line']
+            topology = action['topology']
 
-    for action in episode_actions:
-        impact_on_action = []
-        detail = action.impact_on_objects()
+            if injection['changed']:
+                for detail in injection['impacted']:
+                    impact_detail.append(" injection set {} to {} <br>".format(detail['set'], detail['to']))
 
-        if detail['has_impact']:
-            if detail['injection']['changed']:
-                for injection in detail:
-                    impact_on_action.append('\n injection set {} to {}'.format(
-                        injection['set'], injection['to']))
+            if force_line['changed']:
+                reconnections = force_line['reconnections']
+                disconnections = force_line['disconnections']
 
-            if detail['force_line']['changed']:
-                reconnections_count = detail['force_line']['reconnections']['count']
-                if reconnections_count > 0:
-                    impact_on_action.append('\n force reconnection of {} powerlines'
-                                            .format(reconnections_count))
+                if reconnections['count'] > 0:
+                    impact_detail.append(" force reconnection of {} powerlines ({}) <br>"
+                                         .format(reconnections['count'], reconnections['powerlines']))
 
-                disconnections_count = detail['force_line']['disconnections']['count']
-                if disconnections_count > 0:
-                    impact_on_action.append('\n force disconnection of {} powerlines'
-                                            .format(disconnections_count))
+                if disconnections['count'] > 0:
+                    impact_detail.append(" force disconnection of {} powerlines ({}) <br>"
+                                         .format(disconnections['count'], disconnections['powerlines']))
 
-            if detail['switch_line']['changed']:
-                impact_on_action.append('switch status of {} powerlines'
-                                        .format(detail['switch_line']['count']))
+            if switch_line['changed']:
+                impact_detail.append(" switch status of {} powerlines ({}) <br>"
+                                     .format(switch_line['count'], switch_line['powerlines']))
 
-            if detail['topology']['changed']:
-                bus_switchs = detail['topology']['bus_switch']
-                assigned_bus = detail['topology']['assigned_bus']
-                disconnected_bus = detail['topology']['disconnect_bus']
+            if topology['changed']:
+                bus_switch = topology['bus_switch']
+                assigned_bus = topology['assigned_bus']
+                disconnected_bus = topology['disconnect_bus']
 
-                if len(bus_switchs) > 0:
-                    for bus_switch in bus_switchs:
-                        impact_on_action.append('\n switch bus of {} {} on substation {}'
-                                                .format(bus_switch['object_type'],
-                                                        bus_switch['object_id'],
-                                                        bus_switch['substation']))
+                if len(bus_switch) > 0:
+                    for switch in bus_switch:
+                        impact_detail.append(" switch bus of {} {} on substation {} <br>"
+                                             .format(switch['object_type'], switch['object_id'],
+                                                     switch['substation']))
                 if len(assigned_bus) > 0:
-                    for assigned in assigned_bus:
-                        impact_on_action.append('\n assign bus {} to {} {} on substation {}'
-                                                .format(assigned['bus'], assigned['object_type'],
-                                                        assigned['object_id'], assigned['substation']))
+                    for assignment in assigned_bus:
+                        impact_detail.append(" assign bus {} to {} {} on substation {} <br>"
+                                             .format(assignment['bus'], assignment['object_type'],
+                                                     assignment['object_id'], assignment['substation']))
                 if len(disconnected_bus) > 0:
-                    for disconnected in disconnected_bus:
-                        impact_on_action.append('\n disconnect bus {} {} on substation {}'
-                                                .format(disconnected['object_type'],
-                                                        disconnected['object_id'],
-                                                        disconnected['substation']))
-
-            tooltip.append(''.join(impact_on_action))
-
+                    for disconnection in disconnected_bus:
+                        impact_detail.append(" disconnect bus {} {} on substation {} <br>"
+                                             .format(disconnection['object_type'], disconnection['object_id'],
+                                                     disconnection['substation']))
+            tooltip.append(''.join(impact_detail))
         else:
-            tooltip.append(no_action_text)
+            tooltip.append('Do nothing')
 
     return tooltip
 
