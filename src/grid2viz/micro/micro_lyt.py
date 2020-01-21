@@ -19,20 +19,7 @@ layout_def = {
 indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", children=[
     html.H4("Indicators"),
     html.Div(className="card-body row", children=[
-        html.Div(
-            className="col-xl-2",
-            children=[
-                dt.DataTable(
-                    id="timeseries_table_micro",
-                    columns=[{"name": "Timestamps", "id": "Timestamps"}],
-                    style_as_list_view=True,
-                    row_deletable=False,
-                    filter_action="native",
-                    sort_action="native"
-                )
-            ]
-        ),
-        html.Div(className="col-xl-5", children=[
+        html.Div(className="col-xl-6", children=[
             html.H6(className="text-center",
                     children="Rewards instant + cumulated for 2 agent"),
             dcc.Loading(
@@ -46,7 +33,7 @@ indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", ch
             )
         ]),
 
-        html.Div(className="col-xl-5", children=[
+        html.Div(className="col-xl-6", children=[
             html.H6(className="text-center",
                     children="Actions"),
             dcc.Loading(
@@ -71,7 +58,7 @@ flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock
 
             dcc.Loading(
                 dcc.Graph(
-                    id="temp_id", #TODO don't forget to rename it
+                    id="temp_id",  # TODO don't forget to rename it
                     figure=go.Figure(
                         layout=layout_def,
                     )
@@ -82,9 +69,9 @@ flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock
             html.H6(className="text-center",
                     children="Title"),
             dac.Radio(options=[
-                    {'label': 'Voltage', "value": "voltage"},
-                    {'label': 'Flow', "value": "flow"},
-                ],
+                {'label': 'Voltage', "value": "voltage"},
+                {'label': 'Flow', "value": "flow"},
+            ],
                 value="voltage",
                 id="voltage_flow_selector",
                 buttonStyle="solid"
@@ -165,7 +152,8 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                     style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=observation_model.get_total_overflow_trace(episode)
+                        data=observation_model.get_total_overflow_trace(
+                            episode)
                     ),
                     config=dict(displayModeBar=False)
                 ),

@@ -1,3 +1,5 @@
+import datetime as dt
+
 from dash.dependencies import Input, Output, State
 from src.app import app
 import pandas as pd
@@ -45,17 +47,21 @@ def load_voltage_flow_line_choice(value):
 )
 def load_flow_voltage_graph(values, figure):
     if values is not None:
-        voltage_ex = pd.DataFrame([obs.v_ex for obs in episode.observations], columns=episode.line_names)
-        voltage_or = pd.DataFrame([obs.v_or for obs in episode.observations], columns=episode.line_names)
+        voltage_ex = pd.DataFrame(
+            [obs.v_ex for obs in episode.observations], columns=episode.line_names)
+        voltage_or = pd.DataFrame(
+            [obs.v_or for obs in episode.observations], columns=episode.line_names)
         traces = []
 
         for value in values:
-            line_side = str(value)[:2]  # the first 2 characters are the side of line ('ex' or 'or')
+            # the first 2 characters are the side of line ('ex' or 'or')
+            line_side = str(value)[:2]
             line_name = str(value)
             if line_side == 'ex':
                 traces.append(go.Scatter(
                     x=episode.timestamps,
-                    y=voltage_ex[line_name[3:]].round(3),  # remove the first 3 char to get the line name and round to 3 decimals
+                    # remove the first 3 char to get the line name and round to 3 decimals
+                    y=voltage_ex[line_name[3:]].round(3),
                     name=line_name)
                 )
             if line_side == 'or':
@@ -116,7 +122,8 @@ def load_context_data(equipments, relayout_data_store, figure, kind):
         equipments = [equipments]  # to make pd.series.isin() work
 
     if kind == "Load":
-        figure["data"] = observation_model.get_load_trace_per_equipment(equipments)
+        figure["data"] = observation_model.get_load_trace_per_equipment(
+            equipments)
     if kind == "Production":
         figure["data"] = observation_model.get_all_prod_trace(equipments)
     if kind == "Hazards":
@@ -130,10 +137,16 @@ def load_context_data(equipments, relayout_data_store, figure, kind):
 @app.callback(
     [Output("overflow_ts", "figure"), Output("usage_rate_ts", "figure")],
     [Input('agent_selector', 'value'),
-     Input("relayoutStoreMicro", "data")],
-    [State("overflow_ts", "figure"), State("usage_rate_ts", "figure")]
+     Input("relayoutStoreMicro", "data"),
+     Input("user_timestamps", "value"),
+     Input("enlarge_left", "n_clicks"),
+     Input("enlarge_right", "n_clicks")],
+    [State("overflow_ts", "figure"),
+     State("usage_rate_ts", "figure")]
 )
-def update_agent_ref_graph(value, relayout_data_store, figure_overflow, figure_usage):
+def update_agent_ref_graph(study_agent, relayout_data_store,
+                           user_selected_timestamp, n_clicks_left, n_clicks_right,
+                           figure_overflow, figure_usage):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout_usage = figure_usage["layout"]
@@ -142,14 +155,35 @@ def update_agent_ref_graph(value, relayout_data_store, figure_overflow, figure_u
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    if value == agent_ref:
+    if study_agent == agent_ref:
         new_episode = episode
     else:
-        new_episode = make_episode(base_dir, value, indx)
+        new_episode = make_episode(base_dir, study_agent, indx)
     figure_overflow["data"] = observation_model.get_total_overflow_trace(
         new_episode)
     figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
+    if user_selected_timestamp is not None:
+        if n_clicks_left is None:
+            n_clicks_left = 0
+        if n_clicks_right is None:
+            n_clicks_right = 0
+        center_indx = new_episode.timestamps.index(
+            dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
+        )
+        timestamp_range = new_episode.timestamps[
+            max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
+        ]
+        xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
+        xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
+        figure_overflow["layout"].update(
+            xaxis=dict(range=[xmin, xmax], autorange=False)
+        )
+        figure_usage["layout"].update(
+            xaxis=dict(range=[xmin, xmax], autorange=False)
+        )
+
     return figure_overflow, figure_usage
+
 
 @app.callback(
     Output("timeseries_table_micro", "data"),

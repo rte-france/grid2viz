@@ -36,9 +36,7 @@ navbar = dbc.Navbar(
             color="dark",
             className="float-left mr-1 hidden"
         ),
-        dcc.Dropdown(id="user_timestamps", options=[{'label': 'labeleeeee', 'value': 'labeleeeee'}],
-                     value='labeleeeee',
-                     className="col-xl-1 hidden",
+        dcc.Dropdown(id="user_timestamps", className="col-xl-1 hidden",
                      style={"width": "200px", "margin-right": "4px"}),
         dbc.Button(
             id="enlarge_right",
@@ -121,6 +119,16 @@ def update_user_timestamps_value(data):
     if not data:
         raise PreventUpdate
     return data[0]["value"]
+
+@app.callback(Output("enlarge_left", "n_clicks"),
+              [Input("user_timestamps", "value")])
+def reset_n_cliks_left(value):
+    return 0
+
+@app.callback(Output("enlarge_right", "n_clicks"),
+              [Input("user_timestamps", "value")])
+def reset_n_cliks_right(value):
+    return 0
 
 @app.callback(Output("enlarge_left", "className"),
               [Input("url", "pathname")])
