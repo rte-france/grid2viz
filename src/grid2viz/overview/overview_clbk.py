@@ -48,12 +48,11 @@ def update_ts_graph_avail_assets(kind):
 @app.callback(
     Output("input_env_charts", "figure"),
     [Input("input_assets_selector", "value"),
-     Input('temporaryid', 'children'),
      Input("relayoutStoreOverview", "data")],
     [State("input_env_charts", "figure"),
      State("scen_overview_ts_switch", "value")]
 )
-def load_summary_data(equipments, children, relayout_data_store, figure, kind):
+def load_summary_data(equipments, relayout_data_store, figure, kind):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]

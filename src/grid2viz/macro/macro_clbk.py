@@ -169,15 +169,13 @@ def update_actions_graph(study_agent, relayout_data_store, figure):
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_action_details = action_tooltip(ref_episode.actions)
-    new_action_details = action_tooltip(new_episode.actions)
     figure["data"] = [
         go.Scatter(x=new_episode.action_data.timestamp,
                    y=actions_ts["Nb Actions"], name=study_agent,
-                   text=new_action_details),
+                   text=action_tooltip(new_episode.actions)),
         go.Scatter(x=new_episode.action_data.timestamp,
                    y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
-                   text=ref_action_details),
+                   text=action_tooltip(ref_episode.actions)),
 
         go.Scatter(x=new_episode.action_data.timestamp,
                    y=new_episode.action_data["distance"], name=study_agent + " distance", yaxis='y2'),
@@ -194,8 +192,8 @@ def action_tooltip(episode_actions):
     actions_impact = [action.impact_on_objects() for action in episode_actions]
 
     for action in actions_impact:
+        impact_detail = []
         if action['has_impact']:
-            impact_detail = []
             injection = action['injection']
             force_line = action['force_line']
             switch_line = action['switch_line']
@@ -203,8 +201,8 @@ def action_tooltip(episode_actions):
 
             if injection['changed']:
                 for detail in injection['impacted']:
-                    impact_detail.append(" injection set {} to {} <br>".format(
-                        detail['set'], detail['to']))
+                    impact_detail.append(" injection set {} to {} <br>"
+                                         .format(detail['set'], detail['to']))
 
             if force_line['changed']:
                 reconnections = force_line['reconnections']
