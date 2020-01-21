@@ -118,6 +118,7 @@ def update_nbs(study_agent):
     [Input('agent_log_selector', 'value')],
 )
 def update_study_agent(study_agent):
+    make_episode(base_dir, study_agent, indx)
     return study_agent
 
 
