@@ -75,7 +75,7 @@ def relayout_callback(*args):
     if len(relayouts_indx) > 2:
         # This should never happen
         print(relayouts_indx)
-        raise Exception("Weird")
+        raise Exception
 
     relayout_data_store["reset_nb"] = new_reset_nb
     relayout_data_store["relayout_history"].append(args[relayouts_indx[0]])

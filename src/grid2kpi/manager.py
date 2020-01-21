@@ -12,7 +12,6 @@ def get_total_overflow_ts(episode):
                       columns=["time", "value"])
     for (time_step, obs) in enumerate(episode.observations):
         tstamp = episode.timestamp(obs)
-        print(tstamp)
         tstamp = episode.timestamps[time_step]
         df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
     return df

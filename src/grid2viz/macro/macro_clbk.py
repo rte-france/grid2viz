@@ -2,6 +2,8 @@ from collections import Counter
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
@@ -33,12 +35,27 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure):
             layout.update(new_axis_layout)
             return figure
 
+    new_episode = make_episode(base_dir, study_agent, indx)
+    actions_ts = new_episode.action_data.set_index("timestamp")[[
+        'action_line', 'action_subs'
+    ]].sum(axis=1).to_frame(name="Nb Actions")
+    df = observation_model.get_df_computed_reward(new_episode)
+    action_events_df = pd.DataFrame(
+        index=df["timestep"], data=np.nan, columns=["action_events"])
+    action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
+        df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
+    action_trace = go.Scatter(
+        x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
+        mode='markers', marker_color='#FFEB3B',
+        marker={"symbol": "hexagon", "size": 10}
+    )
     ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
         episode)
     studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
         make_episode(base_dir, study_agent, indx))
 
-    figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace]
+    figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
+                      action_trace]
     figure['layout'] = {**figure['layout'],
                         'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
@@ -87,6 +104,15 @@ def add_timestamp(clickData, data):
 
 
 @app.callback(
+    Output("user_timestamps_store", "data"),
+    [Input("timeseries_table", "data")]
+)
+def update_user_timestamps_store(timestamps):
+    return [dict(label=timestamp["Timestamps"], value=timestamp["Timestamps"])
+            for timestamp in timestamps]
+
+
+@app.callback(
     Output("relayoutStoreMacro", "data"),
     [Input("usage_rate_graph_study", "relayoutData"),
      Input("action_timeserie", "relayoutData"),
@@ -118,6 +144,7 @@ def update_nbs(study_agent):
     [Input('agent_log_selector', 'value')],
 )
 def update_study_agent(study_agent):
+    new_episode = make_episode(base_dir, study_agent, indx)
     return study_agent
 
 

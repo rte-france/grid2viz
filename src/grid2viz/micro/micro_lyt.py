@@ -27,18 +27,6 @@ indicator_line = html.Div(className="lineBlock card", children=[
                     row_deletable=False,
                     filter_action="native",
                     sort_action="native"
-                ),
-                dbc.Button(
-                    id="enlarge_left",
-                    children="+5 left",
-                    color="primary",
-                    className="mr-1"
-                ),
-                dbc.Button(
-                    id="enlarge_right",
-                    children="+5 right",
-                    color="primary",
-                    className="mr-1"
                 )
             ]
         ),

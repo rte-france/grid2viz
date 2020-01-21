@@ -2,6 +2,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
@@ -29,6 +30,22 @@ navbar = dbc.Navbar(
         html.Div([html.Span("Studied Agent:", className="badge badge-secondary"),
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
+        dbc.Button(
+            id="enlarge_left",
+            children="-5",
+            color="dark",
+            className="float-left mr-1 hidden"
+        ),
+        dcc.Dropdown(id="user_timestamps", options=[{'label': 'labeleeeee', 'value': 'labeleeeee'}],
+                     value='labeleeeee',
+                     className="col-xl-1 hidden",
+                     style={"width": "200px", "margin-right": "4px"}),
+        dbc.Button(
+            id="enlarge_right",
+            children="+5",
+            color="dark",
+            className="float-left hidden"
+        ),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"
         ),
@@ -46,6 +63,7 @@ body = html.Div([
 app.layout = html.Div([
     dcc.Store(id="agent_ref", storage_type='memory'),
     dcc.Store(id="agent_study", storage_type='memory'),
+    dcc.Store(id="user_timestamps_store"),
     navbar,
     body
 ])
@@ -83,6 +101,42 @@ def update_ref_agent_label(agent):
               [Input("agent_study", "data")])
 def update_study_agent_label(agent):
     return agent
+
+@app.callback(Output("user_timestamps", "className"),
+              [Input("url", "pathname")])
+def show_user_timestamps(pathname):
+    class_name = "mr-1"
+    if pathname != "/micro":
+        class_name = " ".join([class_name, "hidden"])
+    return class_name
+
+@app.callback(Output("user_timestamps", "options"),
+              [Input("user_timestamps_store", "data")])
+def update_user_timestamps_options(data):
+    return data
+
+@app.callback(Output("user_timestamps", "value"),
+              [Input("user_timestamps_store", "data")])
+def update_user_timestamps_value(data):
+    if not data:
+        raise PreventUpdate
+    return data[0]["value"]
+
+@app.callback(Output("enlarge_left", "className"),
+              [Input("url", "pathname")])
+def show_minus_five_button(pathname):
+    class_name = "float-left mr-1"
+    if pathname != "/micro":
+        class_name = " ".join([class_name, "hidden"])
+    return class_name
+
+@app.callback(Output("enlarge_right", "className"),
+              [Input("url", "pathname")])
+def show_plus_five_button(pathname):
+    class_name = "float-left"
+    if pathname != "/micro":
+        class_name = " ".join([class_name, "hidden"])
+    return class_name
 
 
 server = app.server
