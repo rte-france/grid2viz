@@ -149,7 +149,7 @@ def summary_line(ref_agent=agent_ref):
                         config=dict(displayModeBar=False)
                     ),
                 ], className="row"),
-            ], className="col-xl-6"),
+            ], className="col-xl-7"),
         ], className="card-body row"),
     ], className="lineBlock card")
 
