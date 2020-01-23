@@ -1,7 +1,13 @@
 import datetime as dt
 
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
+
 from src.app import app
+from src.grid2viz.utils.graph_utils import relayout_callback
+from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
+
+from grid2op.PlotPlotly import PlotObs
 import pandas as pd
 import plotly.graph_objects as go
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
@@ -191,3 +197,28 @@ def update_agent_ref_graph(study_agent, relayout_data_store,
 )
 def sync_timeseries_table(data):
     return data
+
+
+@app.callback(
+    Output("interactive_graph", "figure"),
+    [Input('agent_selector', 'value'),
+     Input("relayoutStoreMicro", "data"),
+     Input("user_timestamps", "value"),
+     Input("enlarge_left", "n_clicks"),
+     Input("enlarge_right", "n_clicks")]
+)
+def update_interactive_graph(study_agent, relayout_data_store,
+                             user_selected_timestamp, n_clicks_left, n_clicks_right):
+    new_episode = make_episode(base_dir, study_agent, indx)
+    # init the plot
+    graph_layout = [(280, -81), (100, -270), (-366, -270), (-366, -54), (64, -54), (64, 54), (-450, 0),
+                    (-550, 0), (-326, 54), (-222, 108), (-79, 162), (170, 270), (64, 270), (-222, 216)]
+    if user_selected_timestamp is not None:
+        plot_helper = PlotObs(substation_layout=graph_layout, observation_space=new_episode.observation_space)
+        center_indx = new_episode.timestamps.index(
+            dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
+        )
+        fig = plot_helper.get_plot_observation(new_episode.observations[center_indx])
+        return fig
+    else:
+        raise PreventUpdate

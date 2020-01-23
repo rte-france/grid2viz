@@ -58,7 +58,7 @@ flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock
 
             dcc.Loading(
                 dcc.Graph(
-                    id="temp_id",  # TODO don't forget to rename it
+                    id="interactive_graph",
                     figure=go.Figure(
                         layout=layout_def,
                     )
