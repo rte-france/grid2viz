@@ -1,9 +1,11 @@
 import datetime as dt
 
 from dash.dependencies import Input, Output, State
-from src.app import app
+from dash.exceptions import PreventUpdate
 import pandas as pd
 import plotly.graph_objects as go
+
+from src.app import app
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode import observation_model, env_actions, profiles_traces
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
@@ -20,14 +22,47 @@ def relayout_store_overview(*args):
     return relayout_callback(*args)
 
 
+@app.callback(
+    Output("window", "data"),
+    [Input("enlarge_left", "n_clicks"),
+     Input("enlarge_right", "n_clicks"),
+     Input("user_timestamps", "value")],
+    [State('agent_selector', 'value')]
+)
+def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
+                   study_agent):
+    if user_selected_timestamp is None:
+        raise PreventUpdate
+    if n_clicks_left is None:
+        n_clicks_left = 0
+    if n_clicks_right is None:
+        n_clicks_right = 0
+    if study_agent == agent_ref:
+        new_episode = episode
+    else:
+        new_episode = make_episode(base_dir, study_agent, indx)
+    center_indx = new_episode.timestamps.index(
+        dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
+    )
+    timestamp_range = new_episode.timestamps[
+        max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
+    ]
+    xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
+    xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
+
+    return (xmin, xmax)
+
+
 # flux line callback
 @app.callback(
     [Output('line_side_choices', 'options'),
      Output('line_side_choices', 'value')],
-    [Input('voltage_flow_selector', 'value')]
+    [Input('voltage_flow_selector', 'value')],
+    [State('agent_selector', 'value')]
 )
-def load_voltage_flow_line_choice(value):
+def load_voltage_flow_line_choice(value, study_agent):
     option = []
+    new_episode = make_episode(base_dir, study_agent, indx)
     for names in episode.line_names:
         option.append({
             'label': 'ex_' + names,
@@ -42,36 +77,42 @@ def load_voltage_flow_line_choice(value):
 
 @app.callback(
     Output('voltage_flow_graph', 'figure'),
-    [Input('line_side_choices', 'value')],
+    [Input('line_side_choices', 'value'),
+     Input("window", "data")],
     [State('voltage_flow_graph', 'figure')]
 )
-def load_flow_voltage_graph(values, figure):
-    if values is not None:
-        voltage_ex = pd.DataFrame(
-            [obs.v_ex for obs in episode.observations], columns=episode.line_names)
-        voltage_or = pd.DataFrame(
-            [obs.v_or for obs in episode.observations], columns=episode.line_names)
-        traces = []
+def load_flow_voltage_graph(values, window, figure):
+    if values is None:
+        raise PreventUpdate
+    voltage_ex = pd.DataFrame(
+        [obs.v_ex for obs in episode.observations], columns=episode.line_names)
+    voltage_or = pd.DataFrame(
+        [obs.v_or for obs in episode.observations], columns=episode.line_names)
+    traces = []
 
-        for value in values:
-            # the first 2 characters are the side of line ('ex' or 'or')
-            line_side = str(value)[:2]
-            line_name = str(value)
-            if line_side == 'ex':
-                traces.append(go.Scatter(
-                    x=episode.timestamps,
-                    # remove the first 3 char to get the line name and round to 3 decimals
-                    y=voltage_ex[line_name[3:]].round(3),
-                    name=line_name)
-                )
-            if line_side == 'or':
-                traces.append(go.Scatter(
-                    x=episode.timestamps,
-                    y=voltage_or[line_name[3:]].round(3),
-                    name=line_name)
-                )
+    for value in values:
+        # the first 2 characters are the side of line ('ex' or 'or')
+        line_side = str(value)[:2]
+        line_name = str(value)
+        if line_side == 'ex':
+            traces.append(go.Scatter(
+                x=episode.timestamps,
+                # remove the first 3 char to get the line name and round to 3 decimals
+                y=voltage_ex[line_name[3:]].round(3),
+                name=line_name)
+            )
+        if line_side == 'or':
+            traces.append(go.Scatter(
+                x=episode.timestamps,
+                y=voltage_or[line_name[3:]].round(3),
+                name=line_name)
+            )
 
-        figure['data'] = traces
+    figure['data'] = traces
+    if window is not None:
+        figure["layout"].update(
+            xaxis=dict(range=window, autorange=False)
+        )
 
     return figure
 
@@ -104,11 +145,12 @@ def update_ts_graph_avail_assets(kind):
 @app.callback(
     Output("env_charts_ts", "figure"),
     [Input("asset_selector", "value"),
-     Input("relayoutStoreMicro", "data")],
+     Input("relayoutStoreMicro", "data"),
+     Input("window", "data")],
     [State("env_charts_ts", "figure"),
      State("environment_choices_buttons", "value")]
 )
-def load_context_data(equipments, relayout_data_store, figure, kind):
+def load_context_data(equipments, relayout_data_store, window, figure, kind):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -131,6 +173,11 @@ def load_context_data(equipments, relayout_data_store, figure, kind):
     if kind == "Maintenances":
         figure["data"] = observation_model.get_maintenance_trace(equipments)
 
+    if window is not None:
+        figure["layout"].update(
+            xaxis=dict(range=window, autorange=False)
+        )
+
     return figure
 
 
@@ -138,14 +185,11 @@ def load_context_data(equipments, relayout_data_store, figure, kind):
     [Output("overflow_ts", "figure"), Output("usage_rate_ts", "figure")],
     [Input('agent_selector', 'value'),
      Input("relayoutStoreMicro", "data"),
-     Input("user_timestamps", "value"),
-     Input("enlarge_left", "n_clicks"),
-     Input("enlarge_right", "n_clicks")],
+     Input("window", "data")],
     [State("overflow_ts", "figure"),
      State("usage_rate_ts", "figure")]
 )
-def update_agent_ref_graph(study_agent, relayout_data_store,
-                           user_selected_timestamp, n_clicks_left, n_clicks_right,
+def update_agent_ref_graph(study_agent, relayout_data_store, window,
                            figure_overflow, figure_usage):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
@@ -162,24 +206,12 @@ def update_agent_ref_graph(study_agent, relayout_data_store,
     figure_overflow["data"] = observation_model.get_total_overflow_trace(
         new_episode)
     figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
-    if user_selected_timestamp is not None:
-        if n_clicks_left is None:
-            n_clicks_left = 0
-        if n_clicks_right is None:
-            n_clicks_right = 0
-        center_indx = new_episode.timestamps.index(
-            dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
-        )
-        timestamp_range = new_episode.timestamps[
-            max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
-        ]
-        xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
-        xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
+    if window is not None:
         figure_overflow["layout"].update(
-            xaxis=dict(range=[xmin, xmax], autorange=False)
+            xaxis=dict(range=window, autorange=False)
         )
         figure_usage["layout"].update(
-            xaxis=dict(range=[xmin, xmax], autorange=False)
+            xaxis=dict(range=window, autorange=False)
         )
 
     return figure_overflow, figure_usage

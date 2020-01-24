@@ -49,7 +49,7 @@ indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", ch
 ])
 
 flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock card", children=[
-    html.H4("Flux"),
+    html.H4("Flow"),
     html.Div(className="card-body row", children=[
 
         html.Div(className="col-xl-4", children=[
@@ -67,7 +67,7 @@ flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock
         ]),
         html.Div(className="col-xl-8", children=[
             html.H6(className="text-center",
-                    children="Title"),
+                    children="Voltage and Flow"),
             dac.Radio(options=[
                 {'label': 'Voltage', "value": "voltage"},
                 {'label': 'Flow', "value": "flow"},
@@ -184,6 +184,7 @@ all_info_line = html.Div(id="all_info_line_id", className="lineBlock card ", chi
 
 layout = html.Div(id="micro_page", children=[
     dcc.Store(id="relayoutStoreMicro"),
+    dcc.Store(id="window"),
     indicator_line,
     flux_inspector_line,
     context_inspector_line,

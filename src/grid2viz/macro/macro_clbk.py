@@ -23,9 +23,10 @@ from src.grid2kpi.episode.maintenances import (
     Output("cumulated_rewards_timeserie", "figure"),
     [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
-    [State("cumulated_rewards_timeserie", "figure")]
+    [State("cumulated_rewards_timeserie", "figure"),
+     State("agent_ref", "data")]
 )
-def load_reward_data_scatter(study_agent, relayout_data_store, figure):
+def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent):
 
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
@@ -36,6 +37,9 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure):
             return figure
 
     new_episode = make_episode(base_dir, study_agent, indx)
+    if ref_agent is None:
+        ref_agent = agent_ref
+    ref_episode = make_episode(base_dir, ref_agent, indx)
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -50,7 +54,7 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure):
         marker={"symbol": "hexagon", "size": 10}
     )
     ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
-        episode)
+        ref_episode)
     studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
         make_episode(base_dir, study_agent, indx))
 
@@ -168,6 +172,9 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
     new_episode = make_episode(base_dir, study_agent, indx)
     figure_overflow["data"] = observation_model.get_total_overflow_trace(
         new_episode)
+    maintenance_trace = observation_model.get_maintenance_trace(["total"])[0]
+    maintenance_trace.update({"name": "Nb of maintenances"})
+    figure_overflow["data"].append(maintenance_trace)
     figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
     return figure_overflow, figure_usage
 

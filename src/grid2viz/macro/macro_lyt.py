@@ -118,7 +118,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
 
                 html.Div(className="col", children=[
                     html.H6(className="text-center",
-                            children="Usage Overflow"),
+                            children="Overflow and Maintenances"),
                     dcc.Graph(
                         id="overflow_graph_study",
                         figure=go.Figure(

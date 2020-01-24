@@ -143,7 +143,7 @@ def update_card_step(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_maintenance(children):
-    return nb_maintenances(observation_model.episode)
+    return env_actions(observation_model.episode, which="maintenances", kind="nb", aggr=True)
 
 
 @app.callback(

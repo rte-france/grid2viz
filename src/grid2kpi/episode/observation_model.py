@@ -113,14 +113,15 @@ def get_usage_rate(episode):
 def get_hazard_trace(equipments=None):
     ts_hazards_by_line = env_actions(
         episode, which="hazards", kind="ts", aggr=False)
-    if equipments is not None:
-        ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
 
     if 'total' in equipments:
         ts_hazards_by_line = ts_hazards_by_line.assign(
             total=episode.hazards.groupby('timestamp', as_index=True)[
                 'value'].sum()
         )
+
+    if equipments is not None:
+        ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
 
     trace = [go.Scatter(
         x=ts_hazards_by_line.index,
@@ -135,14 +136,14 @@ def get_maintenance_trace(equipments=None):
     ts_maintenances_by_line = env_actions(
         episode, which="maintenances", kind="ts", aggr=False)
 
-    if equipments is not None:
-        ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
-
     if 'total' in equipments:
         ts_maintenances_by_line = ts_maintenances_by_line.assign(
             total=episode.maintenances.groupby(
                 'timestamp', as_index=True)['value'].sum()
         )
+
+    if equipments is not None:
+        ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
 
     trace = [go.Scatter(x=ts_maintenances_by_line.index,
                         y=ts_maintenances_by_line[line],
@@ -267,10 +268,8 @@ def get_df_trace_per_equipment(df):
 
 def init_table_inspection_data():
     ts_hazards = env_actions(episode, which="hazards", kind="ts", aggr=True)
-    ts_hazards = ts_hazards.rename(columns={"value": "Hazards"})
     ts_maintenances = env_actions(
         episode, which="maintenances", kind="ts", aggr=True)
-    ts_maintenances = ts_maintenances.rename(columns={"value": "Maintenances"})
     table = ts_hazards.merge(
         ts_maintenances, left_index=True, right_index=True)
     table = table.reset_index()
