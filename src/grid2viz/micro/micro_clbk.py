@@ -65,62 +65,118 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
 def load_voltage_flow_line_choice(value, study_agent):
     option = []
     new_episode = make_episode(base_dir, study_agent, indx)
-    for names in episode.line_names:
-        option.append({
-            'label': 'ex_' + names,
-            'value': 'ex_' + names
-        })
-        option.append({
-            'label': 'or_' + names,
-            'value': 'or_' + names
-        })
+
+    if value == 'voltage':
+        for names in episode.line_names:
+            option.append({
+                'label': 'ex_' + names,
+                'value': 'ex_' + names
+            })
+            option.append({
+                'label': 'or_' + names,
+                'value': 'or_' + names
+            })
+
+    if value == 'flow':
+        for names in episode.line_names:
+            option.append({
+                'label': 'ex_active_' + names,
+                'value': 'ex_active_' + names
+            })
+            option.append({
+                'label': 'ex_reactive_' + names,
+                'value': 'ex_reactive_' + names
+            })
+            option.append({
+                'label': 'ex_current_' + names,
+                'value': 'ex_current_' + names
+            })
+            option.append({
+                'label': 'or_active_' + names,
+                'value': 'or_active_' + names
+            })
+            option.append({
+                'label': 'or_reactive_' + names,
+                'value': 'or_reactive_' + names
+            })
+            option.append({
+                'label': 'or_current_' + names,
+                'value': 'or_current_' + names
+            })
+
     return option, [option[0]['value']]
 
 
 @app.callback(
     Output('voltage_flow_graph', 'figure'),
     [Input('line_side_choices', 'value'),
+     Input('voltage_flow_selector', 'value'),
      Input("window", "data")],
     [State('voltage_flow_graph', 'figure')]
 )
-def load_flow_voltage_graph(values, window, figure):
-    if values is None:
-        raise PreventUpdate
-    voltage_ex = pd.DataFrame(
-        [obs.v_ex for obs in episode.observations], columns=episode.line_names)
-    voltage_or = pd.DataFrame(
-        [obs.v_or for obs in episode.observations], columns=episode.line_names)
+def load_flow_voltage_graph(selected_lines, select_cat, window, figure):
+    if selected_lines is not None:
+        if select_cat == 'voltage':
+            figure['data'] = load_voltage_for_lines(selected_lines)
+        if select_cat == 'flow':
+            figure['data'] = load_flow_for_lines(selected_lines)
+
+    if window is not None:
+        figure["layout"].update(
+            xaxis=dict(range=window, autorange=False)
+        )
+    return figure
+
+
+def load_voltage_for_lines(lines):
+    voltage = episode.flow_and_voltage_line
     traces = []
 
-    for value in values:
+    for value in lines:
         # the first 2 characters are the side of line ('ex' or 'or')
         line_side = str(value)[:2]
         line_name = str(value)
         if line_side == 'ex':
             traces.append(go.Scatter(
                 x=episode.timestamps,
-                # remove the first 3 char to get the line name and round to 3 decimals
-                y=voltage_ex[line_name[3:]].round(3),
+                # remove the first 3 char to get the line name and round to 3 dec
+                y=voltage[line_name[3:]]['ex']['voltage'],
                 name=line_name)
             )
         if line_side == 'or':
             traces.append(go.Scatter(
                 x=episode.timestamps,
-                y=voltage_or[line_name[3:]].round(3),
+                y=voltage[line_name[3:]]['or']['voltage'],
                 name=line_name)
             )
+    return traces
 
-    figure['data'] = traces
-    if window is not None:
-        figure["layout"].update(
-            xaxis=dict(range=window, autorange=False)
-        )
 
-    return figure
+def load_flow_for_lines(lines):
+    flow = episode.flow_and_voltage_line
+    traces = []
+
+    for value in lines:
+        line_side = str(value)[:2]  # the first 2 characters are the side of line ('ex' or 'or')
+        flow_type = str(value)[3:].split('_', 1)[0]  # the type is the 1st part of the string: 'type_name'
+        line_name = str(value)[3:].split('_', 1)[1]  # the name is the 2nd part of the string: 'type_name'
+        x = episode.timestamps
+        if line_side == 'ex':
+            traces.append(go.Scatter(
+                x=x,
+                y=flow[line_name]['ex'][flow_type],
+                name=value)
+            )
+        elif line_side == 'or':
+            traces.append(go.Scatter(
+                x=x,
+                y=flow[line_name]['or'][flow_type],
+                name=value)
+            )
+    return traces
 
 
 # context line callback
-
 @app.callback(
     [Output("asset_selector", "options"),
      Output("asset_selector", "value")],
