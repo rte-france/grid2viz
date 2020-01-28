@@ -69,10 +69,10 @@ flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock
             html.H6(className="text-center",
                     children="Voltage and Flow"),
             dac.Radio(options=[
-                {'label': 'Voltage', "value": "voltage"},
                 {'label': 'Flow', "value": "flow"},
+                {'label': 'Voltage', "value": "voltage"},
             ],
-                value="voltage",
+                value="flow",
                 id="voltage_flow_selector",
                 buttonStyle="solid"
             ),
