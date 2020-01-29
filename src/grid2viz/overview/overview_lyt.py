@@ -62,12 +62,12 @@ indicators_line = html.Div(id="temporaryid", children=[
                 html.P(className="text-muted", children="Steps")
             ]),
             html.Div(className="mb-4", children=[
-                html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
+                html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
                        children=""),
                 html.P(className="text-muted", children="Hazards")
             ]),
             html.Div(className="mb-4", children=[
-                html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
+                html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
                        children=""),
                 html.P(className="text-muted", children="Maintenances")
             ]),
