@@ -18,7 +18,10 @@ from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
     Output("relayoutStoreMicro", "data"),
     [Input("env_charts_ts", "relayoutData"),
      Input("usage_rate_ts", "relayoutData"),
-     Input("overflow_ts", "relayoutData")],
+     Input("overflow_ts", "relayoutData"),
+     Input("cum_instant_reward_ts", "relayoutData"),
+     Input("actions_ts", "relayoutData"),
+     Input("voltage_flow_graph", "relayoutData")],
     [State("relayoutStoreMicro", "data")]
 )
 def relayout_store_overview(*args):
@@ -63,9 +66,13 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
      Input("relayoutStoreMicro", "data"),
      Input("window", "data")],
     [State("cum_instant_reward_ts", "figure"),
-     State("agent_ref", "data")]
+     State("agent_ref", "data"),
+     State("user_timestamps", "value")]
 )
-def load_reward_ts(study_agent, relayout_data_store, window, figure, ref_agent):
+def load_reward_ts(study_agent, relayout_data_store, window, figure, ref_agent, selected_timestamp):
+    if selected_timestamp is None:
+        raise PreventUpdate
+
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -114,9 +121,13 @@ def load_reward_ts(study_agent, relayout_data_store, window, figure, ref_agent):
     [Input('agent_study', 'data'),
      Input('relayoutStoreMicro', 'data'),
      Input("window", "data")],
-    [State("actions_ts", "figure")]
+    [State("actions_ts", "figure"),
+     State("user_timestamps", "value")]
 )
-def load_actions_ts(study_agent, relayout_data_store, window, figure):
+def load_actions_ts(study_agent, relayout_data_store, window, figure, selected_timestamp):
+    if selected_timestamp is None:
+        raise PreventUpdate
+
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
