@@ -18,7 +18,7 @@ def indicator_line(study_agent=agent_ref):
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
 
-            html.Div(className="col-xl-2", children=[
+            html.Div(className="col-2", children=[
                 dcc.Dropdown(
                     id='agent_log_selector',
                     options=[{'label': agent, 'value': agent}
@@ -49,7 +49,7 @@ def indicator_line(study_agent=agent_ref):
                 )
             ]),
 
-            html.Div(className="col-xl-3", children=[
+            html.Div(className="col-3", children=[
                 html.H6(className="text-center",
                         children="Type Action Repartition"),
                 dcc.Loading(
@@ -63,7 +63,7 @@ def indicator_line(study_agent=agent_ref):
 
             ]),
 
-            html.Div(className="col-xl-7", children=[
+            html.Div(className="col-7", children=[
                 html.H6(className="text-center",
                         children="Action Maintenance Duration"),
                 dcc.Loading(dcc.Graph(
@@ -103,7 +103,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
 
         html.Div(className="col-10", children=[
             html.Div(className="row", children=[
-                html.Div(className="col", children=[
+                html.Div(className="col-6", children=[
                     html.H6(className="text-center",
                             children="Instant and Cumulated Reward"),
                     dcc.Graph(
@@ -116,7 +116,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
                     )
                 ]),
 
-                html.Div(className="col", children=[
+                html.Div(className="col-6", children=[
                     html.H6(className="text-center",
                             children="Overflow and Maintenances"),
                     dcc.Graph(
@@ -130,7 +130,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
             ]),
 
             html.Div(className="row", children=[
-                html.Div(className="col", children=[
+                html.Div(className="col-6", children=[
                     html.H6(className="text-center", children="Actions"),
                     dcc.Graph(
                         id="action_timeserie",
@@ -140,7 +140,7 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
                         )
                     )
                 ]),
-                html.Div(className="col", children=[
+                html.Div(className="col-6", children=[
                     html.H6(className="text-center",
                             children="Usage Rate"),
                     dcc.Graph(
@@ -174,7 +174,7 @@ inspector_line = html.Div(className="lineBlock card ", children=[
                 html.A('here.', href='https://dash.plot.ly/datatable/filtering', target="_blank")]),
         ]),
 
-        html.Div(className="col-xl-12 row", children=[
+        html.Div(className="col-12 row", children=[
             html.Div(className="col", children=[
                 html.H6(className="text-center",
                         children="Distribution of Substation action"),
