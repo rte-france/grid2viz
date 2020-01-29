@@ -11,7 +11,6 @@ from src.grid2viz.micro import micro_lyt
 from src.grid2viz.overview import overview_lyt
 from src.grid2kpi.manager import agent_ref, indx
 
-
 nav_items = [
     dbc.NavItem(dbc.NavLink("Scenario Selection", href="/episodes")),
     dbc.NavItem(dbc.NavLink("Scenario Overview", href="/overview")),
@@ -95,10 +94,12 @@ def display_page(pathname, ref_agent, study_agent):
 def update_ref_agent_label(agent):
     return agent
 
+
 @app.callback(Output("study_ag_lbl", "children"),
               [Input("agent_study", "data")])
 def update_study_agent_label(agent):
     return agent
+
 
 @app.callback(Output("user_timestamps", "className"),
               [Input("url", "pathname")])
@@ -108,10 +109,12 @@ def show_user_timestamps(pathname):
         class_name = " ".join([class_name, "hidden"])
     return class_name
 
+
 @app.callback(Output("user_timestamps", "options"),
               [Input("user_timestamps_store", "data")])
 def update_user_timestamps_options(data):
     return data
+
 
 @app.callback(Output("user_timestamps", "value"),
               [Input("user_timestamps_store", "data")])
@@ -120,15 +123,18 @@ def update_user_timestamps_value(data):
         raise PreventUpdate
     return data[0]["value"]
 
+
 @app.callback(Output("enlarge_left", "n_clicks"),
               [Input("user_timestamps", "value")])
 def reset_n_cliks_left(value):
     return 0
 
+
 @app.callback(Output("enlarge_right", "n_clicks"),
               [Input("user_timestamps", "value")])
 def reset_n_cliks_right(value):
     return 0
+
 
 @app.callback(Output("enlarge_left", "className"),
               [Input("url", "pathname")])
@@ -137,6 +143,7 @@ def show_minus_five_button(pathname):
     if pathname != "/micro":
         class_name = " ".join([class_name, "hidden"])
     return class_name
+
 
 @app.callback(Output("enlarge_right", "className"),
               [Input("url", "pathname")])

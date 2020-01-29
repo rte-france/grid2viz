@@ -11,8 +11,7 @@ from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_re
 from src.grid2kpi.episode import observation_model
 from src.grid2kpi.episode import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
-from src.grid2kpi.episode.maintenances import (
-    nb_maintenances, duration_maintenances, hist_duration_maintenances)
+from src.grid2kpi.episode.maintenances import (hist_duration_maintenances)
 
 
 # TODO add contant color code for ref and studied agent
