@@ -75,7 +75,7 @@ indicators_line = html.Div(id="temporaryid", children=[
                 html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
                        children="NaN"),
                 html.P(className="text-muted",
-                       children="Duration of Maintenances")
+                       children="Duration of Maintenances (min)")
             ])
         ], className="col-xl-3 align-self-center")
     ], className="card-body row"),

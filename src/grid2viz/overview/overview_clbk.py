@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode import observation_model, env_actions, profiles_traces
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
-from src.grid2kpi.episode.maintenances import duration_maintenances, nb_maintenances
+from src.grid2kpi.episode.maintenances import duration_maintenances
 
 
 @app.callback(
@@ -159,7 +159,7 @@ def update_card_hazard(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_duration_maintenances(children):
-    return duration_maintenances(observation_model.episode)
+    return observation_model.get_duration_maintenances()
 
 
 @app.callback(

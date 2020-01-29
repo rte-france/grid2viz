@@ -132,6 +132,12 @@ def get_hazard_trace(equipments=None):
     return trace
 
 
+def get_duration_maintenances():
+    timestep_duration = (episode.timestamps[1] - episode.timestamps[0])
+    nb_maintenance = env_actions(episode, which="maintenances", kind="dur", aggr=False).sum()
+    return (timestep_duration * nb_maintenance).total_seconds() / 60.0
+
+
 def get_maintenance_trace(equipments=None):
     ts_maintenances_by_line = env_actions(
         episode, which="maintenances", kind="ts", aggr=False)

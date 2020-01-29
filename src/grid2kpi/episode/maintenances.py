@@ -7,11 +7,10 @@ def nb_maintenances(episode):
     )
 
 
-def duration_maintenances(epsiode):
+def duration_maintenances(episode):
     # Suppose that there is at most one maintenance per line per episode
-
     return sum(
-        t for t in epsiode.observations[0].duration_next_maintenance if t
+        t for t in episode.observations[0].duration_next_maintenance if t
     )
 
 
