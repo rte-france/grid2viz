@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
-from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref
+from src.grid2kpi.manager import make_episode, base_dir, indx
 from src.grid2kpi.episode import observation_model
 from src.grid2kpi.episode import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
@@ -36,8 +36,6 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
             return figure
 
     new_episode = make_episode(base_dir, study_agent, indx)
-    if ref_agent is None:
-        ref_agent = agent_ref
     ref_episode = make_episode(base_dir, ref_agent, indx)
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
@@ -182,9 +180,10 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
     Output("action_timeserie", "figure"),
     [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
-    [State("action_timeserie", "figure")]
+    [State("action_timeserie", "figure"),
+     State("agent_ref", "data")]
 )
-def update_actions_graph(study_agent, relayout_data_store, figure):
+def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]

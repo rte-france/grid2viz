@@ -162,6 +162,12 @@ inspector_line = html.Div(className="lineBlock card ", children=[
         html.Div(className="col", children=[
             dt.DataTable(
                 id="inspector_datable",
+                filter_action="native",
+                sort_action="native",
+                sort_mode="multi",
+                page_action="native",
+                page_current=0,
+                page_size=20,
                 style_table={
                     'overflow': 'auto',
                     'width': '100%',

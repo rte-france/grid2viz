@@ -51,47 +51,50 @@ indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", ch
 flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock card", children=[
     html.H4("Flow"),
     html.Div(className="card-body row", children=[
+        html.Div(className="col", children=[
+            html.Div(className="row", children=[
 
-        html.Div(className="col-xl-4", children=[
-            html.H6(className="text-center",
-                    children="Interactive Graph"),
+                html.Div(className="col", children=[
+                    html.H6(className="text-center",
+                            children="Interactive Graph"),
 
-            dcc.Loading(
-                dcc.Graph(
-                    id="interactive_graph",
-                    figure=go.Figure(
-                        layout=layout_def,
+                    dcc.Loading(
+                        dcc.Graph(
+                            id="interactive_graph"
+                        )
                     )
-                )
-            )
-        ]),
-        html.Div(className="col-xl-8", children=[
-            html.H6(className="text-center",
-                    children="Voltage and Flow"),
-            dac.Radio(options=[
-                {'label': 'Flow', "value": "flow"},
-                {'label': 'Voltage', "value": "voltage"},
-            ],
-                value="flow",
-                id="voltage_flow_selector",
-                buttonStyle="solid"
-            ),
-            dac.Select(
-                id="line_side_choices",
-                options=[],
-                value=[],
-                mode='multiple',
-                showArrow=True
-            ),
-            dcc.Loading(
-                dcc.Graph(
-                    id="voltage_flow_graph",
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=[dict(type="scatter")]
-                    )
-                ))
-        ]),
+                ])
+            ]),
+            html.Div(className="row", children=[
+                html.Div(className="col", children=[
+                    html.H6(className="text-center",
+                            children="Voltage and Flow"),
+                    dac.Radio(options=[
+                        {'label': 'Flow', "value": "flow"},
+                        {'label': 'Voltage', "value": "voltage"},
+                    ],
+                        value="flow",
+                        id="voltage_flow_selector",
+                        buttonStyle="solid"
+                    ),
+                    dac.Select(
+                        id="line_side_choices",
+                        options=[],
+                        value=[],
+                        mode='multiple',
+                        showArrow=True
+                    ),
+                    dcc.Loading(
+                        dcc.Graph(
+                            id="voltage_flow_graph",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
+                        ))
+                ]),
+            ])
+        ])
     ])
 ])
 
