@@ -31,10 +31,10 @@ def relayout_store_overview(*args):
     [Input("enlarge_left", "n_clicks"),
      Input("enlarge_right", "n_clicks"),
      Input("user_timestamps", "value")],
-    [State('agent_study', 'data'), State('agent_ref', 'data')]
+    [State('agent_study', 'data')]
 )
 def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
-                   study_agent, agent_ref):
+                   study_agent):
     if user_selected_timestamp is None:
         raise PreventUpdate
     if n_clicks_left is None:

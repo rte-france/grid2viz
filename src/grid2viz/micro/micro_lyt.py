@@ -6,9 +6,10 @@ import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
 import numpy as np
+import datetime
 
 from src.grid2kpi.episode import observation_model
-from src.grid2kpi.manager import episode, agents, agent_ref
+from src.grid2kpi.manager import episode, make_episode, base_dir, indx
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -133,11 +134,6 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
 
         html.Div(className="col-xl-7", children=[
             html.H5("OverFlow and Usage rate"),
-            dcc.Dropdown(
-                id="agent_selector", placeholder="select a ref agent",
-                options=[{'label': agent, 'value': agent} for agent in agents],
-                value=agent_ref
-            ),
             html.Div(className="row", children=[
                 dcc.Graph(
                     id='usage_rate_ts',
@@ -185,11 +181,28 @@ all_info_line = html.Div(id="all_info_line_id", className="lineBlock card ", chi
     ])
 ])
 
-layout = html.Div(id="micro_page", children=[
-    dcc.Store(id="relayoutStoreMicro"),
-    dcc.Store(id="window"),
-    indicator_line,
-    flux_inspector_line,
-    context_inspector_line,
-    all_info_line
-])
+
+def compute_window(user_selected_timestamp, study_agent):
+    n_clicks_left = 0
+    n_clicks_right = 0
+    new_episode = make_episode(base_dir, study_agent, indx)
+    center_indx = new_episode.timestamps.index(
+        datetime.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
+    )
+    timestamp_range = new_episode.timestamps[
+                      max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
+                      ]
+    xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
+    xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
+    return xmin, xmax
+
+
+def layout(user_selected_timestamp, study_agent):
+    return html.Div(id="micro_page", children=[
+        dcc.Store(id="relayoutStoreMicro"),
+        dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent)),
+        indicator_line,
+        flux_inspector_line,
+        context_inspector_line,
+        all_info_line
+    ])

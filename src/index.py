@@ -70,9 +70,10 @@ app.layout = html.Div([
     Output('page-content', 'children'),
     [Input('url', 'pathname')],
     [State("agent_ref", "data"),
-     State("agent_study", "data")]
+     State("agent_study", "data"),
+     State("user_timestamps", "value")]
 )
-def display_page(pathname, ref_agent, study_agent):
+def display_page(pathname, ref_agent, study_agent, user_selected_timestamp):
     if ref_agent is None:
         ref_agent = agent_ref
     if study_agent is None:
@@ -84,7 +85,7 @@ def display_page(pathname, ref_agent, study_agent):
     elif pathname == "/macro":
         return macro_lyt(study_agent)
     elif pathname == "/micro":
-        return micro_lyt
+        return micro_lyt(user_selected_timestamp, study_agent)
     else:
         return 404
 
