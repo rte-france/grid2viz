@@ -26,7 +26,6 @@ from src.grid2kpi.episode.maintenances import (hist_duration_maintenances)
      State("agent_ref", "data")]
 )
 def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent):
-
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -305,3 +304,17 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
     figure_switch_line["data"] = actions_model.get_action_switch_line_trace(
         new_episode)
     return figure_sub, figure_switch_line
+
+
+@app.callback(
+    Output("tooltip_table", "children"),
+    [Input('agent_study', 'data'),
+     Input("inspector_datable", "active_cell")]
+)
+def update_more_info(study_agent, active_cell):
+    if active_cell is None:
+        raise PreventUpdate
+    row = active_cell["row"]
+    new_episode = make_episode(base_dir, study_agent, indx)
+    act = new_episode.actions[row]
+    return str(act)

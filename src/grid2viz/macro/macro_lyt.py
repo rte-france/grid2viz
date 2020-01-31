@@ -179,7 +179,13 @@ inspector_line = html.Div(className="lineBlock card ", children=[
                 'The documentation for the filtering syntax can be found ',
                 html.A('here.', href='https://dash.plot.ly/datatable/filtering', target="_blank")]),
         ]),
-
+        html.Div(className="col-12 row", children=[
+            html.Div(className="col", children=[
+                html.P(id="tooltip_table", className="more-info-table", children=[
+                    "Click on a row to have more info on the action"
+                ])
+            ])
+        ]),
         html.Div(className="col-12 row", children=[
             html.Div(className="col", children=[
                 html.H6(className="text-center",

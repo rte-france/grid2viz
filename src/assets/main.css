@@ -50,3 +50,9 @@ body {
     border-color:#2196F3;
     border-width: 0.5px;
   }
+
+.more-info-table {
+    white-space: pre;
+    border: solid 2px #2196f3;
+    border-radius: 5px;
+}
