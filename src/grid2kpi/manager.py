@@ -4,6 +4,8 @@ import configparser
 import csv
 import pandas as pd
 
+import plotly.graph_objects as go
+
 # TEMPORARY: should be moved to a proper class
 from grid2op.PlotPlotly import PlotObs
 
@@ -28,6 +30,90 @@ def make_network(new_episode):
         graphs[new_episode] = PlotObs(
             substation_layout=graph_layout, observation_space=new_episode.observation_space)
     return graphs[new_episode]
+
+
+def get_network_graph(network, episode):
+    fig_dict = network.get_plot_observation(episode.observations[0]).to_dict()
+    fig_dict["frames"] = []
+    fig_dict["layout"]["sliders"] = {
+        "args": [
+            "transition", {
+                "duration": 400,
+                "easing": "cubic-in-out"
+            }
+        ],
+        "initialValue": str(episode.timestamp(episode.observations[0])),
+        "plotlycommand": "animate",
+        "values": episode.timestamps,
+        "visible": True
+    }
+    fig_dict["layout"]["updatemenus"] = [
+        {
+            "buttons": [
+                {
+                    "args": [None, {"frame": {"duration": 500, "redraw": False},
+                                    "fromcurrent": True, "transition": {"duration": 300,
+                                                                        "easing": "quadratic-in-out"}}],
+                    "label": "Play",
+                    "method": "animate"
+                },
+                {
+                    "args": [[None], {"frame": {"duration": 0, "redraw": False},
+                                      "mode": "immediate",
+                                      "transition": {"duration": 0}}],
+                    "label": "Pause",
+                    "method": "animate"
+                }
+            ],
+            "direction": "left",
+            "pad": {"r": 10, "t": 87},
+            "showactive": False,
+            "type": "buttons",
+            "x": 0.1,
+            "xanchor": "right",
+            "y": 0,
+            "yanchor": "top"
+        }
+    ]
+
+    sliders_dict = {
+        "active": 0,
+        "yanchor": "top",
+        "xanchor": "left",
+        "currentvalue": {
+            "font": {"size": 20},
+            "prefix": "Timestamp:",
+            "visible": True,
+            "xanchor": "right"
+        },
+        "transition": {"duration": 300, "easing": "cubic-in-out"},
+        "pad": {"b": 10, "t": 50},
+        "len": 0.9,
+        "x": 0.1,
+        "y": 0,
+        "steps": []
+    }
+    for obs in episode.observations[:-1]:
+        timestamp = episode.timestamp(obs)
+        frame = {"data": [], "name": str(timestamp)}
+        current_fig_dict = network.get_plot_observation(obs).to_dict()
+        frame["data"] = current_fig_dict["data"]
+        fig_dict["frames"].append(frame)
+        slider_step = {"args": [
+            [timestamp],
+            {"frame": {"duration": 300, "redraw": False},
+             "mode": "immediate",
+             "transition": {"duration": 300}}
+        ],
+            "label": str(timestamp),
+            "method": "animate"}
+        sliders_dict["steps"].append(slider_step)
+
+    fig_dict["layout"]["sliders"] = [sliders_dict]
+
+    fig = go.Figure(fig_dict)
+
+    return fig
 
 
 store = {}

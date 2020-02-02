@@ -10,7 +10,7 @@ import datetime
 
 from src.grid2kpi.episode import observation_model
 from src.grid2kpi.manager import (
-    episode, make_episode, base_dir, indx, make_network)
+    episode, make_episode, base_dir, indx, make_network, get_network_graph)
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -210,8 +210,7 @@ def layout(user_selected_timestamp, study_agent):
             user_selected_timestamp, study_agent)),
         indicator_line,
         # TODO : episode.observations[1] will change
-        flux_inspector_line(make_network(
-            episode).get_plot_observation(episode.observations[1])),
+        flux_inspector_line(get_network_graph(make_network(episode), episode)),
         context_inspector_line,
         all_info_line
     ])
