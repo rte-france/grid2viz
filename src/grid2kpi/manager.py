@@ -9,9 +9,10 @@ from grid2op.PlotPlotly import PlotObs
 
 
 def get_total_overflow_ts(episode):
-    df = pd.DataFrame(index=range(len(episode.observations)),
+    # TODO: This :-1 probably has to change
+    df = pd.DataFrame(index=range(len(episode.observations[:-1])),
                       columns=["time", "value"])
-    for (time_step, obs) in enumerate(episode.observations):
+    for (time_step, obs) in enumerate(episode.observations[:-1]):
         tstamp = episode.timestamps[time_step]
         df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
     return df
@@ -24,7 +25,8 @@ graph_layout = [(280, -81), (100, -270), (-366, -270), (-366, -54), (64, -54), (
 
 def make_network(new_episode):
     if new_episode not in graphs:
-        graphs[new_episode] = PlotObs(substation_layout=graph_layout, observation_space=new_episode.observation_space)
+        graphs[new_episode] = PlotObs(
+            substation_layout=graph_layout, observation_space=new_episode.observation_space)
     return graphs[new_episode]
 
 

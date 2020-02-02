@@ -9,7 +9,8 @@ import numpy as np
 import datetime
 
 from src.grid2kpi.episode import observation_model
-from src.grid2kpi.manager import episode, make_episode, base_dir, indx
+from src.grid2kpi.manager import (
+    episode, make_episode, base_dir, indx, make_network)
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -49,55 +50,59 @@ indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", ch
     ])
 ])
 
-flux_inspector_line = html.Div(id="flux_inspector_line_id", className="lineBlock card", children=[
-    html.H4("Flow"),
-    html.Div(className="card-body row", children=[
-        html.Div(className="col", children=[
-            html.Div(className="row", children=[
 
-                html.Div(className="col", children=[
-                    html.H6(className="text-center",
-                            children="Interactive Graph"),
+def flux_inspector_line(network_graph=None):
 
-                    dcc.Loading(
-                        dcc.Graph(
-                            id="interactive_graph"
+    return html.Div(id="flux_inspector_line_id", className="lineBlock card", children=[
+        html.H4("Flow"),
+        html.Div(className="card-body row", children=[
+            html.Div(className="col", children=[
+                html.Div(className="row", children=[
+
+                    html.Div(className="col", children=[
+                        html.H6(className="text-center",
+                                children="Interactive Graph"),
+
+                        dcc.Loading(
+                            dcc.Graph(
+                                id="interactive_graph",
+                                figure=network_graph)
                         )
-                    )
-                ])
-            ]),
-            html.Div(className="row", children=[
-                html.Div(className="col", children=[
-                    html.H6(className="text-center",
-                            children="Voltage and Flow"),
-                    dac.Radio(options=[
-                        {'label': 'Flow', "value": "flow"},
-                        {'label': 'Voltage', "value": "voltage"},
-                    ],
-                        value="flow",
-                        id="voltage_flow_selector",
-                        buttonStyle="solid"
-                    ),
-                    dac.Select(
-                        id="line_side_choices",
-                        options=[],
-                        value=[],
-                        mode='multiple',
-                        showArrow=True
-                    ),
-                    dcc.Loading(
-                        dcc.Graph(
-                            id="voltage_flow_graph",
-                            figure=go.Figure(
-                                layout=layout_def,
-                                data=[dict(type="scatter")]
-                            )
-                        ))
+                    ])
                 ]),
+                html.Div(className="row", children=[
+                    html.Div(className="col", children=[
+                        html.H6(className="text-center",
+                                children="Voltage and Flow"),
+                        dac.Radio(options=[
+                            {'label': 'Flow', "value": "flow"},
+                            {'label': 'Voltage', "value": "voltage"},
+                        ],
+                            value="flow",
+                            id="voltage_flow_selector",
+                            buttonStyle="solid"
+                        ),
+                        dac.Select(
+                            id="line_side_choices",
+                            options=[],
+                            value=[],
+                            mode='multiple',
+                            showArrow=True
+                        ),
+                        dcc.Loading(
+                            dcc.Graph(
+                                id="voltage_flow_graph",
+                                figure=go.Figure(
+                                    layout=layout_def,
+                                    data=[dict(type="scatter")]
+                                )
+                            ))
+                    ]),
+                ])
             ])
         ])
     ])
-])
+
 
 context_inspector_line = html.Div(id="context_inspector_line_id", className="lineBlock card ", children=[
     html.H4("Context"),
@@ -177,32 +182,36 @@ all_info_line = html.Div(id="all_info_line_id", className="lineBlock card ", chi
                 page_size=20,
             )
         ])
-
     ])
 ])
 
 
 def compute_window(user_selected_timestamp, study_agent):
-    n_clicks_left = 0
-    n_clicks_right = 0
-    new_episode = make_episode(base_dir, study_agent, indx)
-    center_indx = new_episode.timestamps.index(
-        datetime.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
-    )
-    timestamp_range = new_episode.timestamps[
-                      max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
-                      ]
-    xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
-    xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
-    return xmin, xmax
+    if user_selected_timestamp is not None:
+        n_clicks_left = 0
+        n_clicks_right = 0
+        new_episode = make_episode(base_dir, study_agent, indx)
+        center_indx = new_episode.timestamps.index(
+            datetime.datetime.strptime(
+                user_selected_timestamp, '%Y-%m-%d %H:%M')
+        )
+        timestamp_range = new_episode.timestamps[
+            max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
+        ]
+        xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
+        xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
+        return xmin, xmax
 
 
 def layout(user_selected_timestamp, study_agent):
     return html.Div(id="micro_page", children=[
         dcc.Store(id="relayoutStoreMicro"),
-        dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent)),
+        dcc.Store(id="window", data=compute_window(
+            user_selected_timestamp, study_agent)),
         indicator_line,
-        flux_inspector_line,
+        # TODO : episode.observations[1] will change
+        flux_inspector_line(make_network(
+            episode).get_plot_observation(episode.observations[1])),
         context_inspector_line,
         all_info_line
     ])
