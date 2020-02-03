@@ -1,0 +1,101 @@
+/* ._dash-loading-callback{
+    border: 10px solid #e4032e;
+    border-right-color: #f49600;
+    border-bottom-color: #e4032e;
+    border-left-color: #f49600;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: slidein 1s, spin 0.7s linear infinite;
+    position: fixed;
+    left: calc( 50% - 40px );
+    top: calc( 50vh - 40px );
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  @keyframes slidein {
+    0% {
+      opacity: 0;
+    }
+    90% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  } */
+
+  HTML CSS JSResult
+EDIT ON
+  ._dash-loading-callback {
+    position: fixed;
+    z-index: 100;
+  }
+
+  ._dash-loading-callback::after {
+    content: 'Loading';
+    font-size: 50px;
+    font-family: sans-serif;
+    padding-top: 50px;
+    color: #000;
+
+    -webkit-animation: fadein 0.5s ease-in 1s forwards; /* Safari, Chrome and Opera > 12.1 */
+       -moz-animation: fadein 0.5s ease-in 1s forwards; /* Firefox < 16 */
+        -ms-animation: fadein 0.5s ease-in 1s forwards; /* Internet Explorer */
+         -o-animation: fadein 0.5s ease-in 1s forwards; /* Opera < 12.1 */
+            animation: fadein 0.5s ease-in 1s forwards;  
+    /* prevent flickering on every callback */
+    -webkit-animation-delay: 0.5s;
+    animation-delay: 0.5s;
+
+    /* The banner */
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    cursor: progress;
+    z-index: 100000;
+
+    background-image: url(https://media0.giphy.com/media/xT5LMPkRBu23a186LS/200.webp?cid=790b761138cd046e45069d676924701a599d546268b897ca&rid=200.webp);
+    background-position: center center;
+    background-repeat: no-repeat;
+  }
+
+  @keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+  }
+
+  /* Firefox < 16 */
+  @-moz-keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+  }
+
+  /* Safari, Chrome and Opera > 12.1 */
+  @-webkit-keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+  }
+
+  /* Internet Explorer */
+  @-ms-keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+  }
+
+  /* Opera < 12.1 */
+  @-o-keyframes fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+  }
