@@ -4,7 +4,7 @@ import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
 from src.grid2kpi.manager import agents, agent_ref, episode
-from src.grid2kpi.episode import observation_model
+from src.grid2kpi.episode_analytics import observation_model
 
 layout_def = {
     'legend': {'orientation': 'h'},

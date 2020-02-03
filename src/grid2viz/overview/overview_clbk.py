@@ -6,9 +6,11 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-from src.grid2kpi.episode import observation_model, env_actions, profiles_traces
+from src.grid2kpi.episode_analytics import observation_model
+from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
+from src.grid2kpi.episode_analytics.env_actions import env_actions
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
-from src.grid2kpi.episode.maintenances import duration_maintenances
+from src.grid2kpi.episode_analytics.maintenances import duration_maintenances
 
 
 @app.callback(

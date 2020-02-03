@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from src.grid2kpi.episode import observation_model
+from src.grid2kpi.episode_analytics import observation_model
 from src.grid2kpi.manager import (
     episode, make_episode, base_dir, indx, make_network, get_network_graph)
 

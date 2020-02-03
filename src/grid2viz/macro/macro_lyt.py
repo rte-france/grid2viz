@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
 
-from src.grid2kpi.episode import observation_model
+from src.grid2kpi.episode_analytics import observation_model
 from src.grid2kpi.manager import episode, agents, agent_ref
 
 layout_def = {

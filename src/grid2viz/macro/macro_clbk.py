@@ -8,10 +8,10 @@ import plotly.graph_objects as go
 
 from src.app import app
 from src.grid2kpi.manager import make_episode, base_dir, indx
-from src.grid2kpi.episode import observation_model
-from src.grid2kpi.episode import actions_model
+from src.grid2kpi.episode_analytics import observation_model
+from src.grid2kpi.episode_analytics import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
-from src.grid2kpi.episode.maintenances import (hist_duration_maintenances)
+from src.grid2kpi.episode_analytics.maintenances import (hist_duration_maintenances)
 
 
 # TODO add contant color code for ref and studied agent
@@ -142,8 +142,11 @@ def update_nbs(study_agent):
 @app.callback(
     Output("agent_study", "data"),
     [Input('agent_log_selector', 'value')],
+    [State("agent_study", "data")],
 )
-def update_study_agent(study_agent):
+def update_study_agent(study_agent, stored_agent):
+    if study_agent == stored_agent:
+        raise PreventUpdate
     make_episode(base_dir, study_agent, indx)
     return study_agent
 

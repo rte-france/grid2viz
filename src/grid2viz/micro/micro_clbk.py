@@ -7,7 +7,7 @@ from dash.exceptions import PreventUpdate
 import numpy as np
 
 from src.app import app
-from src.grid2kpi.episode import observation_model
+from src.grid2kpi.episode_analytics import observation_model
 from src.grid2kpi.manager import make_episode, base_dir, indx, prod_types, make_network, get_network_graph
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 

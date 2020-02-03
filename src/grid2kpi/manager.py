@@ -1,4 +1,5 @@
-from grid2op.Episode import Episode
+from src.grid2kpi.episode_analytics.EpisodeAnalytics import EpisodeAnalytics
+from grid2op.EpisodeData import EpisodeData
 import os
 import configparser
 import csv
@@ -124,9 +125,9 @@ def make_episode(base_dir, agent, indx):
     if id in store:
         return store[id]
     path = base_dir + agent
-    episode_loaded = Episode.fromdisk(
+    episode_loaded = EpisodeAnalytics(EpisodeData.fromdisk(
         path, indx
-    )
+    ))
     store[id] = episode_loaded
 
     # TEMPORARY: should be moved to a proper class
