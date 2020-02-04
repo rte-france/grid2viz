@@ -11,6 +11,7 @@ class EpisodeAnalytics():
     def __init__(self, episode_data):
         self.episode_data = episode_data
 
+        # Add EpisodeData attributes to EpisodeAnalytics 
         for attribute in [elem for elem in dir(self.episode_data) if not (elem.startswith("__") or callable(getattr(self.episode_data, elem)))]:
             setattr(self, attribute, getattr(self.episode_data, attribute))
 
