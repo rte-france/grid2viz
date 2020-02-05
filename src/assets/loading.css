@@ -51,8 +51,8 @@ EDIT ON
     -o-animation: fadein 0.5s ease-in 1s forwards; /* Opera < 12.1 */
     animation: fadein 0.5s ease-in 1s forwards;
     /* prevent flickering on every callback */
-    -webkit-animation-delay: 0.5s;
-    animation-delay: 0.5s;
+    -webkit-animation-delay: 5s;
+    animation-delay: 5s;
 
     /* The banner */
     box-sizing: border-box;

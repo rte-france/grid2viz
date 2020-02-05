@@ -1,5 +1,3 @@
-from collections import Counter
-
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import numpy as np
@@ -62,7 +60,7 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 )
 def load_pie_chart(study_agent, figure):
     new_episode = make_episode(base_dir, study_agent, indx)
-    nb_actions = new_episode['data'].action_data[['action_line', 'action_subs']].sum()
+    nb_actions = study_agent['data'].action_data[['action_line', 'action_subs']].sum()
     figure['data'] = [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
         values=[nb_actions["action_line"], nb_actions["action_subs"]]

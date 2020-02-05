@@ -123,7 +123,7 @@ def make_episode(base_dir, agent, indx):
         'data': episode_loaded,
         'total_overflow_trace': EpisodeTrace.get_total_overflow_trace(episode_loaded),
         'usage_rate_trace': EpisodeTrace.get_usage_rate_trace(episode_loaded),
-        'reward_trace': EpisodeTrace.get_df_rewards_trace(episode_loaded, id + '_rewards', id + '_cum_reswards'),
+        'reward_trace': EpisodeTrace.get_df_rewards_trace(episode_loaded, id + '_rewards', id + '_cum_rewards'),
         'total_overflow_ts': EpisodeTrace.get_total_overflow_ts(episode_loaded)
     }
 

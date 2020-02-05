@@ -12,7 +12,7 @@ layout_def = {
 }
 
 
-def indicator_line(study_agent=agent_ref):
+def indicator_line(study_agent=episode):
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
@@ -27,18 +27,21 @@ def indicator_line(study_agent=agent_ref):
                 ),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_score_output",
-                           className="border-bottom h3 mb-0 text-right", children="NaN"),
+                           className="border-bottom h3 mb-0 text-right",
+                           children=round(study_agent['data'].meta["cumulative_reward"])),
                     html.P(className="text-muted", children="Score")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_overflow",
-                           className="border-bottom h3 mb-0 text-right", children="NaN"),
+                           className="border-bottom h3 mb-0 text-right",
+                           children=study_agent['total_overflow_ts']["value"].sum()),
                     html.P(className="text-muted",
                            children="Number of Overflow")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_action",
-                           className="border-bottom h3 mb-0 text-right", children="NaN"),
+                           className="border-bottom h3 mb-0 text-right",
+                           children=study_agent['data'].action_data[['action_line', 'action_subs']].sum(axis=1).sum()),
                     html.P(className="text-muted ",
                            children="Number of Action")
                 ])
@@ -51,6 +54,7 @@ def indicator_line(study_agent=agent_ref):
                     id="agent_study_pie_chart",
                     figure=go.Figure(
                         layout=layout_def,
+                        data=action_repartition_pie
                     )
                 )
 
@@ -71,79 +75,81 @@ def indicator_line(study_agent=agent_ref):
     ])
 
 
-overview_line = html.Div(id="overview_line_id", className="lineBlock card", children=[
-    html.H4("Overview"),
-    html.Div(className="card-body row", children=[
+def overview_line(study_agent=episode):
+    return html.Div(id="overview_line_id", className="lineBlock card", children=[
+        html.H4("Overview"),
+        html.Div(className="card-body row", children=[
 
-        html.Div(className="col-2", children=[
-            dt.DataTable(
-                id="timeseries_table",
-                columns=[{"name": "Timestamps", "id": "Timestamps"}],
-                style_as_list_view=True,
-                row_deletable=True,
-                filter_action="native",
-                sort_action="native",
-                style_table={
-                    'overflow-y': 'scroll',
-                    'width': 'auto',
-                    'height': '100%'
-                },
-            )
+            html.Div(className="col-2", children=[
+                dt.DataTable(
+                    id="timeseries_table",
+                    columns=[{"name": "Timestamps", "id": "Timestamps"}],
+                    style_as_list_view=True,
+                    row_deletable=True,
+                    filter_action="native",
+                    sort_action="native",
+                    style_table={
+                        'overflow-y': 'scroll',
+                        'width': 'auto',
+                        'height': '100%'
+                    },
+                )
 
-        ]),
-
-        html.Div(className="col-10", children=[
-            html.Div(className="row", children=[
-                html.Div(className="col-6", children=[
-                    html.H6(className="text-center",
-                            children="Instant and Cumulated Reward"),
-                    dcc.Graph(
-                        id="cumulated_rewards_timeserie",
-                        figure=go.Figure(
-                            layout=layout_def,
-                        )
-                    )
-                ]),
-
-                html.Div(className="col-6", children=[
-                    html.H6(className="text-center",
-                            children="Overflow and Maintenances"),
-                    dcc.Graph(
-                        id="overflow_graph_study",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="scatter")]
-                        )
-                    )
-                ]),
             ]),
 
-            html.Div(className="row", children=[
-                html.Div(className="col-6", children=[
-                    html.H6(className="text-center", children="Actions"),
-                    dcc.Graph(
-                        id="action_timeserie",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="scatter")]
+            html.Div(className="col-10", children=[
+                html.Div(className="row", children=[
+                    html.Div(className="col-6", children=[
+                        html.H6(className="text-center",
+                                children="Instant and Cumulated Reward"),
+                        dcc.Graph(
+                            id="cumulated_rewards_timeserie",
+                            figure=go.Figure(
+                                layout=layout_def,
+                            )
                         )
-                    )
-                ]),
-                html.Div(className="col-6", children=[
-                    html.H6(className="text-center",
-                            children="Usage Rate"),
-                    dcc.Graph(
-                        id="usage_rate_graph_study",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="scatter")]
+                    ]),
+
+                    html.Div(className="col-6", children=[
+                        html.H6(className="text-center",
+                                children="Overflow and Maintenances"),
+                        dcc.Graph(
+                            id="overflow_graph_study",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
                         )
-                    )
+                    ]),
                 ]),
-            ]),
+
+                html.Div(className="row", children=[
+                    html.Div(className="col-6", children=[
+                        html.H6(className="text-center", children="Actions"),
+                        dcc.Graph(
+                            id="action_timeserie",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
+                        )
+                    ]),
+                    html.Div(className="col-6", children=[
+                        html.H6(className="text-center",
+                                children="Usage Rate"),
+                        dcc.Graph(
+                            id="usage_rate_graph_study",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
+                        )
+                    ]),
+                ]),
+            ])
         ])
     ])
-])
+
 
 inspector_line = html.Div(className="lineBlock card ", children=[
     html.H4("Inspector"),
@@ -191,11 +197,11 @@ inspector_line = html.Div(className="lineBlock card ", children=[
                 html.H6(className="text-center",
                         children="Distribution of line action"),
                 dcc.Graph(
-                        id="distribution_line_action_chart",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="bar")]
-                        )
+                    id="distribution_line_action_chart",
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="bar")]
+                    )
                 )
             ]),
         ]),
@@ -205,9 +211,10 @@ inspector_line = html.Div(className="lineBlock card ", children=[
 
 
 def layout(study_agent=agent_ref):
+
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
         indicator_line(study_agent),
-        overview_line,
+        overview_line(study_agent),
         inspector_line
     ])
