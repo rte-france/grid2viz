@@ -3,6 +3,7 @@ from dash.exceptions import PreventUpdate
 import pandas as pd
 
 from src.app import app
+from src.grid2viz.utils.perf_analyser import whoami, timeit
 
 
 @app.callback(
