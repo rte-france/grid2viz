@@ -33,43 +33,43 @@
 
   HTML CSS JSResult
 EDIT ON
-  ._dash-loading-callback {
+._dash-loading-callback {
     position: fixed;
     z-index: 100;
-  }
+}
 
-  ._dash-loading-callback::after {
-    content: 'Loading';
+._dash-loading-callback::after {
+    content: 'Loading...';
     font-size: 50px;
     font-family: sans-serif;
     padding-top: 50px;
     color: #000;
 
     -webkit-animation: fadein 0.5s ease-in 1s forwards; /* Safari, Chrome and Opera > 12.1 */
-       -moz-animation: fadein 0.5s ease-in 1s forwards; /* Firefox < 16 */
-        -ms-animation: fadein 0.5s ease-in 1s forwards; /* Internet Explorer */
-         -o-animation: fadein 0.5s ease-in 1s forwards; /* Opera < 12.1 */
-            animation: fadein 0.5s ease-in 1s forwards;  
+    -moz-animation: fadein 0.5s ease-in 1s forwards; /* Firefox < 16 */
+    -ms-animation: fadein 0.5s ease-in 1s forwards; /* Internet Explorer */
+    -o-animation: fadein 0.5s ease-in 1s forwards; /* Opera < 12.1 */
+    animation: fadein 0.5s ease-in 1s forwards;
     /* prevent flickering on every callback */
     -webkit-animation-delay: 0.5s;
     animation-delay: 0.5s;
 
     /* The banner */
-    opacity: 0;
+    box-sizing: border-box;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.78);
     text-align: center;
     cursor: progress;
     z-index: 100000;
 
-    background-image: url(https://media0.giphy.com/media/xT5LMPkRBu23a186LS/200.webp?cid=790b761138cd046e45069d676924701a599d546268b897ca&rid=200.webp);
+    background-image: url('loader.gif'); /* from: https://icons8.com/preloaders/ */
     background-position: center center;
     background-repeat: no-repeat;
-  }
+}
 
   @keyframes fadein {
       from { opacity: 0; }

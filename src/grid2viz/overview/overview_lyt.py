@@ -24,36 +24,26 @@ indicators_line = html.Div(id="temporaryid", children=[
     html.H4("Indicators"),
     html.Div(children=[
 
-        html.Div(className="col-xl-5",
-                 children=[
-                     html.H5("Consumption Profiles"),
-                     dcc.Loading(
-                         id="overview_loading_profiles",
-                         children=dcc.Graph(
-                             id="indicator_line_charts",
-                             style={'margin-top': '1em'},
-                             figure=go.Figure(
-                                 layout=layout_def
-                             ),
-                             config=dict(displayModeBar=False)
-                         )
-                     )
-                 ]
-                 ),
+        html.Div([
+            html.H5("Consumption Profiles"),
+            dcc.Graph(
+                id="indicator_line_charts",
+                style={'margin-top': '1em'},
+                figure=go.Figure(
+                    layout=layout_def
+                ),
+            )
+        ], className="col-xl-5"),
 
         html.Div(children=[
             html.H5("Production shares"),
-            dcc.Loading(
-                id="overview_loading_prod_shares",
-                children=dcc.Graph(
-                    id="production_share_graph",
-                    figure=go.Figure(
-                        layout=layout_pie
-                    ),
-                    config=dict(displayModeBar=False)
-                )
-            )],
-            className="col-xl-4"),
+            dcc.Graph(
+                id="production_share_graph",
+                figure=go.Figure(
+                    layout=layout_pie
+                ),
+            )], className="col-xl-4"),
+
         # number summary column
         html.Div(children=[
             html.Div(className="mb-4", children=[

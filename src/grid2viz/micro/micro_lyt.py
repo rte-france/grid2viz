@@ -24,13 +24,11 @@ indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", ch
         html.Div(className="col-xl-6", children=[
             html.H6(className="text-center",
                     children="Rewards instant + cumulated for 2 agent"),
-            dcc.Loading(
-                dcc.Graph(
-                    id="cum_instant_reward_ts",
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=[dict(type="bar")]
-                    )
+            dcc.Graph(
+                id="cum_instant_reward_ts",
+                figure=go.Figure(
+                    layout=layout_def,
+                    data=[dict(type="bar")]
                 )
             )
         ]),
@@ -38,14 +36,13 @@ indicator_line = html.Div(id="indicator_line_id", className="lineBlock card", ch
         html.Div(className="col-xl-6", children=[
             html.H6(className="text-center",
                     children="Actions"),
-            dcc.Loading(
-                dcc.Graph(
-                    id="actions_ts",
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=[dict(type="bar")]
-                    )
-                ))
+            dcc.Graph(
+                id="actions_ts",
+                figure=go.Figure(
+                    layout=layout_def,
+                    data=[dict(type="bar")]
+                )
+            )
         ])
     ])
 ])
@@ -63,10 +60,9 @@ def flux_inspector_line(network_graph=None):
                         html.H6(className="text-center",
                                 children="Interactive Graph"),
 
-                        dcc.Loading(
-                            dcc.Graph(
-                                id="interactive_graph",
-                                figure=network_graph)
+                        dcc.Graph(
+                            id="interactive_graph",
+                            figure=network_graph
                         )
                     ])
                 ]),
@@ -89,14 +85,13 @@ def flux_inspector_line(network_graph=None):
                             mode='multiple',
                             showArrow=True
                         ),
-                        dcc.Loading(
-                            dcc.Graph(
-                                id="voltage_flow_graph",
-                                figure=go.Figure(
-                                    layout=layout_def,
-                                    data=[dict(type="scatter")]
-                                )
-                            ))
+                        dcc.Graph(
+                            id="voltage_flow_graph",
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=[dict(type="scatter")]
+                            )
+                        )
                     ]),
                 ])
             ])

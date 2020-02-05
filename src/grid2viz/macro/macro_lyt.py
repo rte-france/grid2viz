@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
 
-from src.grid2kpi.episode_analytics import observation_model
 from src.grid2kpi.manager import episode, agents, agent_ref
 
 layout_def = {
@@ -26,38 +25,32 @@ def indicator_line(study_agent=agent_ref):
                     value=study_agent,
                     placeholder="Agent log"
                 ),
-                dcc.Loading(
-                    [
-                        html.Div(className="m-2", children=[
-                            html.P(id="indicator_score_output",
-                                   className="border-bottom h3 mb-0 text-right", children="NaN"),
-                            html.P(className="text-muted", children="Score")
-                        ]),
-                        html.Div(className="m-2", children=[
-                            html.P(id="indicator_nb_overflow",
-                                   className="border-bottom h3 mb-0 text-right", children="NaN"),
-                            html.P(className="text-muted",
-                                   children="Number of Overflow")
-                        ]),
-                        html.Div(className="m-2", children=[
-                            html.P(id="indicator_nb_action",
-                                   className="border-bottom h3 mb-0 text-right", children="NaN"),
-                            html.P(className="text-muted ",
-                                   children="Number of Action")
-                        ])
-                    ]
-                )
+                html.Div(className="m-2", children=[
+                    html.P(id="indicator_score_output",
+                           className="border-bottom h3 mb-0 text-right", children="NaN"),
+                    html.P(className="text-muted", children="Score")
+                ]),
+                html.Div(className="m-2", children=[
+                    html.P(id="indicator_nb_overflow",
+                           className="border-bottom h3 mb-0 text-right", children="NaN"),
+                    html.P(className="text-muted",
+                           children="Number of Overflow")
+                ]),
+                html.Div(className="m-2", children=[
+                    html.P(id="indicator_nb_action",
+                           className="border-bottom h3 mb-0 text-right", children="NaN"),
+                    html.P(className="text-muted ",
+                           children="Number of Action")
+                ])
             ]),
 
             html.Div(className="col-3", children=[
                 html.H6(className="text-center",
                         children="Type Action Repartition"),
-                dcc.Loading(
-                    dcc.Graph(
-                        id="agent_study_pie_chart",
-                        figure=go.Figure(
-                            layout=layout_def,
-                        )
+                dcc.Graph(
+                    id="agent_study_pie_chart",
+                    figure=go.Figure(
+                        layout=layout_def,
                     )
                 )
 
@@ -66,13 +59,13 @@ def indicator_line(study_agent=agent_ref):
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
                         children="Action Maintenance Duration"),
-                dcc.Loading(dcc.Graph(
+                dcc.Graph(
                     id="maintenance_duration",
                     figure=go.Figure(
                         layout=layout_def,
                         data=[dict(type="bar")]
                     )
-                ))
+                )
             ])
         ]),
     ])
@@ -83,20 +76,18 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
     html.Div(className="card-body row", children=[
 
         html.Div(className="col-2", children=[
-            dcc.Loading(
-                dt.DataTable(
-                    id="timeseries_table",
-                    columns=[{"name": "Timestamps", "id": "Timestamps"}],
-                    style_as_list_view=True,
-                    row_deletable=True,
-                    filter_action="native",
-                    sort_action="native",
-                    style_table={
-                        'overflow-y': 'scroll',
-                        'width': 'auto',
-                        'height': '100%'
-                    },
-                )
+            dt.DataTable(
+                id="timeseries_table",
+                columns=[{"name": "Timestamps", "id": "Timestamps"}],
+                style_as_list_view=True,
+                row_deletable=True,
+                filter_action="native",
+                sort_action="native",
+                style_table={
+                    'overflow-y': 'scroll',
+                    'width': 'auto',
+                    'height': '100%'
+                },
             )
 
         ]),
@@ -110,8 +101,6 @@ overview_line = html.Div(id="overview_line_id", className="lineBlock card", chil
                         id="cumulated_rewards_timeserie",
                         figure=go.Figure(
                             layout=layout_def,
-                            # data=observation_model.get_df_rewards_trace(
-                            #     episode)
                         )
                     )
                 ]),
@@ -190,29 +179,24 @@ inspector_line = html.Div(className="lineBlock card ", children=[
             html.Div(className="col", children=[
                 html.H6(className="text-center",
                         children="Distribution of Substation action"),
-                dcc.Loading(
-                    dcc.Graph(
-                        id="distribution_substation_action_chart",
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=[dict(type="bar")]
-                        )
+                dcc.Graph(
+                    id="distribution_substation_action_chart",
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="bar")]
                     )
                 )
             ]),
             html.Div(className="col", children=[
                 html.H6(className="text-center",
                         children="Distribution of line action"),
-                dcc.Loading(
-                    dcc.Graph(
+                dcc.Graph(
                         id="distribution_line_action_chart",
                         figure=go.Figure(
                             layout=layout_def,
                             data=[dict(type="bar")]
                         )
-                    )
                 )
-
             ]),
         ]),
 
