@@ -4,7 +4,9 @@ import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
 
-from src.grid2kpi.manager import episode, agents, agent_ref
+from src.grid2viz.macro.macro_clbk import episode, agent_ref, agents,\
+    get_score_agent, get_nb_action_agent, get_nb_overflow_agent, \
+    action_repartition_pie
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -16,32 +18,31 @@ def indicator_line(study_agent=episode):
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
-
             html.Div(className="col-2", children=[
                 dcc.Dropdown(
                     id='agent_log_selector',
                     options=[{'label': agent, 'value': agent}
                              for agent in agents],
-                    value=study_agent,
+                    value=agent_ref,
                     placeholder="Agent log"
                 ),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_score_output",
                            className="border-bottom h3 mb-0 text-right",
-                           children=round(study_agent['data'].meta["cumulative_reward"])),
+                           children=get_score_agent(study_agent)),
                     html.P(className="text-muted", children="Score")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_overflow",
                            className="border-bottom h3 mb-0 text-right",
-                           children=study_agent['total_overflow_ts']["value"].sum()),
+                           children=get_nb_action_agent(study_agent)),
                     html.P(className="text-muted",
                            children="Number of Overflow")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_action",
                            className="border-bottom h3 mb-0 text-right",
-                           children=study_agent['data'].action_data[['action_line', 'action_subs']].sum(axis=1).sum()),
+                           children=get_nb_overflow_agent(study_agent)),
                     html.P(className="text-muted ",
                            children="Number of Action")
                 ])
@@ -54,7 +55,7 @@ def indicator_line(study_agent=episode):
                     id="agent_study_pie_chart",
                     figure=go.Figure(
                         layout=layout_def,
-                        data=action_repartition_pie
+                        data=action_repartition_pie(study_agent)
                     )
                 )
 
@@ -210,11 +211,12 @@ inspector_line = html.Div(className="lineBlock card ", children=[
 ])
 
 
-def layout(study_agent=agent_ref):
+def layout(study_agent=episode):
 
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
-        indicator_line(study_agent),
-        overview_line(study_agent),
+        # TODO I don't know where the layout param is filled this is a temporary trick to get the whole default episode
+        indicator_line(episode),
+        overview_line(episode),
         inspector_line
     ])

@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
-from src.grid2kpi.manager import make_episode, base_dir, indx
+from src.grid2kpi.manager import make_episode, base_dir, indx, episode, agent_ref, agents
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
@@ -58,15 +58,18 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
     [Input('agent_study', 'data')],
     [State("agent_study_pie_chart", "figure")]
 )
-def load_pie_chart(study_agent, figure):
+def update_action_repartition_pie(study_agent, figure):
     new_episode = make_episode(base_dir, study_agent, indx)
-    nb_actions = study_agent['data'].action_data[['action_line', 'action_subs']].sum()
-    figure['data'] = [go.Pie(
+    figure['data'] = action_repartition_pie(new_episode)
+    return figure
+
+
+def action_repartition_pie(agent):
+    nb_actions = agent['data'].action_data[['action_line', 'action_subs']].sum()
+    return [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
         values=[nb_actions["action_line"], nb_actions["action_subs"]]
     )]
-    return figure
-
 
 @app.callback(
     Output("maintenance_duration", "figure"),
@@ -124,11 +127,25 @@ def relayout_store(*args):
 )
 def update_nbs(study_agent):
     new_episode = make_episode(base_dir, study_agent, indx)
-    score = new_episode['data'].meta["cumulative_reward"]
-    nb_overflow = new_episode['total_overflow_ts']["value"].sum()
-    nb_action = new_episode['data'].action_data[['action_line', 'action_subs']].sum(
+    score = get_score_agent(new_episode)
+    nb_overflow = get_nb_overflow_agent(new_episode)
+    nb_action = get_nb_action_agent(new_episode)
+
+    return score, nb_overflow, nb_action
+
+
+def get_score_agent(agent):
+    score = agent['data'].meta["cumulative_reward"]
+    return round(score)
+
+
+def get_nb_overflow_agent(agent):
+    return agent['total_overflow_ts']["value"].sum()
+
+
+def get_nb_action_agent(agent):
+    return  agent['data'].action_data[['action_line', 'action_subs']].sum(
         axis=1).sum()
-    return round(score), nb_overflow, nb_action
 
 
 @app.callback(
