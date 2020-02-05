@@ -7,8 +7,8 @@ from dash.exceptions import PreventUpdate
 import numpy as np
 
 from src.app import app
-from src.grid2kpi.episode_analytics import observation_model
-from src.grid2kpi.manager import make_episode, base_dir, indx, prod_types, make_network, get_network_graph
+from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
+from src.grid2kpi.manager import episode, make_episode, base_dir, indx, prod_types, make_network, get_network_graph
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 
 
@@ -42,10 +42,10 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
     if n_clicks_right is None:
         n_clicks_right = 0
     new_episode = make_episode(base_dir, study_agent, indx)
-    center_indx = new_episode.timestamps.index(
+    center_indx = new_episode['data'].timestamps.index(
         dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
     )
-    timestamp_range = new_episode.timestamps[
+    timestamp_range = new_episode['data'].timestamps[
                       max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
                       ]
     xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
@@ -78,10 +78,10 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
 
     new_episode = make_episode(base_dir, study_agent, indx)
     ref_episode = make_episode(base_dir, agent_ref, indx)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
+    actions_ts = new_episode['data'].action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    df = observation_model.get_df_computed_reward(new_episode)
+    df = observation_model.get_df_computed_reward(new_episode['data'])
     action_events_df = pd.DataFrame(
         index=df["timestep"], data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
@@ -91,10 +91,8 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10}
     )
-    ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
-        ref_episode)
-    studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
-        make_episode(base_dir, study_agent, indx))
+    ref_episode_reward_trace = ref_episode['reward_trace']
+    studied_agent_reward_trace = make_episode(base_dir, study_agent, indx)['reward_trace']
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
@@ -130,11 +128,11 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, study_agent, indx)
+    new_episode = make_episode(base_dir, study_agent, indx)['data']
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_episode = make_episode(base_dir, agent_ref, indx)
+    ref_episode = make_episode(base_dir, agent_ref, indx)['data']
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -233,7 +231,7 @@ def load_voltage_flow_line_choice(value, study_agent):
     option = []
     new_episode = make_episode(base_dir, study_agent, indx)
 
-    for name in new_episode.line_names:
+    for name in new_episode['data'].line_names:
         if value == 'voltage':
             option.append({
                 'label': 'ex_' + name,
@@ -289,7 +287,7 @@ def load_flow_voltage_graph(selected_lines, select_cat, relayout_data_store, win
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
-    new_episode = make_episode(base_dir, study_agent, indx)
+    new_episode = make_episode(base_dir, study_agent, indx)['data']
     if selected_lines is not None:
         if select_cat == 'voltage':
             figure['data'] = load_voltage_for_lines(selected_lines, new_episode)
@@ -360,7 +358,7 @@ def load_flow_for_lines(lines, new_episode):
     [State("agent_study", "data")]
 )
 def update_ts_graph_avail_assets(kind, study_agent):
-    new_episode = make_episode(base_dir, study_agent, indx)
+    new_episode = make_episode(base_dir, study_agent, indx)['data']
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
                           for line_name in [*new_episode.line_names, 'total']], new_episode.line_names[0]
@@ -400,14 +398,13 @@ def load_context_data(equipments, relayout_data_store, window, figure, kind):
         equipments = [equipments]  # to make pd.series.isin() work
 
     if kind == "Load":
-        figure["data"] = observation_model.get_load_trace_per_equipment(
-            equipments)
+        figure["data"] = EpisodeTrace.get_load_trace_per_equipment(episode, equipments)
     if kind == "Production":
-        figure["data"] = observation_model.get_all_prod_trace(equipments)
+        figure["data"] = EpisodeTrace.get_all_prod_trace(episode, prod_types, equipments)
     if kind == "Hazards":
-        figure["data"] = observation_model.get_hazard_trace(equipments)
+        figure["data"] = EpisodeTrace.get_hazard_trace(episode, equipments)
     if kind == "Maintenances":
-        figure["data"] = observation_model.get_maintenance_trace(equipments)
+        figure["data"] = EpisodeTrace.get_maintenance_trace(episode, equipments)
 
     if window is not None:
         figure["layout"].update(
@@ -437,9 +434,8 @@ def update_agent_ref_graph(relayout_data_store, window,
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
     new_episode = make_episode(base_dir, study_agent, indx)
-    figure_overflow["data"] = observation_model.get_total_overflow_trace(
-        new_episode)
-    figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
+    figure_overflow["data"] = new_episode['total_overflow_trace']
+    figure_usage["data"] = new_episode['usage_rate_trace']
 
     if window is not None:
         figure_overflow["layout"].update(
@@ -459,25 +455,24 @@ def update_agent_ref_graph(relayout_data_store, window,
 def sync_timeseries_table(data):
     return data
 
-
-@app.callback(
-    Output("interactive_graph", "figure"),
-    [Input("relayoutStoreMicro", "data"),
-     Input("user_timestamps", "value"),
-     Input("window", "data")],
-    [State("interactive_graph", "figure"),
-     State('agent_study', 'data')]
-)
-def update_interactive_graph(relayout_data_store,
-                             user_selected_timestamp, window, figure, study_agent):
-    new_episode = make_episode(base_dir, study_agent, indx)
-    if user_selected_timestamp is not None:
-        plot_helper = make_network(new_episode)
-        center_indx = new_episode.timestamps.index(
-            dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
-        )
-        fig = get_network_graph(plot_helper, new_episode)
-        # fig = plot_helper.get_plot_observation(new_episode.observations[center_indx])
-        return fig
-    else:
-        raise PreventUpdate
+# @app.callback(
+#     Output("interactive_graph", "figure"),
+#     [Input("relayoutStoreMicro", "data"),
+#      Input("user_timestamps", "value"),
+#      Input("window", "data")],
+#     [State("interactive_graph", "figure"),
+#      State('agent_study', 'data')]
+# )
+# def update_interactive_graph(relayout_data_store,
+#                              user_selected_timestamp, window, figure, study_agent):
+#     new_episode = make_episode(base_dir, study_agent, indx)
+#     if user_selected_timestamp is not None:
+#         plot_helper = make_network(new_episode)
+#         center_indx = new_episode.timestamps.index(
+#             dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
+#         )
+#         fig = get_network_graph(plot_helper, new_episode)
+#         # fig = plot_helper.get_plot_observation(new_episode.observations[center_indx])
+#         return fig
+#     else:
+#         raise PreventUpdate

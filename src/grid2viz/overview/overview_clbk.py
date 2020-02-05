@@ -6,11 +6,12 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-from src.grid2kpi.episode_analytics import observation_model
+from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.episode_analytics.env_actions import env_actions
 from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
 from src.grid2kpi.episode_analytics.maintenances import duration_maintenances
+from src.grid2viz.utils.perf_analyser import timeit, whoami
 
 
 @app.callback(
@@ -32,17 +33,17 @@ def relayout_store_overview(*args):
 def update_ts_graph_avail_assets(kind):
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in [*episode.line_names, 'total']], episode.line_names[0]
+                          for line_name in [*episode['data'].line_names, 'total']], episode['data'].line_names[0]
     elif kind == 'Production':
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
-        value = episode.prod_names[0]
+                   for prod_name in [*episode['data'].prod_names, *list(set(prod_types.values())), 'total']]
+        value = episode['data'].prod_names[0]
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in [*episode.load_names, 'total']]
-        value = episode.load_names[0]
+                   for load_name in [*episode['data'].load_names, 'total']]
+        value = episode['data'].load_names[0]
 
     return options, value
 
@@ -68,14 +69,13 @@ def load_summary_data(equipments, relayout_data_store, figure, kind):
         equipments = [equipments]  # to make pd.series.isin() work
 
     if kind == "Load":
-        figure["data"] = observation_model.get_load_trace_per_equipment(
-            equipments)
+        figure["data"] = EpisodeTrace.get_load_trace_per_equipment(episode, equipments)
     if kind == "Production":
-        figure["data"] = observation_model.get_all_prod_trace(equipments)
+        figure["data"] = EpisodeTrace.get_all_prod_trace(episode, prod_types, equipments)
     if kind == "Hazards":
-        figure["data"] = observation_model.get_hazard_trace(equipments)
+        figure["data"] = EpisodeTrace.get_hazard_trace(episode, equipments)
     if kind == "Maintenances":
-        figure["data"] = observation_model.get_maintenance_trace(equipments)
+        figure["data"] = EpisodeTrace.get_maintenance_trace(episode, equipments)
 
     return figure
 
@@ -86,7 +86,7 @@ def load_summary_data(equipments, relayout_data_store, figure, kind):
 )
 def update_select_loads(children):
     return [
-        {'label': load, "value": load} for load in [*observation_model.episode.load_names, 'total']
+        {'label': load, "value": load} for load in [*episode['data'].load_names, 'total']
     ]
 
 
@@ -96,7 +96,7 @@ def update_select_loads(children):
 )
 def update_select_prods(children):
     return [
-        {'label': prod, "value": prod} for prod in observation_model.episode.prod_names
+        {'label': prod, "value": prod} for prod in episode['data'].prod_names
     ]
 
 
@@ -111,7 +111,7 @@ def update_select_prods(children):
 )
 def update_table(loads, prods, children, data):
     if data is None:
-        table = observation_model.init_table_inspection_data()
+        table = observation_model.init_table_inspection_data(episode)
         return [{"name": i, "id": i} for i in table.columns], table.to_dict('records')
     if loads is None:
         loads = []
@@ -127,7 +127,7 @@ def update_table(loads, prods, children, data):
     df = df.drop(cols_to_drop, axis=1)
     if cols_to_add:
         df = df.merge(
-            observation_model.get_prod_and_conso()[cols_to_add], left_on="timestamp", right_index=True)
+            observation_model.get_prod_and_conso(episode)[cols_to_add], left_on="timestamp", right_index=True)
     cols = [{"name": i, "id": i} for i in df.columns]
     return cols, df.to_dict('records')
 
@@ -137,7 +137,7 @@ def update_table(loads, prods, children, data):
     [Input('temporaryid', 'children')]
 )
 def update_card_step(children):
-    return len(observation_model.episode.observations)
+    return len(episode['data'].observations)
 
 
 @app.callback(
@@ -145,7 +145,7 @@ def update_card_step(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_maintenance(children):
-    return env_actions(observation_model.episode, which="maintenances", kind="nb", aggr=True)
+    return env_actions(episode, which="maintenances", kind="nb", aggr=True)
 
 
 @app.callback(
@@ -153,7 +153,7 @@ def update_card_maintenance(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_hazard(children):
-    return env_actions(observation_model.episode, which="hazards", kind="nb", aggr=True)
+    return env_actions(episode, which="hazards", kind="nb", aggr=True)
 
 
 @app.callback(
@@ -161,7 +161,7 @@ def update_card_hazard(children):
     [Input('temporaryid', 'children')]
 )
 def update_card_duration_maintenances(children):
-    return observation_model.get_duration_maintenances()
+    return observation_model.get_duration_maintenances(episode)
 
 
 @app.callback(
@@ -191,9 +191,8 @@ def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figu
         new_episode = episode
     else:
         new_episode = make_episode(base_dir, ref_agent, indx)
-    figure_overflow["data"] = observation_model.get_total_overflow_trace(
-        new_episode)
-    figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
+    figure_overflow["data"] = new_episode['total_overflow_trace']
+    figure_usage["data"] = new_episode['usage_rate_trace']
     return figure_overflow, figure_usage
 
 
@@ -203,7 +202,7 @@ def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figu
     [State("indicator_line_charts", "figure")]
 )
 def update_profile_conso_graph(children, figure):
-    figure["data"] = profiles_traces(observation_model.episode, freq="30T")
+    figure["data"] = profiles_traces(episode, freq="30T")
     return figure
 
 
@@ -213,7 +212,7 @@ def update_profile_conso_graph(children, figure):
     [State("production_share_graph", "figure")]
 )
 def update_production_share_graph(children, figure):
-    share_prod = observation_model.get_prod_share_trace()
+    share_prod = EpisodeTrace.get_prod_share_trace(episode, prod_types)
     figure["data"] = share_prod
     return figure
 
@@ -223,5 +222,5 @@ def update_production_share_graph(children, figure):
     [Input('temporaryid', 'children')]
 )
 def update_date_range(children):
-    return observation_model.episode.production["timestamp"].dt.date.values[0], \
-        observation_model.episode.production["timestamp"].dt.date.values[-1]
+    return episode['data'].production["timestamp"].dt.date.values[0], \
+           episode['data'].production["timestamp"].dt.date.values[-1]

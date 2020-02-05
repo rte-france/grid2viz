@@ -1,3 +1,4 @@
+from src.grid2kpi.episode_analytics import EpisodeTrace
 from src.grid2kpi.episode_analytics.EpisodeAnalytics import EpisodeAnalytics
 from grid2op.EpisodeData import EpisodeData
 import os
@@ -9,16 +10,6 @@ import plotly.graph_objects as go
 
 # TEMPORARY: should be moved to a proper class
 from grid2op.PlotPlotly import PlotObs
-
-
-def get_total_overflow_ts(episode):
-    # TODO: This :-1 probably has to change
-    df = pd.DataFrame(index=range(len(episode.observations[:-1])),
-                      columns=["time", "value"])
-    for (time_step, obs) in enumerate(episode.observations[:-1]):
-        tstamp = episode.timestamps[time_step]
-        df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
-    return df
 
 
 graphs = {}
@@ -128,13 +119,15 @@ def make_episode(base_dir, agent, indx):
     episode_loaded = EpisodeAnalytics(EpisodeData.fromdisk(
         path, indx
     ))
-    store[id] = episode_loaded
+    store[id] = {
+        'data': episode_loaded,
+        'total_overflow_trace': EpisodeTrace.get_total_overflow_trace(episode_loaded),
+        'usage_rate_trace': EpisodeTrace.get_usage_rate_trace(episode_loaded),
+        'reward_trace': EpisodeTrace.get_df_rewards_trace(episode_loaded, id + '_rewards', id + '_cum_reswards'),
+        'total_overflow_ts': EpisodeTrace.get_total_overflow_ts(episode_loaded)
+    }
 
-    # TEMPORARY: should be moved to a proper class
-    setattr(episode_loaded, "total_overflow_ts",
-            get_total_overflow_ts(episode_loaded))
-
-    return episode_loaded
+    return store[id]
 
 
 path = os.path.join(

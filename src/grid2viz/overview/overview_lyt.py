@@ -4,7 +4,6 @@ import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
 from src.grid2kpi.manager import agents, agent_ref, episode
-from src.grid2kpi.episode_analytics import observation_model
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -93,8 +92,8 @@ def summary_line(ref_agent=agent_ref):
                     id='input_assets_selector',
                     options=[{'label': load_name,
                               'value': load_name}
-                             for load_name in episode.load_names],
-                    value=episode.load_names[0],
+                             for load_name in episode['data'].load_names],
+                    value=episode['data'].load_names[0],
                     mode='multiple',
                     showArrow=True
                 ),
@@ -122,8 +121,7 @@ def summary_line(ref_agent=agent_ref):
                         style={'margin-top': '1em'},
                         figure=go.Figure(
                             layout=layout_def,
-                            data=observation_model.get_usage_rate_trace(
-                                episode)
+                            data=episode['usage_rate_trace']
                         ),
                         config=dict(displayModeBar=False)
                     ),
@@ -133,8 +131,7 @@ def summary_line(ref_agent=agent_ref):
                         style={'margin-top': '1em'},
                         figure=go.Figure(
                             layout=layout_def,
-                            data=observation_model.get_total_overflow_trace(
-                                episode)
+                            data=episode['total_overflow_trace']
                         ),
                         config=dict(displayModeBar=False)
                     ),

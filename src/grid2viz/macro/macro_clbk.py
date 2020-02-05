@@ -8,15 +8,11 @@ import plotly.graph_objects as go
 
 from src.app import app
 from src.grid2kpi.manager import make_episode, base_dir, indx
-from src.grid2kpi.episode_analytics import observation_model
+from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
 from src.grid2kpi.episode_analytics.maintenances import (hist_duration_maintenances)
 
-
-# TODO add contant color code for ref and studied agent
-# studied_color = {'primary': #color, 'secondary': #color}
-# ref_color = {'primary': #color, 'secondary': #color}
 
 @app.callback(
     Output("cumulated_rewards_timeserie", "figure"),
@@ -36,10 +32,10 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 
     new_episode = make_episode(base_dir, study_agent, indx)
     ref_episode = make_episode(base_dir, ref_agent, indx)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
+    actions_ts = new_episode['data'].action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    df = observation_model.get_df_computed_reward(new_episode)
+    df = observation_model.get_df_computed_reward(new_episode['data'])
     action_events_df = pd.DataFrame(
         index=df["timestep"], data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
@@ -49,10 +45,8 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10}
     )
-    ref_episode_reward_trace = observation_model.get_ref_agent_rewards_trace(
-        ref_episode)
-    studied_agent_reward_trace = observation_model.get_studied_agent_reward_trace(
-        make_episode(base_dir, study_agent, indx))
+    ref_episode_reward_trace = ref_episode['reward_trace']
+    studied_agent_reward_trace = make_episode(base_dir, study_agent, indx)['reward_trace']
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
@@ -68,7 +62,7 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 )
 def load_pie_chart(study_agent, figure):
     new_episode = make_episode(base_dir, study_agent, indx)
-    nb_actions = new_episode.action_data[['action_line', 'action_subs']].sum()
+    nb_actions = new_episode['data'].action_data[['action_line', 'action_subs']].sum()
     figure['data'] = [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
         values=[nb_actions["action_line"], nb_actions["action_subs"]]
@@ -132,9 +126,9 @@ def relayout_store(*args):
 )
 def update_nbs(study_agent):
     new_episode = make_episode(base_dir, study_agent, indx)
-    score = new_episode.meta["cumulative_reward"]
-    nb_overflow = new_episode.total_overflow_ts["value"].sum()
-    nb_action = new_episode.action_data[['action_line', 'action_subs']].sum(
+    score = new_episode['data'].meta["cumulative_reward"]
+    nb_overflow = new_episode['total_overflow_ts']["value"].sum()
+    nb_action = new_episode['data'].action_data[['action_line', 'action_subs']].sum(
         axis=1).sum()
     return round(score), nb_overflow, nb_action
 
@@ -169,12 +163,11 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
     new_episode = make_episode(base_dir, study_agent, indx)
-    figure_overflow["data"] = observation_model.get_total_overflow_trace(
-        new_episode)
-    maintenance_trace = observation_model.get_maintenance_trace(["total"])[0]
+    figure_overflow["data"] = new_episode['total_overflow_trace']
+    maintenance_trace = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])[0]
     maintenance_trace.update({"name": "Nb of maintenances"})
     figure_overflow["data"].append(maintenance_trace)
-    figure_usage["data"] = observation_model.get_usage_rate_trace(new_episode)
+    figure_usage["data"] = new_episode['usage_rate_trace']
     return figure_overflow, figure_usage
 
 
@@ -194,11 +187,11 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, study_agent, indx)
+    new_episode = make_episode(base_dir, study_agent, indx)['data']
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_episode = make_episode(base_dir, agent_ref, indx)
+    ref_episode = make_episode(base_dir, agent_ref, indx)['data']
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -319,5 +312,5 @@ def update_more_info(study_agent, active_cell):
         raise PreventUpdate
     row = active_cell["row"]
     new_episode = make_episode(base_dir, study_agent, indx)
-    act = new_episode.actions[row]
+    act = new_episode['data'].actions[row]
     return str(act)

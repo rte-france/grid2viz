@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from src.grid2kpi.episode_analytics import observation_model
+from src.grid2kpi.episode_analytics import EpisodeTrace
 from src.grid2kpi.manager import (
     episode, make_episode, base_dir, indx, make_network, get_network_graph)
 
@@ -119,8 +119,8 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                 id='asset_selector',
                 options=[{'label': load_name,
                           'value': load_name}
-                         for load_name in episode.load_names],
-                value=episode.load_names[0],
+                         for load_name in episode['data'].load_names],
+                value=episode['data'].load_names[0],
                 mode='multiple',
                 showArrow=True
             ),
@@ -141,7 +141,7 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                     style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=observation_model.get_usage_rate_trace(episode)
+                        data=episode['usage_rate_trace']
                     ),
                     config=dict(displayModeBar=False)
                 ),
@@ -151,8 +151,7 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                     style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=observation_model.get_total_overflow_trace(
-                            episode)
+                        data=episode['total_overflow_trace']
                     ),
                     config=dict(displayModeBar=False)
                 ),
@@ -186,11 +185,11 @@ def compute_window(user_selected_timestamp, study_agent):
         n_clicks_left = 0
         n_clicks_right = 0
         new_episode = make_episode(base_dir, study_agent, indx)
-        center_indx = new_episode.timestamps.index(
+        center_indx = new_episode['data'] .timestamps.index(
             datetime.datetime.strptime(
                 user_selected_timestamp, '%Y-%m-%d %H:%M')
         )
-        timestamp_range = new_episode.timestamps[
+        timestamp_range = new_episode['data'].timestamps[
             max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
         ]
         xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
@@ -205,7 +204,7 @@ def layout(user_selected_timestamp, study_agent):
             user_selected_timestamp, study_agent)),
         indicator_line,
         # TODO : episode.observations[1] will change
-        flux_inspector_line(get_network_graph(make_network(episode), episode)),
+        flux_inspector_line(), # flux_inspector_line(get_network_graph(make_network(episode), episode)),
         context_inspector_line,
         all_info_line
     ])

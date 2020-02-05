@@ -1,18 +1,18 @@
-from ..manager import episode, prod_types
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from .env_actions import env_actions
 
 
-def get_prod_and_conso():
+def get_prod_and_conso(episode):
+    episode_data = episode['data']
     productions = pd.pivot_table(
-        episode.production, index="timestamp", values="value",
+        episode_data.production, index="timestamp", values="value",
         columns=["equipment_name"]
     )
 
     loads = pd.pivot_table(
-        episode.load, index="timestamp", values="value",
+        episode_data.load, index="timestamp", values="value",
         columns=["equipment_name"]
     )
 
@@ -21,60 +21,22 @@ def get_prod_and_conso():
     return prods_and_loads
 
 
-def get_episode_active_consumption_ts():
-    return [sum(obs.load_p) for obs in episode.observations]
+def get_episode_active_consumption_ts(episode):
+    return [sum(obs.load_p) for obs in episode['data'].observations]
 
 
-def get_total_overflow_trace(episode):
-    df = episode.total_overflow_ts
-    return [go.Scatter(
-        x=df["time"],
-        y=df["value"],
-        name="Nb of overflows"
-    )]
-
-
-def get_prod_share_trace():
-    prod_type_values = list(prod_types.values()) if len(
-        prod_types.values()) > 0 else []
-
-    share_prod = get_prod()
-    df = share_prod.groupby("equipment_name")["value"].sum()
-    unique_prod_types = np.unique(prod_type_values)
-
-    labels = [*df.index.values, *np.unique(prod_type_values)]
-
-    parents = [prod_types.get(name) for name in df.index.values]
-    values = list(df)
-    for prod_type in unique_prod_types:
-        parents.append("")
-        value = 0
-        for gen in df.index.values:
-            if prod_types.get(gen) == prod_type:
-                value = value + df.get(gen)
-        values.append(value)
-
-    return [
-        go.Sunburst(labels=labels,
-                    values=values,
-                    parents=parents,
-                    branchvalues="total",
-                    )
-    ]
-
-
-def get_prod(equipments=None):
+def get_prod(episode, equipments=None):
     if equipments is None:
-        return episode.production
+        return episode['data'].production
     else:
-        return episode.production.loc[episode.production.equipment_name.isin(equipments), :]
+        return episode['data'].production.loc[episode['data'].production.equipment_name.isin(equipments), :]
 
 
-def get_load(equipments=None):
+def get_load(episode, equipments=None):
     if equipments is None:
-        return episode.load
+        return episode['data'].load
     else:
-        return episode.load.loc[episode.load.equipment_name.isin(equipments), :]
+        return episode['data'].load.loc[episode['data'].load.equipment_name.isin(equipments), :]
 
 
 def get_rho(episode):
@@ -110,169 +72,13 @@ def get_usage_rate(episode):
     return median_rho
 
 
-def get_hazard_trace(equipments=None):
-    ts_hazards_by_line = env_actions(
-        episode, which="hazards", kind="ts", aggr=False)
-
-    if 'total' in equipments:
-        ts_hazards_by_line = ts_hazards_by_line.assign(
-            total=episode.hazards.groupby('timestamp', as_index=True)[
-                'value'].sum()
-        )
-
-    if equipments is not None:
-        ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
-
-    trace = [go.Scatter(
-        x=ts_hazards_by_line.index,
-        y=ts_hazards_by_line[line],
-        name=line)
-        for line in ts_hazards_by_line.columns]
-
-    return trace
-
-
-def get_duration_maintenances():
-    timestep_duration = (episode.timestamps[1] - episode.timestamps[0])
+def get_duration_maintenances(episode):
+    timestep_duration = (episode['data'].timestamps[1] - episode['data'].timestamps[0])
     nb_maintenance = env_actions(episode, which="maintenances", kind="dur", aggr=False).sum()
     return (timestep_duration * nb_maintenance).total_seconds() / 60.0
 
 
-def get_maintenance_trace(equipments=None):
-    ts_maintenances_by_line = env_actions(
-        episode, which="maintenances", kind="ts", aggr=False)
-
-    if 'total' in equipments:
-        ts_maintenances_by_line = ts_maintenances_by_line.assign(
-            total=episode.maintenances.groupby(
-                'timestamp', as_index=True)['value'].sum()
-        )
-
-    if equipments is not None:
-        ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
-
-    trace = [go.Scatter(x=ts_maintenances_by_line.index,
-                        y=ts_maintenances_by_line[line],
-                        name=line)
-             for line in ts_maintenances_by_line.columns]
-    return trace
-
-
-def get_all_prod_trace(selection):
-    prod_with_type = get_prod().assign(
-        prod_type=[prod_types.get(equipment_name)
-                   for equipment_name in get_prod()['equipment_name']]
-    )
-    prod_type_names = prod_types.values()
-    trace = []
-    if 'total' in selection:
-        trace.append(
-            go.Scatter(
-                x=prod_with_type['timestamp'].unique(),
-                y=prod_with_type.groupby('timestamp')['value'].sum(),
-                name='total'
-            )
-        )
-    for name in prod_type_names:
-        if name in selection:
-            trace.append(go.Scatter(
-                x=prod_with_type[prod_with_type.prod_type.values ==
-                                 name]['timestamp'].unique(),
-                y=prod_with_type[prod_with_type.prod_type.values == name].groupby(['timestamp'])[
-                    'value'].sum(),
-                name=name
-            ))
-            selection.remove(
-                name)  # remove prod type from selection to avoid misunderstanding in get_def_trace_per_equipment()
-
-    return [*trace, *get_df_trace_per_equipment(get_prod(selection))]
-
-
-def get_load_trace_per_equipment(equipements):
-    all_equipements = get_load()
-    load_equipments = get_load(equipements)
-
-    if 'total' in equipements:
-        load_equipments = load_equipments.append(pd.DataFrame({
-            'equipement_id': ['nan' for i in all_equipements.groupby('timestep').size()],
-            'equipment_name': ['total' for i in all_equipements.groupby('timestep').size()],
-            'timestamp': [timestamp for timestamp in all_equipements['timestamp'].unique()],
-            'timestep': [timestep for timestep in all_equipements['timestep'].unique()],
-            'value': [value for value in all_equipements.groupby('timestep')['value'].sum()]
-        }))
-
-    return get_df_trace_per_equipment(load_equipments)
-
-
-def get_usage_rate_trace(episode):
-    df = get_usage_rate(episode)
-    line = {
-        "shape": "spline",
-        "width": 0,
-        "smoothing": 1
-    }
-    trace = [go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile10"],
-        name="quantile 10",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile25"],
-        name="quantile 25",
-        fill="tonexty",
-        fillcolor="rgba(159, 197, 232, 0.63)",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["median"],
-        name="median",
-        fill="tonexty",
-        fillcolor="rgba(31, 119, 180, 0.5)",
-        line={
-            "color": "rgb(31, 119, 180)",
-            "shape": "spline",
-            "smoothing": 1
-        }
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile75"],
-        name="quantile 75",
-        fill="tonexty",
-        fillcolor="rgba(31, 119, 180, 0.5)",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile90"],
-        name="quantile 90",
-        fill="tonexty",
-        fillcolor="rgba(159, 197, 232, 0.63)",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["max"],
-        name="Max",
-        line={
-            "shape": "spline",
-            "smoothing": 1,
-            "color": "rgba(255,0,0,0.5)"
-        }
-    )]
-    return trace
-
-
-def get_df_trace_per_equipment(df):
-    trace = []
-    for equipment in df["equipment_name"].drop_duplicates():
-        trace.append(go.Scatter(
-            x=df.loc[df["equipment_name"] == equipment, :]["timestamp"],
-            y=df.loc[df["equipment_name"] == equipment, :]["value"],
-            name=equipment
-        ))
-    return trace
-
-
-def init_table_inspection_data():
+def init_table_inspection_data(episode):
     ts_hazards = env_actions(episode, which="hazards", kind="ts", aggr=True)
     ts_maintenances = env_actions(
         episode, which="maintenances", kind="ts", aggr=True)
@@ -281,21 +87,3 @@ def init_table_inspection_data():
     table = table.reset_index()
     table["IsWorkingDay"] = table["timestamp"].dt.weekday < 5
     return table
-
-
-def get_ref_agent_rewards_trace(ref_episode):
-    return get_df_rewards_trace(ref_episode, "ref_rewards", "ref_cum_rewards")
-
-
-def get_studied_agent_reward_trace(studied_episode):
-    return get_df_rewards_trace(studied_episode, "studied_rewards", "studied_cum_rewards")
-
-
-def get_df_rewards_trace(episode, reward_line_title="rewards", cum_line_title="cum_rewards"):
-    trace = []
-    df = get_df_computed_reward(episode)
-    trace.append(go.Scatter(x=df["timestep"],
-                            y=df["rewards"], name=reward_line_title))
-    trace.append(go.Scatter(
-        x=df["timestep"], y=df["cum_rewards"], name=cum_line_title, yaxis='y2'))
-    return trace
