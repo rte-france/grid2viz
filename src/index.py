@@ -29,20 +29,32 @@ navbar = dbc.Navbar(
         html.Div([html.Span("Studied Agent:", className="badge badge-secondary"),
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
-        dbc.Button(
-            id="enlarge_left",
-            children="-5",
-            color="dark",
-            className="float-left mr-1 hidden"
-        ),
-        dcc.Dropdown(id="user_timestamps", className="col-xl-1 hidden",
-                     style={"width": "200px", "margin-right": "4px"}),
-        dbc.Button(
-            id="enlarge_right",
-            children="+5",
-            color="dark",
-            className="float-left hidden"
-        ),
+        html.Div([
+            dcc.Input(
+                id="user_timestamps_left_input", type="number",
+                debounce=False, placeholder="timestep left",
+                style={"width": "10%"}
+            ),
+            dbc.Button(
+                id="enlarge_left",
+                children="-5",
+                color="dark",
+                className="float-left mr-1"
+            ),
+            dcc.Dropdown(id="user_timestamps", className="",
+                         style={"width": "200px"}),
+            dbc.Button(
+                id="enlarge_right",
+                children="+5",
+                color="dark",
+                className="float-left ml-1"
+            ),
+            dcc.Input(
+                id="user_timestamps_right_input", type="number",
+                debounce=False, placeholder="timestep right",
+                style={"width": "10%"}
+            )
+        ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"
         ),
@@ -54,7 +66,14 @@ navbar = dbc.Navbar(
 
 body = html.Div([
     dcc.Location(id="url", refresh=False),
-    html.Div(id="page-content", className="main-container")
+    html.Div(id="page-content", className="main-container"),
+
+    dbc.Modal([
+        dbc.ModalBody([
+            dbc.Spinner(color="primary", type="grow"),
+            html.P('loading graph...')
+        ])
+    ], id='loading_modal')
 ])
 
 app.layout = html.Div([
@@ -102,10 +121,10 @@ def update_study_agent_label(agent):
     return agent
 
 
-@app.callback(Output("user_timestamps", "className"),
+@app.callback(Output("user_timestamp_div", "className"),
               [Input("url", "pathname")])
 def show_user_timestamps(pathname):
-    class_name = "mr-1"
+    class_name = "ml-4 row"
     if pathname != "/micro":
         class_name = " ".join([class_name, "hidden"])
     return class_name
@@ -128,8 +147,7 @@ def update_user_timestamps_value(data):
 @app.callback(Output("enlarge_left", "n_clicks"),
               [Input("user_timestamps", "value")])
 def reset_n_cliks_left(value):
-    return 0
-
+        return 0
 
 @app.callback(Output("enlarge_right", "n_clicks"),
               [Input("user_timestamps", "value")])
@@ -137,22 +155,12 @@ def reset_n_cliks_right(value):
     return 0
 
 
-@app.callback(Output("enlarge_left", "className"),
-              [Input("url", "pathname")])
-def show_minus_five_button(pathname):
-    class_name = "float-left mr-1"
-    if pathname != "/micro":
-        class_name = " ".join([class_name, "hidden"])
-    return class_name
-
-
-@app.callback(Output("enlarge_right", "className"),
-              [Input("url", "pathname")])
-def show_plus_five_button(pathname):
-    class_name = "float-left"
-    if pathname != "/micro":
-        class_name = " ".join([class_name, "hidden"])
-    return class_name
+@app.callback([Output("user_timestamps_left_input", "value"),
+               Output("user_timestamps_right_input", "value")],
+              [Input("enlarge_left", "n_clicks"),
+               Input("enlarge_right", "n_clicks")])
+def timestep_input_value(left_n_click, right_n_click):
+    return left_n_click, right_n_click
 
 
 server = app.server
