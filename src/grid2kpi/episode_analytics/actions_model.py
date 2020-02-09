@@ -26,7 +26,7 @@ def get_action_table_data(new_episode):
 
 
 def get_action_per_sub(new_episode):
-    data = new_episode['data'].action_data_table
-    count = data[(data["action_subs"] == 1)]["sub_name"].value_counts()
+    data = get_action_table_data(new_episode)
+    count = data[(data["action_subs"] > 0)]["sub_name"].map(lambda x: " ".join(x)).value_counts()
     sub_names = new_episode['data'].name_sub
-    return [go.Bar(x=sub_names, y=count)]
+    return [go.Bar(x=count.index, y=count.values)]

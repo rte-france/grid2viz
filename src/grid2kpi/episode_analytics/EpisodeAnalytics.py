@@ -5,6 +5,7 @@ from grid2op.EpisodeData import EpisodeData
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from numba import jit
 
 
 class EpisodeAnalytics():
@@ -14,15 +15,12 @@ class EpisodeAnalytics():
         # Add EpisodeData attributes to EpisodeAnalytics 
         for attribute in [elem for elem in dir(self.episode_data) if not (elem.startswith("__") or callable(getattr(self.episode_data, elem)))]:
             setattr(self, attribute, getattr(self.episode_data, attribute))
-
         print("computing df")
         beg = time.time()
         print("Environment")
         self.load, self.production, self.rho, self.action_data, self.action_data_table, self.computed_reward, self.flow_and_voltage_line = self._make_df_from_data()
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df()
-        self.timestamps = sorted(self.load.timestamp.dropna().unique())
-        self.timesteps = sorted(self.load.timestep.unique())
         end = time.time()
         print(f"end computing df: {end - beg}")
 
@@ -30,29 +28,47 @@ class EpisodeAnalytics():
     def timestamp(obs):
         return dt.datetime(obs.year, obs.month, obs.day, obs.hour_of_day,
                            obs.minute_of_hour)
-
+    # @jit(forceobj=True)   
     def _make_df_from_data(self):
-        load_size = (len(self.observations)-1) * \
-            len(self.observations[0].load_p)
-        prod_size = (len(self.observations)-1) * \
-            len(self.observations[0].prod_p)
-        rho_size = (len(self.observations)-1) * len(self.observations[0].rho)
-        action_size = len(self.actions)
-        reward_size = len(self.rewards)
-        flow_voltage_size = (len(self.observations)-1)
+        size = len(self.actions)
+        load_size = size * len(self.observations[0].load_p)
+        prod_size = size * len(self.observations[0].prod_p)
+        rho_size = size * len(self.observations[0].rho)
+        action_size = size
+        reward_size = size
+        flow_voltage_size = size
         cols = ["timestep", "timestamp", "equipement_id", "equipment_name",
                 "value"]
         load_data = pd.DataFrame(index=range(load_size), columns=cols)
         production = pd.DataFrame(index=range(prod_size), columns=cols)
         rho = pd.DataFrame(index=range(rho_size), columns=[
             'time', "timestamp", 'equipment', 'value'])
-        action_data = pd.DataFrame(index=range(action_size),
-                                   columns=['timestep', 'timestamp', 'timestep_reward', 'action_line', 'action_subs',
-                                            'set_line', 'switch_line', 'set_topo', 'change_bus', 'distance'])
-        action_data_table = pd.DataFrame(index=range(action_size),
-                                         columns=['timestep', 'timestamp', 'timestep_reward', 'action_line',
-                                                  'action_subs',
-                                                  'line_action', 'sub_name', 'objets_changed', 'distance'])
+        cols_loop_action_data = ['action_line', 'action_subs', 'set_line', 'switch_line', 
+                    'set_topo', 'change_bus', 'distance']
+        action_data = pd.DataFrame(
+            index=range(action_size),
+            # columns=['timestep', 'timestamp', 'timestep_reward', 
+            #          *cols_loop_action_data]
+            columns=[
+                'timestep', 'timestamp', 'timestep_reward','action_line', 
+                'action_subs', 'set_line', 'switch_line', 'set_topo', 
+                'change_bus', 'distance'
+            ]
+        )
+        cols_loop_action_data_table = [
+            'action_line','action_subs','line_action', 'sub_name', 
+            'objects_changed', 'distance'
+        ]
+        action_data_table = pd.DataFrame(
+            index=range(action_size),
+            # columns=['timestep', 'timestamp', 'timestep_reward', 
+            #          *cols_loop_action_data_table]
+            columns=[
+                'timestep', 'timestamp', 'timestep_reward', 'action_line',
+                'action_subs','line_action', 'sub_name', 'objects_changed', 
+                'distance'
+            ]
+        )
         computed_rewards = pd.DataFrame(index=range(reward_size), columns=[
             'timestep', 'rewards', 'cum_rewards'])
         cols = pd.MultiIndex.from_product(
@@ -61,9 +77,26 @@ class EpisodeAnalytics():
             index=range(flow_voltage_size), columns=cols)
         topo_list = []
         bus_list = []
-        for (time_step, (obs, act)) in tqdm(enumerate(zip(self.observations[1:], self.actions)),
+        for (time_step, (obs, act)) in tqdm(enumerate(zip(self.observations[:-1], self.actions)),
                                             total=len(self.env_actions)):
             time_stamp = self.timestamp(obs)
+            line_impact, sub_impact = act.get_topological_impact()
+            sub_action = act.name_sub[sub_impact]# self.get_sub_action(act, obs)
+            if not len(sub_action):
+                sub_action = None
+            line_action = ""
+            open_status = np.where(act._set_line_status == 1)
+            close_status = np.where(act._set_line_status == -1)
+            switch_line = np.where(act._switch_line_status == True)
+            if len(open_status[0]) == 1:
+                line_action = "open " + \
+                    str(self.line_names[open_status[0]])
+            if len(close_status[0]) == 1:
+                line_action = "close " + \
+                    str(self.line_names[close_status[0]])
+            if len(switch_line[0]) == 1:
+                line_action = "switch " + \
+                    str(self.line_names[switch_line[0]])
             for equipment_id, load_p in enumerate(obs.load_p):
                 pos = time_step * self.n_loads + equipment_id
                 load_data.loc[pos, :] = [
@@ -79,28 +112,19 @@ class EpisodeAnalytics():
                 rho.loc[pos, :] = [time_step, time_stamp, equipment, rho_t]
             for line, subs in zip(range(act.n_line), range(len(act.sub_info))):
                 pos = time_step
-                action_data.loc[pos, :] = [time_step, time_stamp, self.rewards[time_step],
-                                           np.sum(act._switch_line_status), np.sum(
-                    act._change_bus_vect),
+                action_line =  np.sum(act._switch_line_status)
+                
+                # TODO: change temporary fix below
+                action_subs = int(np.any(act._change_bus_vect))
+
+                action_data.loc[pos, cols_loop_action_data] = [
+                    action_line,
+                    action_subs,
                     act._set_line_status.flatten().astype(np.float),
                     act._switch_line_status.flatten().astype(np.float),
                     act._set_topo_vect.flatten().astype(np.float),
                     act._change_bus_vect.flatten().astype(np.float),
                     self.get_distance_from_obs(obs)]
-                line_action = ""
-                open_status = np.where(act._set_line_status == 1)
-                close_status = np.where(act._set_line_status == -1)
-                switch_line = np.where(act._switch_line_status == True)
-                if len(open_status[0]) == 1:
-                    line_action = "open " + \
-                        str(self.line_names[open_status[0]])
-                if len(close_status[0]) == 1:
-                    line_action = "close " + \
-                        str(self.line_names[close_status[0]])
-                if len(switch_line[0]) == 1:
-                    line_action = "switch " + \
-                        str(self.line_names[switch_line[0]])
-                sub_action = self.get_sub_action(act, obs)
                 object_changed_set = self.get_object_changed(
                     act._set_topo_vect, topo_list)
                 if object_changed_set is not None:
@@ -108,13 +132,13 @@ class EpisodeAnalytics():
                 else:
                     object_changed = self.get_object_changed(
                         act._change_bus_vect, bus_list)
-                action_data_table.loc[pos, :] = [time_step, time_stamp, self.rewards[time_step],
-                                                 np.sum(act._switch_line_status), np.sum(
-                                                     act._change_bus_vect),
-                                                 line_action,
-                                                 sub_action,
-                                                 object_changed,
-                                                 self.get_distance_from_obs(obs)]
+                action_data_table.loc[pos, cols_loop_action_data_table] = [
+                    action_line,
+                    action_subs,
+                    line_action,
+                    sub_action,
+                    object_changed,
+                    self.get_distance_from_obs(obs)]
 
             computed_rewards.loc[time_step, :] = [time_stamp,
                                                   self.rewards[time_step],
@@ -130,6 +154,14 @@ class EpisodeAnalytics():
                 obs.a_or,
                 obs.v_or
             ]).flatten()
+        self.timestamps = sorted(load_data.timestamp.dropna().unique())
+        self.timesteps = sorted(load_data.timestep.unique())
+        action_data["timestep"] = self.timesteps
+        action_data["timestamp"] = self.timestamps
+        action_data["timestep_reward"] = self.rewards[:size]
+        action_data_table["timestep"] = self.timesteps
+        action_data_table["timestamp"] = self.timestamps
+        action_data_table["timestep_reward"] = self.rewards[:size]
 
         load_data["value"] = load_data["value"].astype(float)
         production["value"] = production["value"].astype(float)
@@ -158,6 +190,7 @@ class EpisodeAnalytics():
     def get_distance_from_obs(self, obs):
         return len(obs.topo_vect) - np.count_nonzero(obs.topo_vect == 1)
 
+    # @jit(forceobj=True)
     def _env_actions_as_df(self):
         hazards_size = (len(self.observations)-1) * self.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
@@ -192,6 +225,6 @@ class Test():
 if __name__ == "__main__":
     test = Test()
     path_agent = "nodisc_badagent"
-    episode = EpisodeData.fromdisk(
+    episode = EpisodeData.from_disk(
         "D:/Projects/RTE - Grid2Viz/20200127_data_scripts/20200127_agents_log/" + path_agent, "3_with_hazards")
     print(dir(EpisodeAnalytics(episode)))

@@ -2,6 +2,7 @@ import inspect
 import time
 import functools
 import logging
+import types
 
 logger = logging.getLogger(__name__)
 
@@ -24,4 +25,10 @@ def timeit(func):
         return result
 
     return wrapper
+
+def decorate_all_in_module(module, decorator):
+    for name in dir(module):
+        obj = getattr(module, name)
+        if isinstance(obj, types.FunctionType):
+            setattr(module, name, decorator(obj))
 

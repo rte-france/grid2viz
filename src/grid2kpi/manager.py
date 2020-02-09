@@ -12,16 +12,17 @@ import plotly.graph_objects as go
 from grid2op.PlotPlotly import PlotObs
 
 
-graphs = {}
+graph = None
 graph_layout = [(280, -81), (100, -270), (-366, -270), (-366, -54), (64, -54), (64, 54), (-450, 0),
                 (-550, 0), (-326, 54), (-222, 108), (-79, 162), (170, 270), (64, 270), (-222, 216)]
 
 
 def make_network(new_episode):
-    if new_episode not in graphs:
-        graphs[new_episode] = PlotObs(
+    global graph
+    if graph is None:
+        graph = PlotObs(
             substation_layout=graph_layout, observation_space=new_episode.observation_space)
-    return graphs[new_episode]
+    return graph
 
 
 def get_network_graph(network, episode):
@@ -111,13 +112,13 @@ def get_network_graph(network, episode):
 store = {}
 
 
-def make_episode(base_dir, agent, indx):
-    id = agent + indx
+def make_episode(base_dir, agent, episode_name):
+    id = agent + episode_name
     if id in store:
         return store[id]
     path = base_dir + agent
-    episode_loaded = EpisodeAnalytics(EpisodeData.fromdisk(
-        path, indx
+    episode_loaded = EpisodeAnalytics(EpisodeData.from_disk(
+        path, episode_name
     ))
     store[id] = {
         'data': episode_loaded,
@@ -140,10 +141,10 @@ path = os.path.join(
 parser = configparser.ConfigParser()
 parser.read(path)
 
-indx = parser.get("DEFAULT", "scenario")
+episode_name = parser.get("DEFAULT", "scenario")
 base_dir = parser.get("DEFAULT", "base_dir")
 agent_ref = parser.get("DEFAULT", "agent_ref")
-episode = make_episode(base_dir, agent_ref, indx)
+episode = make_episode(base_dir, agent_ref, episode_name)
 agents = [file for file in os.listdir(
     base_dir) if os.path.isdir(base_dir + file)]
 scenarios = []

@@ -6,10 +6,22 @@ from dash.exceptions import PreventUpdate
 
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
-from src.grid2viz.macro import macro_lyt
-from src.grid2viz.micro import micro_lyt
-from src.grid2viz.overview import overview_lyt
-from src.grid2kpi.manager import agent_ref, indx
+from src.grid2kpi.manager import agent_ref, episode_name
+from src.grid2viz.utils.perf_analyser import timeit, decorate_all_in_module
+
+import src.grid2viz.macro.macro_clbk as macro_clbk
+import src.grid2viz.macro.macro_lyt as macro
+import src.grid2viz.micro.micro_clbk as micro_clbk
+import src.grid2viz.micro.micro_lyt as micro
+import src.grid2viz.overview.overview_clbk as overview_clbk
+import src.grid2viz.overview.overview_lyt as overview
+
+decorate_all_in_module(macro_clbk, timeit)
+decorate_all_in_module(macro, timeit)
+decorate_all_in_module(micro_clbk, timeit)
+decorate_all_in_module(micro, timeit)
+decorate_all_in_module(overview_clbk, timeit)
+decorate_all_in_module(overview, timeit)
 
 nav_items = [
     dbc.NavItem(dbc.NavLink("Scenario Selection", href="/episodes")),
@@ -21,7 +33,7 @@ nav_items = [
 navbar = dbc.Navbar(
     [
         html.Div([html.Span("Scenario:", className="badge badge-secondary"),
-                  html.Span(indx, className="badge badge-light", id="scen_lbl")],
+                  html.Span(episode_name, className="badge badge-light", id="scen_lbl")],
                  className="reminder float-left"),
         html.Div([html.Span("Ref Agent:", className="badge badge-secondary"),
                   html.Span(agent_ref, className="badge badge-light", id="ref_ag_lbl")],
@@ -30,11 +42,11 @@ navbar = dbc.Navbar(
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
         html.Div([
-            dcc.Input(
-                id="user_timestamps_left_input", type="number",
-                debounce=False, placeholder="timestep left",
-                style={"width": "10%"}
-            ),
+            # dcc.Input(
+            #     id="user_timestamps_left_input", type="number",
+            #     debounce=False, placeholder="timestep left",
+            #     style={"width": "10%"}
+            # ),
             dbc.Button(
                 id="enlarge_left",
                 children="-5",
@@ -49,11 +61,11 @@ navbar = dbc.Navbar(
                 color="dark",
                 className="float-left ml-1"
             ),
-            dcc.Input(
-                id="user_timestamps_right_input", type="number",
-                debounce=False, placeholder="timestep right",
-                style={"width": "10%"}
-            )
+            # dcc.Input(
+            #     id="user_timestamps_right_input", type="number",
+            #     debounce=False, placeholder="timestep right",
+            #     style={"width": "10%"}
+            # )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"
@@ -80,33 +92,41 @@ app.layout = html.Div([
     dcc.Store(id="agent_ref", storage_type='memory'),
     dcc.Store(id="agent_study", storage_type='memory'),
     dcc.Store(id="user_timestamps_store"),
+    dcc.Store(id="page"),
     navbar,
     body
 ])
 
 
 @app.callback(
-    Output('page-content', 'children'),
+    [Output('page-content', 'children'), Output('page', 'data')],
     [Input('url', 'pathname')],
     [State("agent_ref", "data"),
      State("agent_study", "data"),
-     State("user_timestamps", "value")]
+     State("user_timestamps", "value"),
+     State("page", "data"),
+     State("user_timestamps_store", "data")]
 )
-def display_page(pathname, ref_agent, study_agent, user_selected_timestamp):
+def display_page(pathname, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
+    if timestamps_store is None:
+        timestamps_store = []
+    timestamps = [dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store]
+    if pathname[1:] == prev_page:
+        raise PreventUpdate
     if ref_agent is None:
         ref_agent = agent_ref
     if study_agent is None:
         study_agent = agent_ref
     if pathname == "/episodes":
-        return episodes_lyt
+        return episodes_lyt, "episodes"
     elif pathname == "/overview" or pathname == "/":
-        return overview_lyt(ref_agent)
+        return overview.layout(ref_agent), "overview"
     elif pathname == "/macro":
-        return macro_lyt(study_agent)
+        return macro.layout(study_agent, timestamps), "macro"
     elif pathname == "/micro":
-        return micro_lyt(user_selected_timestamp, study_agent)
+        return micro.layout(user_selected_timestamp, study_agent, ref_agent), "micro"
     else:
-        return 404
+        return 404, ""
 
 
 @app.callback(Output("ref_ag_lbl", "children"),

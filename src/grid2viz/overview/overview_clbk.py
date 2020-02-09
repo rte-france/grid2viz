@@ -9,7 +9,7 @@ from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.episode_analytics.env_actions import env_actions
-from src.grid2kpi.manager import episode, make_episode, base_dir, indx, agent_ref, prod_types
+from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, agent_ref, prod_types
 from src.grid2kpi.episode_analytics.maintenances import duration_maintenances
 from src.grid2viz.utils.perf_analyser import timeit, whoami
 
@@ -190,7 +190,7 @@ def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figu
     if ref_agent == agent_ref:
         new_episode = episode
     else:
-        new_episode = make_episode(base_dir, ref_agent, indx)
+        new_episode = make_episode(base_dir, ref_agent, episode_name)
     figure_overflow["data"] = new_episode['total_overflow_trace']
     figure_usage["data"] = new_episode['usage_rate_trace']
     return figure_overflow, figure_usage
