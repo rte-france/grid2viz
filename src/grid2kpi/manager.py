@@ -1,16 +1,17 @@
-from src.grid2kpi.episode_analytics import EpisodeTrace
+import time
+
 from src.grid2kpi.episode_analytics.EpisodeAnalytics import EpisodeAnalytics
 from grid2op.EpisodeData import EpisodeData
 import os
 import configparser
 import csv
 import pandas as pd
+import pickle
 
 import plotly.graph_objects as go
 
 # TEMPORARY: should be moved to a proper class
 from grid2op.PlotPlotly import PlotObs
-
 
 graph = None
 graph_layout = [(280, -81), (100, -270), (-366, -270), (-366, -54), (64, -54), (64, 54), (-450, 0),
@@ -112,23 +113,72 @@ def get_network_graph(network, episode):
 store = {}
 
 
-def make_episode(base_dir, agent, episode_name):
-    id = agent + episode_name
-    if id in store:
-        return store[id]
-    path = base_dir + agent
-    episode_loaded = EpisodeAnalytics(EpisodeData.from_disk(
-        path, episode_name
-    ))
-    store[id] = {
-        'data': episode_loaded,
-        'total_overflow_trace': EpisodeTrace.get_total_overflow_trace(episode_loaded),
-        'usage_rate_trace': EpisodeTrace.get_usage_rate_trace(episode_loaded),
-        'reward_trace': EpisodeTrace.get_df_rewards_trace(episode_loaded, id + '_rewards', id + '_cum_rewards'),
-        'total_overflow_ts': EpisodeTrace.get_total_overflow_ts(episode_loaded)
-    }
+def make_episode(agent, episode_name):
+    if is_in_ram_cache(episode_name, agent):
+        return get_from_ram_cache(episode_name, agent)
+    elif is_in_fs_cache(episode_name, agent):
+        episode = get_from_fs_cache(episode_name, agent)
+        save_in_ram_cache(episode_name, agent, episode)
+        return episode
+    else:
+        episode = compute_episode(episode_name, agent)
+        save_in_fs_cache(episode_name, agent, episode)
+        save_in_ram_cache(episode_name, agent, episode)
+        return episode
 
-    return store[id]
+
+def clear_fs_cache():
+    os.rmdir(cache_dir)
+
+
+def is_in_fs_cache(episode_name, agent):
+    return os.path.isfile(get_fs_cached_file(episode_name, agent))
+
+
+def get_fs_cached_file(episode_name, agent):
+    episode_dir = os.path.join(cache_dir, episode_name)
+    if not os.path.exists(episode_dir):
+        os.makedirs(episode_dir)
+    return os.path.join(episode_dir, agent + ".pickle")
+
+
+def save_in_fs_cache(episode_name, agent, episode):
+    path = get_fs_cached_file(episode_name, agent)
+    with open(path, "wb") as f:
+        pickle.dump(episode, f)
+
+
+def get_from_fs_cache(episode_name, agent):
+    beg = time.time()
+    path = get_fs_cached_file(episode_name, agent)
+    with open(path, "rb") as f:
+        episode_loaded = pickle.load(f)
+    end = time.time()
+    print(f"end loading scenario file: {end - beg}")
+    return episode_loaded
+
+
+def compute_episode(episode_name, agent):
+    path = base_dir + agent
+    return EpisodeAnalytics(EpisodeData.from_disk(
+        path, episode_name
+    ), episode_name, agent)
+
+
+def is_in_ram_cache(episode_name, agent):
+    return make_ram_cache_id(episode_name, agent) in store
+
+
+def save_in_ram_cache(episode_name, agent, episode):
+    store[make_ram_cache_id(episode_name, agent)] = episode
+
+
+def get_from_ram_cache(episode_name, agent):
+    return store[make_ram_cache_id(episode_name, agent)]
+
+
+def make_ram_cache_id(episode_name, agent):
+    return agent + episode_name
 
 
 path = os.path.join(
@@ -143,10 +193,11 @@ parser.read(path)
 
 episode_name = parser.get("DEFAULT", "scenario")
 base_dir = parser.get("DEFAULT", "base_dir")
+cache_dir = os.path.join(base_dir, "_cache")
 agent_ref = parser.get("DEFAULT", "agent_ref")
-episode = make_episode(base_dir, agent_ref, episode_name)
+episode = make_episode(agent_ref, episode_name)
 agents = [file for file in os.listdir(
-    base_dir) if os.path.isdir(base_dir + file)]
+    base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")]
 scenarios = []
 for agent in agents:
     scen_path = base_dir + agent

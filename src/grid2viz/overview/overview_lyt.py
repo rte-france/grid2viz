@@ -92,8 +92,8 @@ def summary_line(ref_agent=agent_ref):
                     id='input_assets_selector',
                     options=[{'label': load_name,
                               'value': load_name}
-                             for load_name in episode['data'].load_names],
-                    value=episode['data'].load_names[0],
+                             for load_name in episode.load_names],
+                    value=episode.load_names[0],
                     mode='multiple',
                     showArrow=True
                 ),
@@ -121,7 +121,7 @@ def summary_line(ref_agent=agent_ref):
                         style={'margin-top': '1em'},
                         figure=go.Figure(
                             layout=layout_def,
-                            data=episode['usage_rate_trace']
+                            data=episode.usage_rate_trace
                         ),
                         config=dict(displayModeBar=False)
                     ),
@@ -131,7 +131,7 @@ def summary_line(ref_agent=agent_ref):
                         style={'margin-top': '1em'},
                         figure=go.Figure(
                             layout=layout_def,
-                            data=episode['total_overflow_trace']
+                            data=episode.total_overflow_trace
                         ),
                         config=dict(displayModeBar=False)
                     ),

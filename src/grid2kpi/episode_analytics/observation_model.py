@@ -5,7 +5,7 @@ from .env_actions import env_actions
 
 
 def get_prod_and_conso(episode):
-    episode_data = episode['data']
+    episode_data = episode
     productions = pd.pivot_table(
         episode_data.production, index="timestamp", values="value",
         columns=["equipment_name"]
@@ -22,21 +22,21 @@ def get_prod_and_conso(episode):
 
 
 def get_episode_active_consumption_ts(episode):
-    return [sum(obs.load_p) for obs in episode['data'].observations]
+    return [sum(obs.load_p) for obs in episode.observations]
 
 
 def get_prod(episode, equipments=None):
     if equipments is None:
-        return episode['data'].production
+        return episode.production
     else:
-        return episode['data'].production.loc[episode['data'].production.equipment_name.isin(equipments), :]
+        return episode.production.loc[episode.production.equipment_name.isin(equipments), :]
 
 
 def get_load(episode, equipments=None):
     if equipments is None:
-        return episode['data'].load
+        return episode.load
     else:
-        return episode['data'].load.loc[episode['data'].load.equipment_name.isin(equipments), :]
+        return episode.load.loc[episode.load.equipment_name.isin(equipments), :]
 
 
 def get_rho(episode):
@@ -73,7 +73,7 @@ def get_usage_rate(episode):
 
 
 def get_duration_maintenances(episode):
-    timestep_duration = (episode['data'].timestamps[1] - episode['data'].timestamps[0])
+    timestep_duration = (episode.timestamps[1] - episode.timestamps[0])
     nb_maintenance = env_actions(episode, which="maintenances", kind="dur", aggr=False).sum()
     return (timestep_duration * nb_maintenance).total_seconds() / 60.0
 

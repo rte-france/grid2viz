@@ -8,7 +8,7 @@ def env_actions(episode, which="hazards", kind="ts", aggr=True):
     if which not in ("hazards", "maintenances"):
         raise ValueError("which argument can only be either hazards or "
                          f"maintenances. {which} passed")
-    env_acts = getattr(episode['data'], which)
+    env_acts = getattr(episode, which)
     env_acts = pd.pivot_table(
         env_acts, index="timestamp", columns=["line_name"], values="value"
     )

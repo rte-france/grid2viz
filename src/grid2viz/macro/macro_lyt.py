@@ -243,7 +243,7 @@ def action_distrubtion(episode):
 
 
 def layout(study_agent=episode, timestamps=None):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
         # TODO I don't know where the layout param is filled this is a temporary trick to get the whole default episode

@@ -33,17 +33,17 @@ def relayout_store_overview(*args):
 def update_ts_graph_avail_assets(kind):
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in [*episode['data'].line_names, 'total']], episode['data'].line_names[0]
+                          for line_name in [*episode.line_names, 'total']], episode.line_names[0]
     elif kind == 'Production':
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in [*episode['data'].prod_names, *list(set(prod_types.values())), 'total']]
-        value = episode['data'].prod_names[0]
+                   for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
+        value = episode.prod_names[0]
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in [*episode['data'].load_names, 'total']]
-        value = episode['data'].load_names[0]
+                   for load_name in [*episode.load_names, 'total']]
+        value = episode.load_names[0]
 
     return options, value
 
@@ -86,7 +86,7 @@ def load_summary_data(equipments, relayout_data_store, figure, kind):
 )
 def update_select_loads(children):
     return [
-        {'label': load, "value": load} for load in [*episode['data'].load_names, 'total']
+        {'label': load, "value": load} for load in [*episode.load_names, 'total']
     ]
 
 
@@ -96,7 +96,7 @@ def update_select_loads(children):
 )
 def update_select_prods(children):
     return [
-        {'label': prod, "value": prod} for prod in episode['data'].prod_names
+        {'label': prod, "value": prod} for prod in episode.prod_names
     ]
 
 
@@ -137,7 +137,7 @@ def update_table(loads, prods, children, data):
     [Input('temporaryid', 'children')]
 )
 def update_card_step(children):
-    return '{} / {}'.format(episode['data'].meta['nb_timestep_played'], episode['data'].meta['chronics_max_timestep'])
+    return '{} / {}'.format(episode.meta['nb_timestep_played'], episode['data'].meta['chronics_max_timestep'])
 
 
 @app.callback(
@@ -190,9 +190,9 @@ def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figu
     if ref_agent == agent_ref:
         new_episode = episode
     else:
-        new_episode = make_episode(base_dir, ref_agent, episode_name)
-    figure_overflow["data"] = new_episode['total_overflow_trace']
-    figure_usage["data"] = new_episode['usage_rate_trace']
+        new_episode = make_episode(ref_agent, episode_name)
+    figure_overflow["data"] = new_episode.total_overflow_trace
+    figure_usage["data"] = new_episode.usage_rate_trace
     return figure_overflow, figure_usage
 
 
@@ -222,5 +222,5 @@ def update_production_share_graph(children, figure):
     [Input('temporaryid', 'children')]
 )
 def update_date_range(children):
-    return episode['data'].production["timestamp"].dt.date.values[0], \
-           episode['data'].production["timestamp"].dt.date.values[-1]
+    return episode.production["timestamp"].dt.date.values[0], \
+           episode.production["timestamp"].dt.date.values[-1]

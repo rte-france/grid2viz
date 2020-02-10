@@ -20,17 +20,17 @@ from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 def update_slider(window, value, study_agent):
     if window is None:
         raise PreventUpdate
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
 
-    min_ = new_episode['data'].timestamps.index(
+    min_ = new_episode.timestamps.index(
         dt.datetime.strptime(window[0], "%Y-%m-%dT%H:%M:%S")
     )
-    max_ = new_episode['data'].timestamps.index(
+    max_ = new_episode.timestamps.index(
         dt.datetime.strptime(window[1], "%Y-%m-%dT%H:%M:%S")
     )
     if value not in range(min_, max_):
         value = min_
-    marks = dict(list(enumerate(new_episode["data"].timestamps[min_:(max_+1)])))
+    marks = dict(list(enumerate(new_episode.timestamps[min_:(max_ + 1)])))
 
     return min_, max_, value, marks
 
@@ -64,11 +64,11 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
         n_clicks_left = 0
     if n_clicks_right is None:
         n_clicks_right = 0
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    center_indx = new_episode['data'].timestamps.index(
+    new_episode = make_episode(study_agent, episode_name)
+    center_indx = new_episode.timestamps.index(
         dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
     )
-    timestamp_range = new_episode['data'].timestamps[
+    timestamp_range = new_episode.timestamps[
                       max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
                       ]
     xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
@@ -99,12 +99,12 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    ref_episode = make_episode(base_dir, agent_ref, episode_name)
-    actions_ts = new_episode['data'].action_data.set_index("timestamp")[[
+    new_episode = make_episode(study_agent, episode_name)
+    ref_episode = make_episode(agent_ref, episode_name)
+    actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    df = observation_model.get_df_computed_reward(new_episode['data'])
+    df = observation_model.get_df_computed_reward(new_episode)
     action_events_df = pd.DataFrame(
         index=df["timestep"], data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
@@ -114,8 +114,8 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10}
     )
-    ref_episode_reward_trace = ref_episode['reward_trace']
-    studied_agent_reward_trace = make_episode(base_dir, study_agent, episode_name)['reward_trace']
+    ref_episode_reward_trace = ref_episode.reward_trace
+    studied_agent_reward_trace = make_episode(study_agent, episode_name).reward_trace
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
@@ -151,11 +151,11 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, study_agent, episode_name)['data']
+    new_episode = make_episode(study_agent, episode_name)
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_episode = make_episode(base_dir, agent_ref, episode_name)['data']
+    ref_episode = make_episode(agent_ref, episode_name)
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -252,9 +252,9 @@ def action_tooltip(episode_actions):
 )
 def load_voltage_flow_line_choice(value, study_agent):
     option = []
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
 
-    for name in new_episode['data'].line_names:
+    for name in new_episode.line_names:
         if value == 'voltage':
             option.append({
                 'label': 'ex_' + name,
@@ -309,7 +309,7 @@ def load_flow_voltage_graph(selected_lines, select_cat, relayout_data_store, win
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
-    new_episode = make_episode(base_dir, study_agent, episode_name)['data']
+    new_episode = make_episode(study_agent, episode_name)
     if selected_lines is not None:
         if select_cat == 'voltage':
             figure['data'] = load_voltage_for_lines(selected_lines, new_episode)
@@ -392,7 +392,7 @@ def load_flow_for_lines(lines, new_episode):
     [State("agent_study", "data")]
 )
 def update_ts_graph_avail_assets(kind, study_agent):
-    new_episode = make_episode(base_dir, study_agent, episode_name)['data']
+    new_episode = make_episode(study_agent, episode_name)
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
                           for line_name in [*new_episode.line_names, 'total']], new_episode.line_names[0]
@@ -467,9 +467,9 @@ def update_agent_ref_graph(relayout_data_store, window,
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    figure_overflow["data"] = new_episode['total_overflow_trace']
-    figure_usage["data"] = new_episode['usage_rate_trace']
+    new_episode = make_episode(study_agent, episode_name)
+    figure_overflow["data"] = new_episode.total_overflow_trace
+    figure_usage["data"] = new_episode.usage_rate_trace
 
     if window is not None:
         figure_overflow["layout"].update(
@@ -496,5 +496,5 @@ def sync_timeseries_table(data):
     [State("agent_study", "data")]
 )
 def update_interactive_graph(slider_value, study_agent):
-    new_episode = make_episode(base_dir, study_agent, episode_name)["data"]
+    new_episode = make_episode(study_agent, episode_name)
     return make_network(new_episode).get_plot_observation(new_episode.observations[slider_value])

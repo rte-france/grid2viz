@@ -59,7 +59,7 @@ def get_hazard_trace(episode, equipments=None):
 
     if 'total' in equipments:
         ts_hazards_by_line = ts_hazards_by_line.assign(
-            total=episode['data'].hazards.groupby('timestamp', as_index=True)[
+            total=episode.hazards.groupby('timestamp', as_index=True)[
                 'value'].sum()
         )
 
@@ -81,7 +81,7 @@ def get_maintenance_trace(episode, equipments=None):
 
     if 'total' in equipments:
         ts_maintenances_by_line = ts_maintenances_by_line.assign(
-            total=episode['data'].maintenances.groupby(
+            total=episode.maintenances.groupby(
                 'timestamp', as_index=True)['value'].sum()
         )
 
@@ -209,11 +209,11 @@ def get_df_trace_per_equipment(df):
     return trace
 
 
-def get_df_rewards_trace(episode, reward_line_title="rewards", cum_line_title="cum_rewards"):
+def get_df_rewards_trace(episode):
     trace = []
     df = observation_model.get_df_computed_reward(episode)
     trace.append(go.Scatter(x=df["timestep"],
-                            y=df["rewards"], name=reward_line_title))
+                            y=df["rewards"], name=episode.agent + "_reward"))
     trace.append(go.Scatter(
-        x=df["timestep"], y=df["cum_rewards"], name=cum_line_title, yaxis='y2'))
+        x=df["timestep"], y=df["cum_rewards"], name=episode.agent + "cum_rewards", yaxis='y2'))
     return trace
