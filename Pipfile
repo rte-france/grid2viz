@@ -18,6 +18,8 @@ pylint = "*"
 seaborn = "*"
 dash-antd-components = {path = "./dash_antd_components-0.0.1.tar.gz"}
 tqdm = "*"
+numba = "*"
+pickle = "*"
 
 [requires]
 python_version = "3.7"

@@ -127,8 +127,8 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                 id='asset_selector',
                 options=[{'label': load_name,
                           'value': load_name}
-                         for load_name in episode['data'].load_names],
-                value=episode['data'].load_names[0],
+                         for load_name in episode.load_names],
+                value=episode.load_names[0],
                 mode='multiple',
                 showArrow=True
             ),
@@ -149,7 +149,7 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                     style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=episode['usage_rate_trace']
+                        data=episode.usage_rate_trace
                     ),
                     config=dict(displayModeBar=False)
                 ),
@@ -159,7 +159,7 @@ context_inspector_line = html.Div(id="context_inspector_line_id", className="lin
                     style={'margin-top': '1em'},
                     figure=go.Figure(
                         layout=layout_def,
-                        data=episode['total_overflow_trace']
+                        data=episode.total_overflow_trace
                     ),
                     config=dict(displayModeBar=False)
                 ),
@@ -217,7 +217,7 @@ def compute_window(user_selected_timestamp, study_agent):
     if user_selected_timestamp is not None:
         n_clicks_left = 0
         n_clicks_right = 0
-        new_episode = make_episode(base_dir, study_agent, episode_name)["data"]
+        new_episode = make_episode(study_agent, episode_name)["data"]
         center_indx = center_index(user_selected_timestamp, new_episode)
         timestamp_range = new_episode.timestamps[
             max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
@@ -228,13 +228,13 @@ def compute_window(user_selected_timestamp, study_agent):
 
 
 def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    ref_episode = make_episode(base_dir, agent_ref, episode_name)
-    actions_ts = new_episode['data'].action_data.set_index("timestamp")[[
+    new_episode = make_episode(study_agent, episode_name)
+    ref_episode = make_episode(agent_ref, episode_name)
+    actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
     figure = {}
-    df = observation_model.get_df_computed_reward(new_episode['data'])
+    df = observation_model.get_df_computed_reward(new_episode)
     action_events_df = pd.DataFrame(
         index=df["timestep"], data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
@@ -244,8 +244,8 @@ def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, a
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10}
     )
-    ref_episode_reward_trace = ref_episode['reward_trace']
-    studied_agent_reward_trace = make_episode(base_dir, study_agent, episode_name)['reward_trace']
+    ref_episode_reward_trace = ref_episode.reward_trace
+    studied_agent_reward_trace = make_episode(study_agent, episode_name).reward_trace
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
@@ -263,11 +263,11 @@ def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, a
 from src.grid2viz.micro.micro_clbk import action_tooltip
 
 def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
-    new_episode = make_episode(base_dir, study_agent, episode_name)['data']
+    new_episode = make_episode(study_agent, episode_name)
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_episode = make_episode(base_dir, agent_ref, episode_name)['data']
+    ref_episode = make_episode(agent_ref, episode_name)
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -298,7 +298,7 @@ def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_nam
     return figure
 
 def layout(user_selected_timestamp, study_agent, ref_agent):
-    new_episode = make_episode(base_dir, study_agent, episode_name)["data"]
+    new_episode = make_episode(study_agent, episode_name)
     center_indx = center_index(user_selected_timestamp, new_episode)
     centered_date = new_episode.timestamps[center_indx]
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])

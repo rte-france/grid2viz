@@ -13,7 +13,6 @@ from src.grid2kpi.episode_analytics.maintenances import (hist_duration_maintenan
 from src.grid2viz.utils.perf_analyser import timeit
 
 
-
 @app.callback(
     Output("cumulated_rewards_timeserie", "figure"),
     [Input('agent_study', 'data'),
@@ -30,12 +29,12 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    ref_episode = make_episode(base_dir, ref_agent, episode_name)
-    actions_ts = new_episode['data'].action_data.set_index("timestamp")[[
+    new_episode = make_episode(study_agent, episode_name)
+    ref_episode = make_episode(ref_agent, episode_name)
+    actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    df = observation_model.get_df_computed_reward(new_episode['data'])
+    df = observation_model.get_df_computed_reward(new_episode)
     action_events_df = pd.DataFrame(
         index=df["timestep"], data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
@@ -45,8 +44,8 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10}
     )
-    ref_episode_reward_trace = ref_episode['reward_trace']
-    studied_agent_reward_trace = make_episode(base_dir, study_agent, episode_name)['reward_trace']
+    ref_episode_reward_trace = ref_episode.reward_trace
+    studied_agent_reward_trace = make_episode(study_agent, episode_name).reward_trace
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
@@ -55,26 +54,23 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
     return figure
 
 
-
 @app.callback(
     Output("agent_study_pie_chart", "figure"),
     [Input('agent_study', 'data')],
     [State("agent_study_pie_chart", "figure")]
 )
 def update_action_repartition_pie(study_agent, figure):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
     figure['data'] = action_repartition_pie(new_episode)
     return figure
 
 
-
 def action_repartition_pie(agent):
-    nb_actions = agent['data'].action_data[['action_line', 'action_subs']].sum()
+    nb_actions = agent.action_data[['action_line', 'action_subs']].sum()
     return [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
         values=[nb_actions["action_line"], nb_actions["action_subs"]]
     )]
-
 
 
 @app.callback(
@@ -83,7 +79,7 @@ def action_repartition_pie(agent):
     [State("maintenance_duration", "figure")]
 )
 def maintenance_duration_hist(study_agent, figure):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
     figure['data'] = [go.Histogram(
         x=hist_duration_maintenances(new_episode)
     )]
@@ -134,7 +130,7 @@ def relayout_store(*args):
     [Input('agent_study', 'data')]
 )
 def update_nbs(study_agent):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
     score = get_score_agent(new_episode)
     nb_overflow = get_nb_overflow_agent(new_episode)
     nb_action = get_nb_action_agent(new_episode)
@@ -143,16 +139,16 @@ def update_nbs(study_agent):
 
 
 def get_score_agent(agent):
-    score = agent['data'].meta["cumulative_reward"]
+    score = agent.meta["cumulative_reward"]
     return round(score)
 
 
 def get_nb_overflow_agent(agent):
-    return agent['total_overflow_ts']["value"].sum()
+    return agent.total_overflow_ts["value"].sum()
 
 
 def get_nb_action_agent(agent):
-    return  agent['data'].action_data[['action_line', 'action_subs']].sum(
+    return agent.action_data[['action_line', 'action_subs']].sum(
         axis=1).sum()
 
 
@@ -164,7 +160,7 @@ def get_nb_action_agent(agent):
 def update_study_agent(study_agent, stored_agent):
     if study_agent == stored_agent:
         raise PreventUpdate
-    make_episode(base_dir, study_agent, episode_name)
+    make_episode(study_agent, episode_name)
     return study_agent
 
 
@@ -185,12 +181,12 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    figure_overflow["data"] = new_episode['total_overflow_trace']
+    new_episode = make_episode(study_agent, episode_name)
+    figure_overflow["data"] = new_episode.total_overflow_trace
     maintenance_trace = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])[0]
     maintenance_trace.update({"name": "Nb of maintenances"})
     figure_overflow["data"].append(maintenance_trace)
-    figure_usage["data"] = new_episode['usage_rate_trace']
+    figure_usage["data"] = new_episode.usage_rate_trace
     return figure_overflow, figure_usage
 
 
@@ -210,11 +206,11 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(base_dir, study_agent, episode_name)['data']
+    new_episode = make_episode(study_agent, episode_name)
     actions_ts = new_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_episode = make_episode(base_dir, agent_ref, episode_name)['data']
+    ref_episode = make_episode(agent_ref, episode_name)
     ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -302,7 +298,7 @@ def action_tooltip(episode_actions):
     [Input('agent_study', 'data')]
 )
 def update_agent_log_action_table(study_agent):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
     table = actions_model.get_action_table_data(new_episode)
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
 
@@ -315,7 +311,7 @@ def update_agent_log_action_table(study_agent):
      State("distribution_line_action_chart", "figure")]
 )
 def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
-    new_episode = make_episode(base_dir, study_agent, episode_name)
+    new_episode = make_episode(study_agent, episode_name)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     # figure_line["data"] = actions_model.get_action_set_line_trace(new_episode)
     # figure_bus["data"] = actions_model.get_action_change_bus_trace(new_episode)
@@ -333,6 +329,6 @@ def update_more_info(study_agent, active_cell):
     if active_cell is None:
         raise PreventUpdate
     row = active_cell["row"]
-    new_episode = make_episode(base_dir, study_agent, episode_name)
-    act = new_episode['data'].actions[row]
+    new_episode = make_episode(study_agent, episode_name)
+    act = new_episode.actions[row]
     return str(act)

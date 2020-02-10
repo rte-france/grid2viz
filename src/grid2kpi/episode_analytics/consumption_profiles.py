@@ -28,7 +28,7 @@ def consumption_profiles(episode, freq="30T"):
 
 
 def profiles_traces(episode, freq="30T"):
-    episode_data = episode['data']
+    episode_data = episode
     df = consumption_profiles(episode_data, freq)
     line = {
         "shape": "spline",
