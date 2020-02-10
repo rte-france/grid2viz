@@ -1,3 +1,4 @@
+import json
 import time
 
 from src.grid2kpi.episode_analytics.EpisodeAnalytics import EpisodeAnalytics
@@ -181,6 +182,25 @@ def make_ram_cache_id(episode_name, agent):
     return agent + episode_name
 
 
+def check_all_tree_and_get_meta_and_best(base_dir, agents):
+    best_agents = {}
+    meta_json = {}
+    for agent in agents:
+        for scenario_name in os.listdir(base_dir + agent):
+            scenario_folder = os.path.join(base_dir, agent, scenario_name)
+            if not os.path.isdir(scenario_folder):
+                continue
+            with open(os.path.join(scenario_folder, "episode_meta.json")) as f:
+                episode_meta = json.load(fp=f)
+                meta_json[scenario_name] = episode_meta
+                if scenario_name not in best_agents:
+                    best_agents[scenario_name] = {"value": -1, "agent": None}
+                if best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"]:
+                    best_agents[scenario_name]["value"] = episode_meta["nb_timestep_played"]
+                    best_agents[scenario_name]["agent"] = agent
+    return meta_json, best_agents
+
+
 path = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
     os.path.pardir,
@@ -198,6 +218,7 @@ agent_ref = parser.get("DEFAULT", "agent_ref")
 episode = make_episode(agent_ref, episode_name)
 agents = [file for file in os.listdir(
     base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")]
+meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
 scenarios = []
 for agent in agents:
     scen_path = base_dir + agent
