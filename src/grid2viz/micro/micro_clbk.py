@@ -264,30 +264,29 @@ def load_voltage_flow_line_choice(value, study_agent):
                 'label': 'or_' + name,
                 'value': 'or_' + name
             })
-        if value == 'flow':
+        if value == 'active_flow':
             option.append({
                 'label': 'ex_active_' + name,
                 'value': 'ex_active_' + name
             })
             option.append({
-                'label': 'ex_reactive_' + name,
-                'value': 'ex_reactive_' + name
+                'label': 'or_active_' + name,
+                'value': 'or_active_' + name
             })
+        if value == 'current_flow':
             option.append({
                 'label': 'ex_current_' + name,
                 'value': 'ex_current_' + name
             })
             option.append({
-                'label': 'or_active_' + name,
-                'value': 'or_active_' + name
-            })
-            option.append({
-                'label': 'or_reactive_' + name,
-                'value': 'or_reactive_' + name
-            })
-            option.append({
                 'label': 'or_current_' + name,
                 'value': 'or_current_' + name
+            })
+
+        if value == 'flow_usage_rate':
+            option.append({
+                'label': 'usage_rate_' + name,
+                'value': 'usage_rate_' + name
             })
 
     return option, [option[0]['value']]
@@ -314,8 +313,9 @@ def load_flow_voltage_graph(selected_lines, select_cat, relayout_data_store, win
     if selected_lines is not None:
         if select_cat == 'voltage':
             figure['data'] = load_voltage_for_lines(selected_lines, new_episode)
-        if select_cat == 'flow':
+        if 'flow' in select_cat:
             figure['data'] = load_flow_for_lines(selected_lines, new_episode)
+
 
     if window is not None:
         figure["layout"].update(
@@ -370,6 +370,17 @@ def load_flow_for_lines(lines, new_episode):
                 y=flow['or'][flow_type][line_name],
                 name=value)
             )
+        else:  # this concern usage rate
+            name = value.split('_', 2)[2] # get the powerline name
+            index_powerline = list(new_episode.line_names).index(name)
+            usage_rate_powerline = new_episode.rho.loc[new_episode.rho['equipment'] ==index_powerline]['value']
+
+            traces.append(go.Scatter(
+                x=x,
+                y=usage_rate_powerline,
+                name=name
+            ))
+
     return traces
 
 

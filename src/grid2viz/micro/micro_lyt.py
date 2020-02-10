@@ -20,8 +20,8 @@ layout_def = {
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
 }
 
-
 SliderParams = namedtuple("SliderParams", ['min', 'max', 'marks', 'value'])
+
 
 def indicator_line(reward_graph, actions_ts_graph):
     return html.Div(id="indicator_line_id", className="lineBlock card", children=[
@@ -49,7 +49,6 @@ def indicator_line(reward_graph, actions_ts_graph):
 
 
 def flux_inspector_line(network_graph=None, slider_params=None):
-
     return html.Div(id="flux_inspector_line_id", className="lineBlock card", children=[
         html.H4("Flow"),
         html.Div(className="card-body row", children=[
@@ -63,7 +62,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                         dcc.Graph(
                             id="interactive_graph",
                             figure=network_graph
-                        ), 
+                        ),
                         dcc.Slider(
                             id="slider",
                             min=slider_params.min,
@@ -79,10 +78,12 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                         html.H6(className="text-center",
                                 children="Voltage and Flow"),
                         dac.Radio(options=[
-                            {'label': 'Flow', "value": "flow"},
-                            {'label': 'Voltage', "value": "voltage"},
+                            {'label': 'Active Flow', "value": "active_flow"},
+                            {'label': 'Current Flow', 'value': 'current_flow'},
+                            {'label': 'Flow Usage Rate', 'value': 'flow_usage_rate'},
+                            {'label': 'Voltage', 'value': 'voltage'}
                         ],
-                            value="flow",
+                            value="active_flow",
                             id="voltage_flow_selector",
                             buttonStyle="solid"
                         ),
@@ -199,19 +200,19 @@ def center_index(user_selected_timestamp, episode):
     return center_indx
 
 
-
 def slider_params(user_selected_timestamp, episode):
-    #min max marks value
+    # min max marks value
     value = center_index(user_selected_timestamp, episode)
     n_clicks_left = 0
     n_clicks_right = 0
     min_ = max([0, (value - 10 - 5 * n_clicks_left)])
     max_ = min([(value + 10 + 5 * n_clicks_right), len(episode.timestamps)])
     timestamp_range = episode.timestamps[
-        min_:max_
-    ]
+                      min_:max_
+                      ]
     marks = dict(zip(range(min_, max_), timestamp_range))
     return SliderParams(min_, max_, marks, value)
+
 
 def compute_window(user_selected_timestamp, study_agent):
     if user_selected_timestamp is not None:
@@ -220,8 +221,8 @@ def compute_window(user_selected_timestamp, study_agent):
         new_episode = make_episode(base_dir, study_agent, episode_name)["data"]
         center_indx = center_index(user_selected_timestamp, new_episode)
         timestamp_range = new_episode.timestamps[
-            max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
-        ]
+                          max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
+                          ]
         xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
         xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
         return xmin, xmax
@@ -260,7 +261,9 @@ def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, a
         )
     return figure
 
+
 from src.grid2viz.micro.micro_clbk import action_tooltip
+
 
 def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
     new_episode = make_episode(base_dir, study_agent, episode_name)['data']
@@ -297,6 +300,7 @@ def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_nam
 
     return figure
 
+
 def layout(user_selected_timestamp, study_agent, ref_agent):
     new_episode = make_episode(base_dir, study_agent, episode_name)["data"]
     center_indx = center_index(user_selected_timestamp, new_episode)
@@ -310,7 +314,8 @@ def layout(user_selected_timestamp, study_agent, ref_agent):
             user_selected_timestamp, study_agent)),
         indicator_line(rw_graph, act_graph),
         # TODO : episode.observations[1] will change
-        flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)), # flux_inspector_line(get_network_graph(make_network(episode), episode)),
+        flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
+        # flux_inspector_line(get_network_graph(make_network(episode), episode)),
         context_inspector_line,
         all_info_line
     ])
