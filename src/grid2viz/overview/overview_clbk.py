@@ -137,7 +137,7 @@ def update_table(loads, prods, children, data):
     [Input('temporaryid', 'children')]
 )
 def update_card_step(children):
-    return len(episode['data'].observations)
+    return '{} / {}'.format(episode['data'].meta['nb_timestep_played'], episode['data'].meta['chronics_max_timestep'])
 
 
 @app.callback(

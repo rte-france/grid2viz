@@ -48,23 +48,23 @@ indicators_line = html.Div(id="temporaryid", children=[
             html.Div(className="mb-4", children=[
                 html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
                        children=""),
-                html.P(className="text-muted", children="Steps")
+                html.P(className="text-muted", children="Best Agent's Steps (step / nb actions)")
             ]),
             html.Div(className="mb-4", children=[
                 html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
                        children=""),
-                html.P(className="text-muted", children="Hazards")
+                html.P(className="text-muted", children="Best Agent's Hazards")
             ]),
             html.Div(className="mb-4", children=[
                 html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
                        children=""),
-                html.P(className="text-muted", children="Maintenances")
+                html.P(className="text-muted", children="Best Agent's Maintenances")
             ]),
             html.Div(className="mb-4", children=[
                 html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
                        children="NaN"),
                 html.P(className="text-muted",
-                       children="Duration of Maintenances (min)")
+                       children="Best Agent Maintenances Duration (min)")
             ])
         ], className="col-xl-3 align-self-center")
     ], className="card-body row"),

@@ -6,13 +6,12 @@ import pandas as pd
 
 from collections import namedtuple
 
-from src.grid2viz.macro.macro_clbk import episode, agent_ref, agents,\
+from src.grid2viz.macro.macro_clbk import episode, agent_ref, agents, \
     get_score_agent, get_nb_action_agent, get_nb_overflow_agent, \
     action_repartition_pie
 from src.grid2kpi.episode_analytics import actions_model
 from src.grid2kpi.episode_analytics.maintenances import hist_duration_maintenances
 from src.grid2kpi.manager import make_episode, base_dir, episode_name, agent_ref
-
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -199,7 +198,7 @@ def inspector_line(table_cols, table_data, episode):
                     dcc.Graph(
                         id="distribution_substation_action_chart",
                         figure=actions_distribution.on_subs
-                        )
+                    )
                 ]),
                 html.Div(className="col", children=[
                     html.H6(className="text-center",
@@ -214,9 +213,11 @@ def inspector_line(table_cols, table_data, episode):
         ])
     ])
 
+
 def get_table(episode):
     table = actions_model.get_action_table_data(episode)
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
+
 
 def maitenance_duration_distrib(episode):
     figure = go.Figure(
@@ -225,10 +226,11 @@ def maitenance_duration_distrib(episode):
     )
     return figure
 
+
 ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])
 
+
 def action_distrubtion(episode):
-    
     figure_subs = go.Figure(
         layout=layout_def,
         data=actions_model.get_action_per_sub(episode)
@@ -249,4 +251,3 @@ def layout(study_agent=episode, timestamps=None):
         overview_line(new_episode, timestamps),
         inspector_line(*get_table(new_episode), new_episode)
     ])
-
