@@ -1,3 +1,5 @@
+import time
+
 from src.grid2kpi.episode_analytics.EpisodeAnalytics import EpisodeAnalytics
 from grid2op.EpisodeData import EpisodeData
 import os
@@ -137,7 +139,7 @@ def get_fs_cached_file(episode_name, agent):
     episode_dir = os.path.join(cache_dir, episode_name)
     if not os.path.exists(episode_dir):
         os.makedirs(episode_dir)
-    return os.path.join(episode_dir, agent + ".py")
+    return os.path.join(episode_dir, agent + ".pickle")
 
 
 def save_in_fs_cache(episode_name, agent, episode):
@@ -147,9 +149,12 @@ def save_in_fs_cache(episode_name, agent, episode):
 
 
 def get_from_fs_cache(episode_name, agent):
+    beg = time.time()
     path = get_fs_cached_file(episode_name, agent)
     with open(path, "rb") as f:
         episode_loaded = pickle.load(f)
+    end = time.time()
+    print(f"end loading scenario file: {end - beg}")
     return episode_loaded
 
 
