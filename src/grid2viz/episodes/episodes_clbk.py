@@ -1,4 +1,5 @@
 from dash.dependencies import Input, Output, State
+from dash import callback_context
 from grid2kpi.episode_analytics import EpisodeTrace
 from src.app import app
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
@@ -9,7 +10,6 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from src.grid2viz.utils.perf_analyser import whoami, timeit
 
-callbak_inputs = []
 
 @app.callback(
     Output('cards_container', 'children'),
@@ -84,21 +84,29 @@ def load_scenario_cards(url):
                             ])
                         ]),
                         dbc.CardFooter(dbc.Button(
-                            "Open", id='test', key=scenario,
+                            "Open", id=scenario, key=scenario,
                             className="btn-block",
                             style={"background-color": "#2196F3"}))
                     ])
                 ])
             )
-            callbak_inputs.append(Input(id_agent, 'n_clicks'))
             cards_count += 1
     return cards_list
 
 
 @app.callback(
-    Output('scenario', 'data'),
-    [Input('test', 'n_clicks')],
-    [State('test', 'key')]
+    [Output('scenario', 'data'), Output('url', 'pathname')],
+    [Input(scenario, 'n_clicks') for scenario in scenarios],
+    [State(scenario, 'key') for scenario in scenarios]
 )
-def open_scenario(button_click, scenario):
-    return scenario
+def open_scenario(*input_state):
+    # use callback context to get triggered input then parse it to get triggered input id
+    # finaly get the state key value from context with the dict key input_id + .key
+    # see : https://dash.plot.ly/faqs How do I determine which Input has changed?
+
+    ctx = callback_context
+    input_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    input_key = ctx.states[input_id + '.key']
+    scenario = input_key
+
+    return scenario, '/overview'
