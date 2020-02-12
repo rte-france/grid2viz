@@ -10,6 +10,7 @@ from src.app import app
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, prod_types, make_network, get_network_graph
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
+from src.grid2viz.utils.common_controllers import action_tooltip
 
 
 @app.callback(
@@ -181,66 +182,6 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
         )
 
     return figure
-
-
-def action_tooltip(episode_actions):
-    tooltip = []
-    actions_impact = [action.impact_on_objects() for action in episode_actions]
-
-    for action in actions_impact:
-        impact_detail = []
-        if action['has_impact']:
-            injection = action['injection']
-            force_line = action['force_line']
-            switch_line = action['switch_line']
-            topology = action['topology']
-
-            if injection['changed']:
-                for detail in injection['impacted']:
-                    impact_detail.append(" injection set {} to {} <br>"
-                                         .format(detail['set'], detail['to']))
-
-            if force_line['changed']:
-                reconnections = force_line['reconnections']
-                disconnections = force_line['disconnections']
-
-                if reconnections['count'] > 0:
-                    impact_detail.append(" force reconnection of {} powerlines ({}) <br>"
-                                         .format(reconnections['count'], reconnections['powerlines']))
-
-                if disconnections['count'] > 0:
-                    impact_detail.append(" force disconnection of {} powerlines ({}) <br>"
-                                         .format(disconnections['count'], disconnections['powerlines']))
-
-            if switch_line['changed']:
-                impact_detail.append(" switch status of {} powerlines ({}) <br>"
-                                     .format(switch_line['count'], switch_line['powerlines']))
-
-            if topology['changed']:
-                bus_switch = topology['bus_switch']
-                assigned_bus = topology['assigned_bus']
-                disconnected_bus = topology['disconnect_bus']
-
-                if len(bus_switch) > 0:
-                    for switch in bus_switch:
-                        impact_detail.append(" switch bus of {} {} on substation {} <br>"
-                                             .format(switch['object_type'], switch['object_id'],
-                                                     switch['substation']))
-                if len(assigned_bus) > 0:
-                    for assignment in assigned_bus:
-                        impact_detail.append(" assign bus {} to {} {} on substation {} <br>"
-                                             .format(assignment['bus'], assignment['object_type'],
-                                                     assignment['object_id'], assignment['substation']))
-                if len(disconnected_bus) > 0:
-                    for disconnection in disconnected_bus:
-                        impact_detail.append(" disconnect bus {} {} on substation {} <br>"
-                                             .format(disconnection['object_type'], disconnection['object_id'],
-                                                     disconnection['substation']))
-            tooltip.append(''.join(impact_detail))
-        else:
-            tooltip.append('Do nothing')
-
-    return tooltip
 
 
 # flux line callback

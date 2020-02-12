@@ -10,6 +10,7 @@ from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
 from src.grid2kpi.episode_analytics.maintenances import (hist_duration_maintenances)
+from src.grid2viz.utils.common_controllers import action_tooltip
 from src.grid2viz.utils.perf_analyser import timeit
 
 
@@ -232,66 +233,6 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
     return figure
 
 
-def action_tooltip(episode_actions):
-    tooltip = []
-    actions_impact = [action.impact_on_objects() for action in episode_actions]
-
-    for action in actions_impact:
-        impact_detail = []
-        if action['has_impact']:
-            injection = action['injection']
-            force_line = action['force_line']
-            switch_line = action['switch_line']
-            topology = action['topology']
-
-            if injection['changed']:
-                for detail in injection['impacted']:
-                    impact_detail.append(" injection set {} to {} <br>"
-                                         .format(detail['set'], detail['to']))
-
-            if force_line['changed']:
-                reconnections = force_line['reconnections']
-                disconnections = force_line['disconnections']
-
-                if reconnections['count'] > 0:
-                    impact_detail.append(" force reconnection of {} powerlines ({}) <br>"
-                                         .format(reconnections['count'], reconnections['powerlines']))
-
-                if disconnections['count'] > 0:
-                    impact_detail.append(" force disconnection of {} powerlines ({}) <br>"
-                                         .format(disconnections['count'], disconnections['powerlines']))
-
-            if switch_line['changed']:
-                impact_detail.append(" switch status of {} powerlines ({}) <br>"
-                                     .format(switch_line['count'], switch_line['powerlines']))
-
-            if topology['changed']:
-                bus_switch = topology['bus_switch']
-                assigned_bus = topology['assigned_bus']
-                disconnected_bus = topology['disconnect_bus']
-
-                if len(bus_switch) > 0:
-                    for switch in bus_switch:
-                        impact_detail.append(" switch bus of {} {} on substation {} <br>"
-                                             .format(switch['object_type'], switch['object_id'],
-                                                     switch['substation']))
-                if len(assigned_bus) > 0:
-                    for assignment in assigned_bus:
-                        impact_detail.append(" assign bus {} to {} {} on substation {} <br>"
-                                             .format(assignment['bus'], assignment['object_type'],
-                                                     assignment['object_id'], assignment['substation']))
-                if len(disconnected_bus) > 0:
-                    for disconnection in disconnected_bus:
-                        impact_detail.append(" disconnect bus {} {} on substation {} <br>"
-                                             .format(disconnection['object_type'], disconnection['object_id'],
-                                                     disconnection['substation']))
-            tooltip.append(''.join(impact_detail))
-        else:
-            tooltip.append('Do nothing')
-
-    return tooltip
-
-
 @app.callback(
     [Output("inspector_datable", "columns"),
      Output("inspector_datable", "data")],
@@ -310,6 +251,7 @@ def update_agent_log_action_table(study_agent):
     [State("distribution_substation_action_chart", "figure"),
      State("distribution_line_action_chart", "figure")]
 )
+@timeit
 def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
     new_episode = make_episode(study_agent, episode_name)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
