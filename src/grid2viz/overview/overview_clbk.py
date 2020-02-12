@@ -9,7 +9,7 @@ from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.episode_analytics.env_actions import env_actions
-from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, agent_ref, prod_types
+from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, agent_ref, prod_types, best_agents
 from src.grid2kpi.episode_analytics.maintenances import duration_maintenances
 from src.grid2viz.utils.perf_analyser import timeit
 
@@ -28,22 +28,25 @@ def relayout_store_overview(*args):
 @app.callback(
     [Output("input_assets_selector", "options"),
      Output("input_assets_selector", "value")],
-    [Input("scen_overview_ts_switch", "value")]
+    [Input("scen_overview_ts_switch", "value")],
+    [State('scenario', 'data')]
 )
-def update_ts_graph_avail_assets(kind):
+def update_ts_graph_avail_assets(kind, scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+
     if kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in [*episode.line_names, 'total']], episode.line_names[0]
+                          for line_name in [*best_agent_ep.line_names, 'total']], best_agent_ep.line_names[0]
     elif kind == 'Production':
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
-        value = episode.prod_names[0]
+                   for prod_name in [*best_agent_ep.prod_names, *list(set(prod_types.values())), 'total']]
+        value = best_agent_ep.prod_names[0]
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in [*episode.load_names, 'total']]
-        value = episode.load_names[0]
+                   for load_name in [*best_agent_ep.load_names, 'total']]
+        value = best_agent_ep.load_names[0]
 
     return options, value
 
@@ -53,9 +56,12 @@ def update_ts_graph_avail_assets(kind):
     [Input("input_assets_selector", "value"),
      Input("relayoutStoreOverview", "data")],
     [State("input_env_charts", "figure"),
-     State("scen_overview_ts_switch", "value")]
+     State("scen_overview_ts_switch", "value"),
+     State('scenario', 'data')]
 )
-def load_summary_data(equipments, relayout_data_store, figure, kind):
+def load_environments_ts(equipments, relayout_data_store, figure, kind, scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -69,13 +75,13 @@ def load_summary_data(equipments, relayout_data_store, figure, kind):
         equipments = [equipments]  # to make pd.series.isin() work
 
     if kind == "Load":
-        figure["data"] = EpisodeTrace.get_load_trace_per_equipment(episode, equipments)
+        figure["data"] = EpisodeTrace.get_load_trace_per_equipment(best_agent_ep, equipments)
     if kind == "Production":
-        figure["data"] = EpisodeTrace.get_all_prod_trace(episode, prod_types, equipments)
+        figure["data"] = EpisodeTrace.get_all_prod_trace(best_agent_ep, prod_types, equipments)
     if kind == "Hazards":
-        figure["data"] = EpisodeTrace.get_hazard_trace(episode, equipments)
+        figure["data"] = EpisodeTrace.get_hazard_trace(best_agent_ep, equipments)
     if kind == "Maintenances":
-        figure["data"] = EpisodeTrace.get_maintenance_trace(episode, equipments)
+        figure["data"] = EpisodeTrace.get_maintenance_trace(best_agent_ep, equipments)
 
     return figure
 
@@ -134,34 +140,38 @@ def update_table(loads, prods, children, data):
 
 @app.callback(
     Output("nb_steps_card", "children"),
-    [Input('temporaryid', 'children')]
+    [Input('scenario', 'data')]
 )
-def update_card_step(children):
-    return '{} / {}'.format(episode.meta['nb_timestep_played'], episode.meta['chronics_max_timestep'])
+def update_card_step(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
 
 
 @app.callback(
     Output("nb_maintenance_card", "children"),
-    [Input('temporaryid', 'children')]
+    [Input('scenario', 'data')]
 )
-def update_card_maintenance(children):
-    return env_actions(episode, which="maintenances", kind="nb", aggr=True)
+def update_card_maintenance(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return env_actions(best_agent_ep, which="maintenances", kind="nb", aggr=True)
 
 
 @app.callback(
     Output("nb_hazard_card", "children"),
-    [Input('temporaryid', 'children')]
+    [Input('scenario', 'data')]
 )
-def update_card_hazard(children):
-    return env_actions(episode, which="hazards", kind="nb", aggr=True)
+def update_card_hazard(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return env_actions(best_agent_ep, which="hazards", kind="nb", aggr=True)
 
 
 @app.callback(
     Output("duration_maintenance_card", "children"),
-    [Input('temporaryid', 'children')]
+    [Input('scenario', 'data')]
 )
-def update_card_duration_maintenances(children):
-    return observation_model.get_duration_maintenances(episode)
+def update_card_duration_maintenances(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return observation_model.get_duration_maintenances(best_agent_ep)
 
 
 @app.callback(
@@ -198,21 +208,23 @@ def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figu
 
 @app.callback(
     Output("indicator_line_charts", "figure"),
-    [Input('temporaryid', 'children')],
+    [Input('scenario', 'data')],
     [State("indicator_line_charts", "figure")]
 )
-def update_profile_conso_graph(children, figure):
-    figure["data"] = profiles_traces(episode, freq="30T")
+def update_profile_conso_graph(scenario, figure):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    figure["data"] = profiles_traces(best_agent_ep, freq="30T")
     return figure
 
 
 @app.callback(
     Output("production_share_graph", "figure"),
-    [Input('temporaryid', 'children')],
+    [Input('scenario', 'data')],
     [State("production_share_graph", "figure")]
 )
-def update_production_share_graph(children, figure):
-    share_prod = EpisodeTrace.get_prod_share_trace(episode, prod_types)
+def update_production_share_graph(scenario, figure):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    share_prod = EpisodeTrace.get_prod_share_trace(best_agent_ep, prod_types)
     figure["data"] = share_prod
     return figure
 

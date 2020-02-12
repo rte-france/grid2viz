@@ -24,7 +24,7 @@ indicators_line = html.Div(id="temporaryid", children=[
     html.Div(children=[
 
         html.Div([
-            html.H5("Consumption Profiles"),
+            html.H5("Best Agent's Consumption Profiles"),
             dcc.Graph(
                 id="indicator_line_charts",
                 style={'margin-top': '1em'},
@@ -35,7 +35,7 @@ indicators_line = html.Div(id="temporaryid", children=[
         ], className="col-xl-5"),
 
         html.Div(children=[
-            html.H5("Production shares"),
+            html.H5("Best Agent's Production Shares"),
             dcc.Graph(
                 id="production_share_graph",
                 figure=go.Figure(
@@ -62,7 +62,7 @@ indicators_line = html.Div(id="temporaryid", children=[
             ]),
             html.Div(className="mb-4", children=[
                 html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
-                       children="NaN"),
+                       children=""),
                 html.P(className="text-muted",
                        children="Best Agent Maintenances Duration (min)")
             ])
@@ -76,7 +76,7 @@ def summary_line(ref_agent=agent_ref):
         html.H4("Summary"),
         html.Div(children=[
             html.Div(children=[
-                html.H5("Environments Time Series"),
+                html.H5("Best Agent's Environments Time Series"),
                 dac.Radio(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},

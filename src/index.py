@@ -130,6 +130,12 @@ def display_page(pathname, ref_agent, study_agent, user_selected_timestamp, prev
         return 404, ""
 
 
+@app.callback(Output('scen_lbl', 'children'),
+              [Input('scenario', 'data')])
+def update_scenario_label(scenario):
+    return scenario
+
+
 @app.callback(Output("ref_ag_lbl", "children"),
               [Input("agent_ref", "data")])
 def update_ref_agent_label(agent):
