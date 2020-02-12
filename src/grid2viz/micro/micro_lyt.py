@@ -218,7 +218,7 @@ def compute_window(user_selected_timestamp, study_agent):
     if user_selected_timestamp is not None:
         n_clicks_left = 0
         n_clicks_right = 0
-        new_episode = make_episode(study_agent, episode_name)["data"]
+        new_episode = make_episode(study_agent, episode_name)
         center_indx = center_index(user_selected_timestamp, new_episode)
         timestamp_range = new_episode.timestamps[
                           max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)

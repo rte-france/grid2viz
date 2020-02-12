@@ -11,7 +11,7 @@ from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.episode_analytics.env_actions import env_actions
 from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, agent_ref, prod_types
 from src.grid2kpi.episode_analytics.maintenances import duration_maintenances
-from src.grid2viz.utils.perf_analyser import timeit, whoami
+from src.grid2viz.utils.perf_analyser import timeit
 
 
 @app.callback(
@@ -137,7 +137,7 @@ def update_table(loads, prods, children, data):
     [Input('temporaryid', 'children')]
 )
 def update_card_step(children):
-    return '{} / {}'.format(episode.meta['nb_timestep_played'], episode['data'].meta['chronics_max_timestep'])
+    return '{} / {}'.format(episode.meta['nb_timestep_played'], episode.meta['chronics_max_timestep'])
 
 
 @app.callback(

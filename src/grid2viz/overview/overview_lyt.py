@@ -84,7 +84,6 @@ def summary_line(ref_agent=agent_ref):
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
                     value="Load",
-                    # name="scen_overview_ts_switch",
                     id="scen_overview_ts_switch",
                     buttonStyle="solid"
                 ),
