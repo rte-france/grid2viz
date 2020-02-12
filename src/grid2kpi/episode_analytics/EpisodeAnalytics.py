@@ -5,12 +5,11 @@ from grid2op.EpisodeData import EpisodeData
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from numba import jit
 
 from . import EpisodeTrace
 
 
-class EpisodeAnalytics():
+class EpisodeAnalytics:
     def __init__(self, episode_data, episode_name, agent):
         self.episode_name = episode_name
         self.agent = agent
@@ -44,47 +43,43 @@ class EpisodeAnalytics():
         load_size = size * len(self.observations[0].load_p)
         prod_size = size * len(self.observations[0].prod_p)
         rho_size = size * len(self.observations[0].rho)
-        action_size = size
-        reward_size = size
-        flow_voltage_size = size
-        cols = ["timestep", "timestamp", "equipement_id", "equipment_name",
+        flow_voltage_cols = ["timestep", "timestamp", "equipement_id", "equipment_name",
                 "value"]
-        load_data = pd.DataFrame(index=range(load_size), columns=cols)
-        production = pd.DataFrame(index=range(prod_size), columns=cols)
+        load_data = pd.DataFrame(index=range(load_size), columns=flow_voltage_cols)
+        production = pd.DataFrame(index=range(prod_size), columns=flow_voltage_cols)
         rho = pd.DataFrame(index=range(rho_size), columns=[
             'time', "timestamp", 'equipment', 'value'])
+
         cols_loop_action_data = ['action_line', 'action_subs', 'set_line', 'switch_line',
                                  'set_topo', 'change_bus', 'distance']
         action_data = pd.DataFrame(
-            index=range(action_size),
-            # columns=['timestep', 'timestamp', 'timestep_reward', 
-            #          *cols_loop_action_data]
+            index=range(size),
             columns=[
                 'timestep', 'timestamp', 'timestep_reward', 'action_line',
                 'action_subs', 'set_line', 'switch_line', 'set_topo',
                 'change_bus', 'distance'
             ]
         )
+
         cols_loop_action_data_table = [
             'action_line', 'action_subs', 'line_action', 'sub_name',
             'objects_changed', 'distance'
         ]
         action_data_table = pd.DataFrame(
-            index=range(action_size),
-            # columns=['timestep', 'timestamp', 'timestep_reward', 
-            #          *cols_loop_action_data_table]
+            index=range(size),
             columns=[
                 'timestep', 'timestamp', 'timestep_reward', 'action_line',
                 'action_subs', 'line_action', 'sub_name', 'objects_changed',
                 'distance'
             ]
         )
-        computed_rewards = pd.DataFrame(index=range(reward_size), columns=[
-            'timestep', 'rewards', 'cum_rewards'])
-        cols = pd.MultiIndex.from_product(
+
+        computed_rewards = pd.DataFrame(index=range(size),
+                                        columns=['timestep', 'rewards', 'cum_rewards'])
+        flow_voltage_cols = pd.MultiIndex.from_product(
             [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], self.line_names])
-        flow_voltage_line_table = pd.DataFrame(
-            index=range(flow_voltage_size), columns=cols)
+        flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
+
         topo_list = []
         bus_list = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(self.observations[:-1], self.actions)),
@@ -92,34 +87,38 @@ class EpisodeAnalytics():
             time_stamp = self.timestamp(obs)
             line_impact, sub_impact = act.get_topological_impact()
             sub_action = act.name_sub[sub_impact]  # self.get_sub_action(act, obs)
+
             if not len(sub_action):
                 sub_action = None
+
             line_action = ""
             open_status = np.where(act._set_line_status == 1)
             close_status = np.where(act._set_line_status == -1)
-            switch_line = np.where(act._switch_line_status == True)
+            switch_line = np.where(act._switch_line_status is True)
+
             if len(open_status[0]) == 1:
-                line_action = "connect " + \
-                              str(self.line_names[open_status[0]])
+                line_action = "connect ".join(str(self.line_names[open_status[0]]))
             if len(close_status[0]) == 1:
-                line_action = "disconnect " + \
-                              str(self.line_names[close_status[0]])
+                line_action = "disconnect ".join(str(self.line_names[close_status[0]]))
             if len(switch_line[0]) == 1:
-                line_action = "switch " + \
-                              str(self.line_names[switch_line[0]])
+                line_action = "switch ".join(str(self.line_names[switch_line[0]]))
+
             for equipment_id, load_p in enumerate(obs.load_p):
                 pos = time_step * self.n_loads + equipment_id
                 load_data.loc[pos, :] = [
                     time_step, time_stamp, equipment_id,
                     self.load_names[equipment_id], load_p]
+
             for equipment_id, prod_p in enumerate(obs.prod_p):
                 pos = time_step * self.n_prods + equipment_id
                 production.loc[pos, :] = [
                     time_step, time_stamp, equipment_id,
                     self.prod_names[equipment_id], prod_p]
+
             for equipment, rho_t in enumerate(obs.rho):
                 pos = time_step * len(obs.rho) + equipment
                 rho.loc[pos, :] = [time_step, time_stamp, equipment, rho_t]
+
             for line, subs in zip(range(act.n_line), range(len(act.sub_info))):
                 pos = time_step
                 action_line = np.sum(act._switch_line_status)
@@ -150,9 +149,11 @@ class EpisodeAnalytics():
                     object_changed,
                     self.get_distance_from_obs(obs)]
 
-            computed_rewards.loc[time_step, :] = [time_stamp,
-                                                  self.rewards[time_step],
-                                                  self.rewards.cumsum(axis=0)[time_step]]
+            computed_rewards.loc[time_step, :] = [
+                time_stamp,
+                self.rewards[time_step],
+                self.rewards.cumsum(axis=0)[time_step]
+            ]
 
             flow_voltage_line_table.loc[time_step, :] = np.array([
                 obs.p_ex,
@@ -164,6 +165,7 @@ class EpisodeAnalytics():
                 obs.a_or,
                 obs.v_or
             ]).flatten()
+
         self.timestamps = sorted(load_data.timestamp.dropna().unique())
         self.timesteps = sorted(load_data.timestep.unique())
         action_data["timestep"] = self.timesteps
@@ -206,6 +208,7 @@ class EpisodeAnalytics():
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
         hazards = pd.DataFrame(index=range(hazards_size), columns=cols)
         maintenances = hazards.copy()
+
         for (time_step, env_act) in tqdm(enumerate(self.env_actions), total=len(self.env_actions)):
             if env_act is None:
                 continue

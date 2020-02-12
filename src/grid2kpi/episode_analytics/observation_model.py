@@ -66,10 +66,9 @@ def quantile90(df):
 
 def get_usage_rate(episode):
     rho = get_rho(episode)
-    # return rho
-    median_rho = rho.groupby("timestamp").aggregate(["median", quantile10, quantile25, quantile75, quantile90, "max"])[
-        ["value"]].reset_index()
-    return median_rho
+    return rho.groupby("timestamp").aggregate([
+        "median", quantile10, quantile25, quantile75, quantile90, "max"
+    ])[["value"]].reset_index()
 
 
 def get_duration_maintenances(episode):

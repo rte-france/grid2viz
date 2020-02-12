@@ -36,6 +36,7 @@ def get_prod_share_trace(episode, prod_types):
 
     parents = [prod_types.get(name) for name in df.index.values]
     values = list(df)
+
     for prod_type in unique_prod_types:
         parents.append("")
         value = 0
@@ -44,13 +45,8 @@ def get_prod_share_trace(episode, prod_types):
                 value = value + df.get(gen)
         values.append(value)
 
-    return [
-        go.Sunburst(labels=labels,
-                    values=values,
-                    parents=parents,
-                    branchvalues="total",
-                    )
-    ]
+    return [go.Sunburst(labels=labels, values=values,
+                        parents=parents, branchvalues="total")]
 
 
 def get_hazard_trace(episode, equipments=None):
@@ -66,13 +62,10 @@ def get_hazard_trace(episode, equipments=None):
     if equipments is not None:
         ts_hazards_by_line = ts_hazards_by_line.loc[:, equipments]
 
-    trace = [go.Scatter(
-        x=ts_hazards_by_line.index,
-        y=ts_hazards_by_line[line],
-        name=line)
-        for line in ts_hazards_by_line.columns]
-
-    return trace
+    return [go.Scatter(x=ts_hazards_by_line.index,
+                       y=ts_hazards_by_line[line],
+                       name=line)
+            for line in ts_hazards_by_line.columns]
 
 
 def get_maintenance_trace(episode, equipments=None):
@@ -88,11 +81,10 @@ def get_maintenance_trace(episode, equipments=None):
     if equipments is not None:
         ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
 
-    trace = [go.Scatter(x=ts_maintenances_by_line.index,
-                        y=ts_maintenances_by_line[line],
-                        name=line)
-             for line in ts_maintenances_by_line.columns]
-    return trace
+    return [go.Scatter(x=ts_maintenances_by_line.index,
+                       y=ts_maintenances_by_line[line],
+                       name=line)
+            for line in ts_maintenances_by_line.columns]
 
 
 def get_all_prod_trace(episode, prod_types, selection):
@@ -148,72 +140,70 @@ def get_usage_rate_trace(episode):
         "width": 0,
         "smoothing": 1
     }
-    trace = [go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile10"],
-        name="quantile 10",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile25"],
-        name="quantile 25",
-        fill="tonexty",
-        fillcolor="rgba(159, 197, 232, 0.63)",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["median"],
-        name="median",
-        fill="tonexty",
-        fillcolor="rgba(31, 119, 180, 0.5)",
-        line={
-            "color": "rgb(31, 119, 180)",
-            "shape": "spline",
-            "smoothing": 1
-        }
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile75"],
-        name="quantile 75",
-        fill="tonexty",
-        fillcolor="rgba(31, 119, 180, 0.5)",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["quantile90"],
-        name="quantile 90",
-        fill="tonexty",
-        fillcolor="rgba(159, 197, 232, 0.63)",
-        line=line
-    ), go.Scatter(
-        x=df["timestamp"],
-        y=df["value"]["max"],
-        name="Max",
-        line={
-            "shape": "spline",
-            "smoothing": 1,
-            "color": "rgba(255,0,0,0.5)"
-        }
-    )]
+    trace = [
+        go.Scatter(
+            x=df["timestamp"],
+            y=df["value"]["quantile10"],
+            name="quantile 10",
+            line=line
+        ), go.Scatter(
+            x=df["timestamp"],
+            y=df["value"]["quantile25"],
+            name="quantile 25",
+            fill="tonexty",
+            fillcolor="rgba(159, 197, 232, 0.63)",
+            line=line
+        ), go.Scatter(
+            x=df["timestamp"],
+            y=df["value"]["median"],
+            name="median",
+            fill="tonexty",
+            fillcolor="rgba(31, 119, 180, 0.5)",
+            line={
+                "color": "rgb(31, 119, 180)",
+                "shape": "spline",
+                "smoothing": 1
+            }
+        ), go.Scatter(
+            x=df["timestamp"],
+            y=df["value"]["quantile75"],
+            name="quantile 75",
+            fill="tonexty",
+            fillcolor="rgba(31, 119, 180, 0.5)",
+            line=line
+        ), go.Scatter(
+            x=df["timestamp"],
+            y=df["value"]["quantile90"],
+            name="quantile 90",
+            fill="tonexty",
+            fillcolor="rgba(159, 197, 232, 0.63)",
+            line=line
+        ), go.Scatter(
+            x=df["timestamp"],
+            y=df["value"]["max"],
+            name="Max",
+            line={
+                "shape": "spline",
+                "smoothing": 1,
+                "color": "rgba(255,0,0,0.5)"
+            }
+        )]
     return trace
 
 
 def get_df_trace_per_equipment(df):
-    trace = []
-    for equipment in df["equipment_name"].drop_duplicates():
-        trace.append(go.Scatter(
-            x=df.loc[df["equipment_name"] == equipment, :]["timestamp"],
-            y=df.loc[df["equipment_name"] == equipment, :]["value"],
-            name=equipment
-        ))
-    return trace
+    return [go.Scatter(
+        x=df.loc[df["equipment_name"] == equipment, :]["timestamp"],
+        y=df.loc[df["equipment_name"] == equipment, :]["value"],
+        name=equipment
+    ) for equipment in df["equipment_name"].drop_duplicates()]
 
 
 def get_df_rewards_trace(episode):
-    trace = []
     df = observation_model.get_df_computed_reward(episode)
-    trace.append(go.Scatter(x=df["timestep"],
-                            y=df["rewards"], name=episode.agent + "_reward"))
-    trace.append(go.Scatter(
-        x=df["timestep"], y=df["cum_rewards"], name=episode.agent + "cum_rewards", yaxis='y2'))
-    return trace
+    return [
+        go.Scatter(x=df["timestep"], y=df["rewards"],
+                   name=episode.agent + "_reward"),
+        go.Scatter(x=df["timestep"], y=df["cum_rewards"],
+                   name=episode.agent + "cum_rewards", yaxis='y2')
+    ]
