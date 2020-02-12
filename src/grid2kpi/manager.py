@@ -185,6 +185,7 @@ def make_ram_cache_id(episode_name, agent):
 def check_all_tree_and_get_meta_and_best(base_dir, agents):
     best_agents = {}
     meta_json = {}
+
     for agent in agents:
         for scenario_name in os.listdir(base_dir + agent):
             scenario_folder = os.path.join(base_dir, agent, scenario_name)
@@ -194,10 +195,12 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
                 episode_meta = json.load(fp=f)
                 meta_json[scenario_name] = episode_meta
                 if scenario_name not in best_agents:
-                    best_agents[scenario_name] = {"value": -1, "agent": None}
+                    best_agents[scenario_name] = {"value": -1, "agent": None, "out_of": 0}
                 if best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"]:
                     best_agents[scenario_name]["value"] = episode_meta["nb_timestep_played"]
                     best_agents[scenario_name]["agent"] = agent
+                    best_agents[scenario_name]['cum_reward'] = episode_meta['cumulative_reward']
+            best_agents[scenario_name]["out_of"] = best_agents[scenario_name]["out_of"] + 1
     return meta_json, best_agents
 
 

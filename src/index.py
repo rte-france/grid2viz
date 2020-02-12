@@ -89,6 +89,7 @@ body = html.Div([
 ])
 
 app.layout = html.Div([
+    dcc.Store(id="scenario", storage_type='memory'),
     dcc.Store(id="agent_ref", storage_type='memory'),
     dcc.Store(id="agent_study", storage_type='memory'),
     dcc.Store(id="user_timestamps_store"),
