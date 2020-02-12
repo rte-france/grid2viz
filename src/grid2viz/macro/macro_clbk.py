@@ -251,7 +251,6 @@ def update_agent_log_action_table(study_agent):
     [State("distribution_substation_action_chart", "figure"),
      State("distribution_line_action_chart", "figure")]
 )
-@timeit
 def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
     new_episode = make_episode(study_agent, episode_name)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)

@@ -118,9 +118,9 @@ def display_page(pathname, ref_agent, study_agent, user_selected_timestamp, prev
         ref_agent = agent_ref
     if study_agent is None:
         study_agent = agent_ref
-    if pathname == "/episodes":
+    if pathname == "/episodes" or pathname == "/":
         return episodes_lyt, "episodes"
-    elif pathname == "/overview" or pathname == "/":
+    elif pathname == "/overview":
         return overview.layout(ref_agent), "overview"
     elif pathname == "/macro":
         return macro.layout(study_agent, timestamps), "macro"

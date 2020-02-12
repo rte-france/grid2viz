@@ -30,7 +30,6 @@ def load_scenario_cards(url):
             best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)
             prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode, prod_types)
             consumption = profiles_traces(best_agent_episode, freq="30T")
-            id_agent = str('{}_{}').format(best_agents[scenario]['agent'], scenario)
 
             cards_list.append(
                 dbc.Col(lg=4, width=12, children=[
@@ -101,7 +100,7 @@ def load_scenario_cards(url):
 )
 def open_scenario(*input_state):
     # use callback context to get triggered input then parse it to get triggered input id
-    # finaly get the state key value from context with the dict key input_id + .key
+    # finaly get the state key value from context with the dict key = input_id + .key
     # see : https://dash.plot.ly/faqs How do I determine which Input has changed?
 
     ctx = callback_context

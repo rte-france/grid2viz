@@ -99,10 +99,10 @@ class EpisodeAnalytics():
             close_status = np.where(act._set_line_status == -1)
             switch_line = np.where(act._switch_line_status == True)
             if len(open_status[0]) == 1:
-                line_action = "open " + \
+                line_action = "connect " + \
                               str(self.line_names[open_status[0]])
             if len(close_status[0]) == 1:
-                line_action = "close " + \
+                line_action = "disconnect " + \
                               str(self.line_names[close_status[0]])
             if len(switch_line[0]) == 1:
                 line_action = "switch " + \
