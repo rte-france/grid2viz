@@ -99,8 +99,11 @@ def overview_line(study_agent=episode, timestamps=None):
                         'width': 'auto',
                         'height': '100%'
                     },
-                )
-
+                ),
+                html.Div(html.P(
+                    'Select an Actions on the "Instant and Accumulated Reward" '
+                    'Time Serie to study it on the next page'
+                ), className='mt-1')
             ]),
 
             html.Div(className="col-10", children=[

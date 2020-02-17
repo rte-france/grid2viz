@@ -42,20 +42,28 @@ navbar = dbc.Navbar(
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
         html.Div([
-            dbc.Button(
-                id="enlarge_left",
-                children="-5",
-                color="dark",
-                className="float-left mr-1"
+            html.Div(
+                dbc.Button(
+                    id="enlarge_left",
+                    children="-5",
+                    color="dark",
+                    className="float-left mr-1"
+                ),
+                dbc.Tooltip('Enlarge left', target='enlarge_left',
+                            placement='bottom'),
             ),
             dcc.Dropdown(id="user_timestamps", className="",
                          style={"width": "200px"}),
-            dbc.Button(
-                id="enlarge_right",
-                children="+5",
-                color="dark",
-                className="float-left ml-1"
-            ),
+            html.Div(
+                dbc.Button(
+                    id="enlarge_right",
+                    children="+5",
+                    color="dark",
+                    className="float-left ml-1"
+                ),
+                dbc.Tooltip('Enlarge right', target='enlarge_right',
+                            placement='bottom')
+            )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"
@@ -166,18 +174,11 @@ def update_user_timestamps_value(data):
 def reset_n_cliks_left(value):
         return 0
 
+
 @app.callback(Output("enlarge_right", "n_clicks"),
               [Input("user_timestamps", "value")])
 def reset_n_cliks_right(value):
     return 0
-
-#
-# @app.callback([Output("user_timestamps_left_input", "value"),
-#                Output("user_timestamps_right_input", "value")],
-#               [Input("enlarge_left", "n_clicks"),
-#                Input("enlarge_right", "n_clicks")])
-# def timestep_input_value(left_n_click, right_n_click):
-#     return left_n_click, right_n_click
 
 
 server = app.server
