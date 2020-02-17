@@ -1,6 +1,6 @@
 from dash.dependencies import Input, Output, State
 from dash import callback_context
-from grid2kpi.episode_analytics import EpisodeTrace
+from src.grid2kpi.episode_analytics import EpisodeTrace
 from src.app import app
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.manager import scenarios, best_agents, meta_json, make_episode, prod_types
@@ -8,7 +8,6 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
-from src.grid2viz.utils.perf_analyser import whoami, timeit
 
 
 @app.callback(

@@ -16,6 +16,7 @@ from grid2op.PlotPlotly import PlotObs
 
 graph = None
 
+
 def make_network(new_episode):
     global graph
     if graph is None:
@@ -210,11 +211,8 @@ path = os.path.join(
 
 parser = configparser.ConfigParser()
 parser.read(path)
-episode_name = parser.get("DEFAULT", "scenario")
 base_dir = parser.get("DEFAULT", "base_dir")
 cache_dir = os.path.join(base_dir, "_cache")
-agent_ref = parser.get("DEFAULT", "agent_ref")
-episode = make_episode(agent_ref, episode_name)
 agents = [file for file in os.listdir(
     base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")]
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
@@ -227,32 +225,28 @@ for agent in agents:
 
 scenarios = set(scenarios)
 
-env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
-
 prod_types = {}
 network_layout = []
 try:
+    env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
     prod_types_file = 'prods_charac.csv'
     network_layout_file = 'coords.csv'
-    if prod_types_file is not None:
-        with open(env_conf_folder + prod_types_file) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=";")
-            line = 0
-            for row in csv_reader:
-                if line == 0:
-                    line = line + 1
-                else:
-                    prod_types[row[1]] = row[2]
+    with open(env_conf_folder + prod_types_file) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=";")
+        line = 0
+        for row in csv_reader:
+            if line == 0:
+                line = line + 1
+            else:
+                prod_types[row[1]] = row[2]
 
-    if network_layout_file is not None:
-        with open(env_conf_folder + network_layout_file) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=';')
-            line = 0
-            test = csv_reader
-            [network_layout.append(
-                (int(row[0].split(',')[1]),
-                 int(row[0].split(',')[2]))
-            ) for row in csv_reader]  # the row is a string which contain the coordinate and an index
-
+    with open(env_conf_folder + network_layout_file) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';')
+        line = 0
+        test = csv_reader
+        [network_layout.append(
+            (int(row[0].split(',')[1]),
+             int(row[0].split(',')[2]))
+        ) for row in csv_reader]  # the row is a string which contain the coordinate and an index
 except configparser.NoOptionError:
     pass  # ignoring this error

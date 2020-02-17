@@ -2,16 +2,14 @@ import dash_html_components as html
 import dash_core_components as dcc
 import plotly.graph_objects as go
 import dash_table as dt
-import pandas as pd
 
 from collections import namedtuple
 
-from src.grid2viz.macro.macro_clbk import episode, agent_ref, agents, \
-    get_score_agent, get_nb_action_agent, get_nb_overflow_agent, \
+from src.grid2viz.macro.macro_clbk import agents, get_score_agent, get_nb_action_agent, get_nb_overflow_agent, \
     action_repartition_pie
 from src.grid2kpi.episode_analytics import actions_model
 from src.grid2kpi.episode_analytics.maintenances import hist_duration_maintenances
-from src.grid2kpi.manager import make_episode, base_dir, episode_name, agent_ref
+from src.grid2kpi.manager import make_episode
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -19,7 +17,7 @@ layout_def = {
 }
 
 
-def indicator_line(episode=episode, agent_name=agent_ref):
+def indicator_line(scenario):
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
@@ -28,26 +26,26 @@ def indicator_line(episode=episode, agent_name=agent_ref):
                     id='agent_log_selector',
                     options=[{'label': agent, 'value': agent}
                              for agent in agents],
-                    value=agent_name,
+                    value=agents[0],
                     placeholder="Agent log"
                 ),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_score_output",
                            className="border-bottom h3 mb-0 text-right",
-                           children=get_score_agent(episode)),
+                           children=""),
                     html.P(className="text-muted", children="Score")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_overflow",
                            className="border-bottom h3 mb-0 text-right",
-                           children=get_nb_action_agent(episode)),
+                           children=""),
                     html.P(className="text-muted",
                            children="Number of Overflow")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_action",
                            className="border-bottom h3 mb-0 text-right",
-                           children=get_nb_overflow_agent(episode)),
+                           children=""),
                     html.P(className="text-muted ",
                            children="Number of Action")
                 ])
@@ -59,8 +57,7 @@ def indicator_line(episode=episode, agent_name=agent_ref):
                 dcc.Graph(
                     id="agent_study_pie_chart",
                     figure=go.Figure(
-                        layout=layout_def,
-                        data=action_repartition_pie(episode)
+                        layout=layout_def
                     )
                 )
 
@@ -71,14 +68,16 @@ def indicator_line(episode=episode, agent_name=agent_ref):
                         children="Action Maintenance Duration"),
                 dcc.Graph(
                     id="maintenance_duration",
-                    figure=maitenance_duration_distrib(episode)
+                    figure=go.Figure(
+                        layout=layout_def
+                    )
                 )
             ])
         ]),
     ])
 
 
-def overview_line(study_agent=episode, timestamps=None):
+def overview_line(timestamps=None):
     if timestamps is None:
         timestamps = []
     return html.Div(id="overview_line_id", className="lineBlock card", children=[
@@ -157,8 +156,7 @@ def overview_line(study_agent=episode, timestamps=None):
     ])
 
 
-def inspector_line(table_cols, table_data, episode):
-    actions_distribution = action_distrubtion(episode)
+def inspector_line():
     return html.Div(className="lineBlock card ", children=[
         html.H4("Inspector"),
         html.Div(className="card-body col row", children=[
@@ -176,9 +174,7 @@ def inspector_line(table_cols, table_data, episode):
                         'width': '100%',
                         'max-width': '100%',
                         'height': '200px'
-                    },
-                    columns=table_cols,
-                    data=table_data
+                    }
                 ),
                 html.Label(children=[
                     'The documentation for the filtering syntax can be found ',
@@ -197,7 +193,9 @@ def inspector_line(table_cols, table_data, episode):
                             children="Distribution of Substation action"),
                     dcc.Graph(
                         id="distribution_substation_action_chart",
-                        figure=actions_distribution.on_subs
+                        figure=go.Figure(
+                            layout=layout_def,
+                        )
                     )
                 ]),
                 html.Div(className="col", children=[
@@ -205,7 +203,9 @@ def inspector_line(table_cols, table_data, episode):
                             children="Distribution of line action"),
                     dcc.Graph(
                         id="distribution_line_action_chart",
-                        figure=actions_distribution.on_lines
+                        figure=go.Figure(
+                            layout=layout_def,
+                        )
                     )
                 ]),
             ]),
@@ -217,14 +217,6 @@ def inspector_line(table_cols, table_data, episode):
 def get_table(episode):
     table = actions_model.get_action_table_data(episode)
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
-
-
-def maitenance_duration_distrib(episode):
-    figure = go.Figure(
-        layout=layout_def,
-        data=[go.Histogram(x=hist_duration_maintenances(episode))]
-    )
-    return figure
 
 
 ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])
@@ -242,12 +234,10 @@ def action_distrubtion(episode):
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines)
 
 
-def layout(study_agent=episode, timestamps=None):
-    new_episode = make_episode(study_agent, episode_name)
+def layout(timestamps, scenario):
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
-        # TODO I don't know where the layout param is filled this is a temporary trick to get the whole default episode
-        indicator_line(new_episode, study_agent),
-        overview_line(new_episode, timestamps),
-        inspector_line(*get_table(new_episode), new_episode)
+        indicator_line(scenario),
+        overview_line(timestamps),
+        inspector_line()
     ])

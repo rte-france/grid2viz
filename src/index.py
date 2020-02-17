@@ -6,7 +6,6 @@ from dash.exceptions import PreventUpdate
 
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
-from src.grid2kpi.manager import agent_ref, episode_name
 from src.grid2viz.utils.perf_analyser import timeit, decorate_all_in_module
 
 import src.grid2viz.macro.macro_clbk as macro_clbk
@@ -33,10 +32,10 @@ nav_items = [
 navbar = dbc.Navbar(
     [
         html.Div([html.Span("Scenario:", className="badge badge-secondary"),
-                  html.Span(episode_name, className="badge badge-light", id="scen_lbl")],
+                  html.Span("None", className="badge badge-light", id="scen_lbl")],
                  className="reminder float-left"),
         html.Div([html.Span("Ref Agent:", className="badge badge-secondary"),
-                  html.Span(agent_ref, className="badge badge-light", id="ref_ag_lbl")],
+                  html.Span("None", className="badge badge-light", id="ref_ag_lbl")],
                  className="reminder float-left"),
         html.Div([html.Span("Studied Agent:", className="badge badge-secondary"),
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
@@ -92,30 +91,27 @@ app.layout = html.Div([
 @app.callback(
     [Output('page-content', 'children'), Output('page', 'data')],
     [Input('url', 'pathname')],
-    [State("agent_ref", "data"),
+    [State("scenario", "data"),
+     State("agent_ref", "data"),
      State("agent_study", "data"),
      State("user_timestamps", "value"),
      State("page", "data"),
      State("user_timestamps_store", "data")]
 )
-def display_page(pathname, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
+def display_page(pathname, scenario, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
     if timestamps_store is None:
         timestamps_store = []
     timestamps = [dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store]
     if pathname[1:] == prev_page:
         raise PreventUpdate
-    if ref_agent is None:
-        ref_agent = agent_ref
-    if study_agent is None:
-        study_agent = agent_ref
     if pathname == "/episodes" or pathname == "/":
         return episodes_lyt, "episodes"
     elif pathname == "/overview":
-        return overview.layout(ref_agent), "overview"
+        return overview.layout(scenario), "overview"
     elif pathname == "/macro":
-        return macro.layout(study_agent, timestamps), "macro"
+        return macro.layout(timestamps, scenario), "macro"
     elif pathname == "/micro":
-        return micro.layout(user_selected_timestamp, study_agent, ref_agent), "micro"
+        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro"
     else:
         return 404, ""
 

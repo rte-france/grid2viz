@@ -1,7 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_antd_components as dac
-import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import dash_table as dt
 import pandas as pd
@@ -9,11 +8,9 @@ import numpy as np
 import datetime
 from collections import namedtuple
 
-from src.grid2kpi.episode_analytics import EpisodeTrace
 from src.grid2kpi.episode_analytics import observation_model
 from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
-from src.grid2kpi.manager import (
-    episode, make_episode, base_dir, episode_name, make_network, get_network_graph)
+from src.grid2kpi.manager import make_episode, make_network
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -116,67 +113,69 @@ def flux_inspector_line(network_graph=None, slider_params=None):
     ])
 
 
-context_inspector_line = html.Div(id="context_inspector_line_id", className="lineBlock card ", children=[
-    html.H4("Context"),
-    html.Div(className="card-body col row", children=[
+def context_inspector_line(episode):
+    return html.Div(id="context_inspector_line_id", className="lineBlock card ", children=[
+        html.H4("Context"),
+        html.Div(className="card-body col row", children=[
 
-        html.Div(className="col-xl-5", children=[
-            html.H5("Environments Time Series"),
-            dac.Radio(options=[
-                {'label': 'Load', "value": "Load"},
-                {'label': 'Production', "value": "Production"},
-                {'label': 'Hazards', "value": "Hazards"},
-                {'label': 'Maintenances', "value": "Maintenances"},
-            ],
-                value="Load",
-                id="environment_choices_buttons",
-                buttonStyle="solid"
-            ),
-            dac.Select(
-                id='asset_selector',
-                options=[{'label': load_name,
-                          'value': load_name}
-                         for load_name in episode.load_names],
-                value=episode.load_names[0],
-                mode='multiple',
-                showArrow=True
-            ),
-            dcc.Graph(
-                id='env_charts_ts',
-                style={'margin-top': '1em'},
-                figure=go.Figure(layout=layout_def),
-                config=dict(displayModeBar=False)
-            ),
-        ]),
-
-        html.Div(className="col-xl-7", children=[
-            html.H5("OverFlow and Usage rate"),
-            html.Div(className="row", children=[
-                dcc.Graph(
-                    id='usage_rate_ts',
-                    className="col-6",
-                    style={'margin-top': '1em'},
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=episode.usage_rate_trace
-                    ),
-                    config=dict(displayModeBar=False)
+            html.Div(className="col-xl-5", children=[
+                html.H5("Environments Time Series"),
+                dac.Radio(options=[
+                    {'label': 'Load', "value": "Load"},
+                    {'label': 'Production', "value": "Production"},
+                    {'label': 'Hazards', "value": "Hazards"},
+                    {'label': 'Maintenances', "value": "Maintenances"},
+                ],
+                    value="Load",
+                    id="environment_choices_buttons",
+                    buttonStyle="solid"
+                ),
+                dac.Select(
+                    id='asset_selector',
+                    options=[{'label': load_name,
+                              'value': load_name}
+                             for load_name in episode.load_names],
+                    value=episode.load_names[0],
+                    mode='multiple',
+                    showArrow=True
                 ),
                 dcc.Graph(
-                    id='overflow_ts',
-                    className="col-6",
+                    id='env_charts_ts',
                     style={'margin-top': '1em'},
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=episode.total_overflow_trace
-                    ),
+                    figure=go.Figure(layout=layout_def),
                     config=dict(displayModeBar=False)
                 ),
-            ], ),
-        ]),
+            ]),
 
+            html.Div(className="col-xl-7", children=[
+                html.H5("OverFlow and Usage rate"),
+                html.Div(className="row", children=[
+                    dcc.Graph(
+                        id='usage_rate_ts',
+                        className="col-6",
+                        style={'margin-top': '1em'},
+                        figure=go.Figure(
+                            layout=layout_def,
+                            data=episode.usage_rate_trace
+                        ),
+                        config=dict(displayModeBar=False)
+                    ),
+                    dcc.Graph(
+                        id='overflow_ts',
+                        className="col-6",
+                        style={'margin-top': '1em'},
+                        figure=go.Figure(
+                            layout=layout_def,
+                            data=episode.total_overflow_trace
+                        ),
+                        config=dict(displayModeBar=False)
+                    ),
+                ], ),
+            ]),
+
+        ])
     ])
-])
+
 
 all_info_line = html.Div(id="all_info_line_id", className="lineBlock card ", children=[
     html.H4("All"),
@@ -222,11 +221,11 @@ def slider_params(user_selected_timestamp, episode):
     return SliderParams(min_, max_, marks, value)
 
 
-def compute_window(user_selected_timestamp, study_agent):
+def compute_window(user_selected_timestamp, study_agent, scenario):
     if user_selected_timestamp is not None:
         n_clicks_left = 0
         n_clicks_right = 0
-        new_episode = make_episode(study_agent, episode_name)
+        new_episode = make_episode(study_agent, scenario)
         center_indx = center_index(user_selected_timestamp, new_episode)
         timestamp_range = new_episode.timestamps[
                           max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
@@ -236,7 +235,7 @@ def compute_window(user_selected_timestamp, study_agent):
         return xmin, xmax
 
 
-def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
+def reward_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
     new_episode = make_episode(study_agent, episode_name)
     ref_episode = make_episode(agent_ref, episode_name)
     actions_ts = get_actions_sum(new_episode)
@@ -259,7 +258,7 @@ def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, a
     figure['layout'] = {**layout_def,
                         'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
 
-    window = compute_window(user_selected_timestamp, study_agent)
+    window = compute_window(user_selected_timestamp, study_agent, episode_name)
 
     if window is not None:
         figure["layout"].update(
@@ -271,7 +270,7 @@ def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, a
 from src.grid2viz.micro.micro_clbk import action_tooltip
 
 
-def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
+def actions_ts_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
     new_episode = make_episode(study_agent, episode_name)
     actions_ts = new_episode.action_data_table.set_index("timestamp")[[
         'action_line', 'action_subs'
@@ -296,7 +295,7 @@ def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_nam
         ], 'layout': {**layout_def, 'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     }
 
-    window = compute_window(user_selected_timestamp, study_agent)
+    window = compute_window(user_selected_timestamp, study_agent, episode_name)
 
     if window is not None:
         figure["layout"].update(
@@ -306,20 +305,18 @@ def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_nam
     return figure
 
 
-def layout(user_selected_timestamp, study_agent, ref_agent):
-    new_episode = make_episode(study_agent, episode_name)
+def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
+    new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
-    rw_graph = reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, ref_agent)
-    act_graph = actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_name, ref_agent)
+    rw_graph = reward_graph(user_selected_timestamp, study_agent, scenario, ref_agent)
+    act_graph = actions_ts_graph(user_selected_timestamp, study_agent, scenario, ref_agent)
     return html.Div(id="micro_page", children=[
         dcc.Store(id="relayoutStoreMicro"),
-        dcc.Store(id="window", data=compute_window(
-            user_selected_timestamp, study_agent)),
+        dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(rw_graph, act_graph),
         # TODO : episode.observations[1] will change
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
-        # flux_inspector_line(get_network_graph(make_network(episode), episode)),
-        context_inspector_line,
+        context_inspector_line(new_episode),
         all_info_line
     ])

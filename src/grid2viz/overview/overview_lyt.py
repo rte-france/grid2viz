@@ -3,7 +3,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
-from src.grid2kpi.manager import agents, agent_ref, episode
+from src.grid2kpi.manager import agents, make_episode, best_agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -71,7 +71,7 @@ indicators_line = html.Div(id="temporaryid", children=[
 ], className="lineBlock card")
 
 
-def summary_line(ref_agent=agent_ref):
+def summary_line(episode):
     return html.Div(children=[
         html.H4("Summary"),
         html.Div(children=[
@@ -111,7 +111,7 @@ def summary_line(ref_agent=agent_ref):
                     id="input_agent_selector", placeholder="select a ref agent",
                     options=[{'label': agent, 'value': agent}
                              for agent in agents],
-                    value=ref_agent
+                    value=agents[0]
                 ),
                 html.Div(children=[
                     dcc.Graph(
@@ -119,8 +119,7 @@ def summary_line(ref_agent=agent_ref):
                         className="col-6",
                         style={'margin-top': '1em'},
                         figure=go.Figure(
-                            layout=layout_def,
-                            data=episode.usage_rate_trace
+                            layout=layout_def
                         ),
                         config=dict(displayModeBar=False)
                     ),
@@ -129,8 +128,7 @@ def summary_line(ref_agent=agent_ref):
                         className="col-6",
                         style={'margin-top': '1em'},
                         figure=go.Figure(
-                            layout=layout_def,
-                            data=episode.total_overflow_trace
+                            layout=layout_def
                         ),
                         config=dict(displayModeBar=False)
                     ),
@@ -183,10 +181,11 @@ ref_agent_line = html.Div(children=[
 ], className="lineBlock card")
 
 
-def layout(ref_agent=agent_ref):
+def layout(scenario):
+    episode = make_episode(best_agents[scenario]["agent"], scenario)
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line,
-        summary_line(ref_agent),
+        summary_line(episode),
         ref_agent_line
     ])

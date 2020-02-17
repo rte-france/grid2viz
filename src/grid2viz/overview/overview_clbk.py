@@ -1,17 +1,14 @@
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+
 from src.app import app
-import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.episode_analytics.env_actions import env_actions
-from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, agent_ref, prod_types, best_agents
-from src.grid2kpi.episode_analytics.maintenances import duration_maintenances
-from src.grid2viz.utils.perf_analyser import timeit
+from src.grid2kpi.manager import make_episode, prod_types, best_agents
 
 
 @app.callback(
@@ -88,9 +85,11 @@ def load_environments_ts(equipments, relayout_data_store, figure, kind, scenario
 
 @app.callback(
     Output("select_loads_for_tb", "options"),
-    [Input('temporaryid', 'children')]
+    [Input('temporaryid', 'children')],
+    [State('scenario', 'data')]
 )
-def update_select_loads(children):
+def update_select_loads(children, scenario):
+    episode = make_episode(best_agents[scenario]["agent"], scenario)
     return [
         {'label': load, "value": load} for load in [*episode.load_names, 'total']
     ]
@@ -98,9 +97,11 @@ def update_select_loads(children):
 
 @app.callback(
     Output("select_prods_for_tb", "options"),
-    [Input('temporaryid', 'children')]
+    [Input('temporaryid', 'children')],
+    [State('scenario', 'data')]
 )
-def update_select_prods(children):
+def update_select_prods(children, scenario):
+    episode = make_episode(best_agents[scenario]["agent"], scenario)
     return [
         {'label': prod, "value": prod} for prod in episode.prod_names
     ]
@@ -111,11 +112,15 @@ def update_select_prods(children):
      Output("inspection_table", "data")],
     [Input("select_loads_for_tb", "value"),
      Input("select_prods_for_tb", "value"),
-     Input("temporaryid", "children")
+     Input("temporaryid", "children"),
+     Input('agent_ref', 'data')
      ],
-    [State("inspection_table", "data")]
+    [State("inspection_table", "data"), State('scenario', 'data')]
 )
-def update_table(loads, prods, children, data):
+def update_table(loads, prods, children, agent_ref, data, scenario):
+    if agent_ref is None:
+        raise PreventUpdate
+    episode = make_episode(agent_ref, scenario)
     if data is None:
         table = observation_model.init_table_inspection_data(episode)
         return [{"name": i, "id": i} for i in table.columns], table.to_dict('records')
@@ -185,10 +190,11 @@ def update_selected_ref_agent(ref_agent):
 @app.callback(
     [Output("overflow_graph", "figure"), Output("usage_rate_graph", "figure")],
     [Input('agent_ref', 'data'),
+     Input('scenario', 'data'),
      Input("relayoutStoreOverview", "data")],
     [State("overflow_graph", "figure"), State("usage_rate_graph", "figure")]
 )
-def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figure_usage):
+def update_agent_ref_graph(ref_agent, scenario, relayout_data_store, figure_overflow, figure_usage):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout_usage = figure_usage["layout"]
@@ -197,10 +203,7 @@ def update_agent_ref_graph(ref_agent, relayout_data_store, figure_overflow, figu
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    if ref_agent == agent_ref:
-        new_episode = episode
-    else:
-        new_episode = make_episode(ref_agent, episode_name)
+    new_episode = make_episode(ref_agent, scenario)
     figure_overflow["data"] = new_episode.total_overflow_trace
     figure_usage["data"] = new_episode.usage_rate_trace
     return figure_overflow, figure_usage
@@ -231,8 +234,11 @@ def update_production_share_graph(scenario, figure):
 
 @app.callback(
     [Output("date_range", "start_date"), Output("date_range", "end_date")],
-    [Input('temporaryid', 'children')]
+    [Input('temporaryid', 'children'),
+     Input('agent_ref', 'data')],
+    [State('scenario', 'data')]
 )
-def update_date_range(children):
+def update_date_range(children, agent_ref, scenario):
+    episode = make_episode(agent_ref, scenario)
     return episode.production["timestamp"].dt.date.values[0], \
            episode.production["timestamp"].dt.date.values[-1]

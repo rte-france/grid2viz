@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 from src.app import app
 from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
-from src.grid2kpi.manager import make_episode, base_dir, episode_name, episode, agent_ref, agents
+from src.grid2kpi.manager import make_episode, agents
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
@@ -20,9 +20,10 @@ from src.grid2viz.utils.perf_analyser import timeit
     [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
     [State("cumulated_rewards_timeserie", "figure"),
-     State("agent_ref", "data")]
+     State("agent_ref", "data"),
+     State("scenario", "data")]
 )
-def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent):
+def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent, scenario):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -31,8 +32,8 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(study_agent, episode_name)
-    ref_episode = make_episode(ref_agent, episode_name)
+    new_episode = make_episode(study_agent, scenario)
+    ref_episode = make_episode(ref_agent, scenario)
     actions_ts = new_episode.action_data_table.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
@@ -47,7 +48,7 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
         marker={"symbol": "hexagon", "size": 10}
     )
     ref_episode_reward_trace = ref_episode.reward_trace
-    studied_agent_reward_trace = make_episode(study_agent, episode_name).reward_trace
+    studied_agent_reward_trace = new_episode.reward_trace
 
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
@@ -59,10 +60,11 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 @app.callback(
     Output("agent_study_pie_chart", "figure"),
     [Input('agent_study', 'data')],
-    [State("agent_study_pie_chart", "figure")]
+    [State("agent_study_pie_chart", "figure"),
+     State("scenario", "data")]
 )
-def update_action_repartition_pie(study_agent, figure):
-    new_episode = make_episode(study_agent, episode_name)
+def update_action_repartition_pie(study_agent, figure, scenario):
+    new_episode = make_episode(study_agent, scenario)
     figure['data'] = action_repartition_pie(new_episode)
     return figure
 
@@ -78,10 +80,11 @@ def action_repartition_pie(agent):
 @app.callback(
     Output("maintenance_duration", "figure"),
     [Input('agent_study', 'data')],
-    [State("maintenance_duration", "figure")]
+    [State("maintenance_duration", "figure"),
+     State("scenario", "data")]
 )
-def maintenance_duration_hist(study_agent, figure):
-    new_episode = make_episode(study_agent, episode_name)
+def maintenance_duration_hist(study_agent, figure, scenario):
+    new_episode = make_episode(study_agent, scenario)
     figure['data'] = [go.Histogram(
         x=hist_duration_maintenances(new_episode)
     )]
@@ -129,10 +132,11 @@ def relayout_store(*args):
     [Output("indicator_score_output", "children"),
      Output("indicator_nb_overflow", "children"),
      Output("indicator_nb_action", "children")],
-    [Input('agent_study', 'data')]
+    [Input('agent_study', 'data'),
+     Input("scenario", "data")]
 )
-def update_nbs(study_agent):
-    new_episode = make_episode(study_agent, episode_name)
+def update_nbs(study_agent, scenario):
+    new_episode = make_episode(study_agent, scenario)
     score = get_score_agent(new_episode)
     nb_overflow = get_nb_overflow_agent(new_episode)
     nb_action = get_nb_action_agent(new_episode)
@@ -157,12 +161,13 @@ def get_nb_action_agent(agent):
 @app.callback(
     Output("agent_study", "data"),
     [Input('agent_log_selector', 'value')],
-    [State("agent_study", "data")],
+    [State("agent_study", "data"),
+     State("scenario", "data")],
 )
-def update_study_agent(study_agent, stored_agent):
+def update_study_agent(study_agent, stored_agent, scenario):
     if study_agent == stored_agent:
         raise PreventUpdate
-    make_episode(study_agent, episode_name)
+    make_episode(study_agent, scenario)
     return study_agent
 
 
@@ -172,9 +177,10 @@ def update_study_agent(study_agent, stored_agent):
     [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
     [State("overflow_graph_study", "figure"),
-     State("usage_rate_graph_study", "figure")]
+     State("usage_rate_graph_study", "figure"),
+     State("scenario", "data")]
 )
-def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, figure_usage):
+def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, figure_usage, scenario):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout_usage = figure_usage["layout"]
@@ -183,7 +189,7 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    new_episode = make_episode(study_agent, episode_name)
+    new_episode = make_episode(study_agent, scenario)
     figure_overflow["data"] = new_episode.total_overflow_trace
     maintenance_trace = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])[0]
     maintenance_trace.update({"name": "Nb of maintenances"})
@@ -197,9 +203,10 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
     [Input('agent_study', 'data'),
      Input('relayoutStoreMacro', 'data')],
     [State("action_timeserie", "figure"),
-     State("agent_ref", "data")]
+     State("agent_ref", "data"),
+     State("scenario", "data")]
 )
-def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
+def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, scenario):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -208,9 +215,9 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(study_agent, episode_name)
+    new_episode = make_episode(study_agent, scenario)
     actions_ts = get_actions_sum(new_episode)
-    ref_episode = make_episode(agent_ref, episode_name)
+    ref_episode = make_episode(agent_ref, scenario)
     ref_agent_actions_ts = get_actions_sum(ref_episode)
     figure["data"] = [
         go.Scatter(x=new_episode.action_data_table.timestamp,
@@ -233,10 +240,11 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
 @app.callback(
     [Output("inspector_datable", "columns"),
      Output("inspector_datable", "data")],
-    [Input('agent_study', 'data')]
+    [Input('agent_study', 'data'),
+     Input("scenario", "data")]
 )
-def update_agent_log_action_table(study_agent):
-    new_episode = make_episode(study_agent, episode_name)
+def update_agent_log_action_table(study_agent, scenario):
+    new_episode = make_episode(study_agent, scenario)
     table = actions_model.get_action_table_data(new_episode)
     return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
 
@@ -246,10 +254,11 @@ def update_agent_log_action_table(study_agent):
      Output("distribution_line_action_chart", "figure")],
     [Input('agent_study', 'data')],
     [State("distribution_substation_action_chart", "figure"),
-     State("distribution_line_action_chart", "figure")]
+     State("distribution_line_action_chart", "figure"),
+     State("scenario", "data")]
 )
-def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
-    new_episode = make_episode(study_agent, episode_name)
+def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, scenario):
+    new_episode = make_episode(study_agent, scenario)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     figure_switch_line["data"] = actions_model.get_action_per_line(new_episode)
     return figure_sub, figure_switch_line
@@ -258,12 +267,13 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
 @app.callback(
     Output("tooltip_table", "children"),
     [Input('agent_study', 'data'),
-     Input("inspector_datable", "active_cell")]
+     Input("inspector_datable", "active_cell"),
+     Input("scenario", "data")]
 )
-def update_more_info(study_agent, active_cell):
+def update_more_info(study_agent, active_cell, scenario):
     if active_cell is None:
         raise PreventUpdate
     row = active_cell["row"]
-    new_episode = make_episode(study_agent, episode_name)
+    new_episode = make_episode(study_agent, scenario)
     act = new_episode.actions[row]
     return str(act)
