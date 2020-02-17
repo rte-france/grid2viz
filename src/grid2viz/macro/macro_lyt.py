@@ -98,8 +98,11 @@ def overview_line(timestamps=None):
                         'width': 'auto',
                         'height': '100%'
                     },
-                )
-
+                ),
+                html.Div(html.P(
+                    'Select an Actions on the "Instant and Accumulated Reward" '
+                    'Time Serie to study it on the next page'
+                ), className='mt-1')
             ]),
 
             html.Div(className="col-10", children=[
@@ -158,7 +161,7 @@ def overview_line(timestamps=None):
 
 def inspector_line():
     return html.Div(className="lineBlock card ", children=[
-        html.H4("Inspector"),
+        html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
         html.Div(className="card-body col row", children=[
             html.Div(className="col", children=[
                 dt.DataTable(

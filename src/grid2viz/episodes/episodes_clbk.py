@@ -1,6 +1,6 @@
 from dash.dependencies import Input, Output, State
 from dash import callback_context
-from src.grid2kpi.episode_analytics import EpisodeTrace
+from src.grid2kpi.episode_analytics import EpisodeTrace, observation_model
 from src.app import app
 from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
 from src.grid2kpi.manager import scenarios, best_agents, meta_json, make_episode, prod_types
@@ -51,6 +51,13 @@ def load_scenario_cards(url):
                                     html.P(className="border-bottom h3 mb-0 text-right",
                                            children=round(best_agents[scenario]['cum_reward'])),
                                     html.P(className="text-muted", children="Cumulative Reward")
+                                ]),
+                                dbc.Col(className="mb-4", children=[
+                                    html.P(className="border-bottom h3 mb-0 text-right",
+                                           children='{} min'.format(round(
+                                               observation_model.get_duration_maintenances(best_agent_episode))
+                                           )),
+                                    html.P(className="text-muted", children="Total Maintenance Duration")
                                 ]),
                             ]),
                             dbc.Row(className="align-items-center", children=[

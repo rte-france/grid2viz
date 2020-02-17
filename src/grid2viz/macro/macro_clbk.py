@@ -53,7 +53,8 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
     figure['layout'] = {**figure['layout'],
-                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+                        'yaxis': {'title': 'Instant Reward'},
+                        'yaxis2': {'title': 'Cumulated Reward', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
     return figure
 
 
@@ -233,7 +234,8 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, sc
                    y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
     figure['layout'] = {**figure['layout'],
-                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+                        'yaxis': {'title': 'Actions'},
+                        'yaxis2': {'title': 'Distance','side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
     return figure
 
 
