@@ -42,11 +42,6 @@ navbar = dbc.Navbar(
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
         html.Div([
-            # dcc.Input(
-            #     id="user_timestamps_left_input", type="number",
-            #     debounce=False, placeholder="timestep left",
-            #     style={"width": "10%"}
-            # ),
             dbc.Button(
                 id="enlarge_left",
                 children="-5",
@@ -61,11 +56,6 @@ navbar = dbc.Navbar(
                 color="dark",
                 className="float-left ml-1"
             ),
-            # dcc.Input(
-            #     id="user_timestamps_right_input", type="number",
-            #     debounce=False, placeholder="timestep right",
-            #     style={"width": "10%"}
-            # )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"
@@ -181,13 +171,13 @@ def reset_n_cliks_left(value):
 def reset_n_cliks_right(value):
     return 0
 
-
-@app.callback([Output("user_timestamps_left_input", "value"),
-               Output("user_timestamps_right_input", "value")],
-              [Input("enlarge_left", "n_clicks"),
-               Input("enlarge_right", "n_clicks")])
-def timestep_input_value(left_n_click, right_n_click):
-    return left_n_click, right_n_click
+#
+# @app.callback([Output("user_timestamps_left_input", "value"),
+#                Output("user_timestamps_right_input", "value")],
+#               [Input("enlarge_left", "n_clicks"),
+#                Input("enlarge_right", "n_clicks")])
+# def timestep_input_value(left_n_click, right_n_click):
+#     return left_n_click, right_n_click
 
 
 server = app.server
