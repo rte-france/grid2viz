@@ -20,18 +20,6 @@ Create the virtualenv from the requirements.txt:
 ```
 
 
-### Grid2Op installation
-
-In order to use the not (yet) integrated `grid2op` version, you have to manually install it into your virtualenv.
-
-Activate the virtualenv:
-
-`.../Grid2Viz$ pipenv shell`
-
-cd to the forked version of `grid2op` and run : 
-
-`(venvname)/.../grid2op$ python setup.py install`
-
 ## Getting started
 
 In order to use this tool, you need to have serialized the RL process of grid2op. The expected file system is :
@@ -45,13 +33,28 @@ In order to use this tool, you need to have serialized the RL process of grid2op
         - scenario_3
 
 Each of the scenario_* files have to contain all files given by serialisation of your RL through grid2op.
+For the update process of this folder chain, see the section `Caching`
 
-`//TODO: when the serialisation is freezed, add description of required files`
+In the config.ini of this repo:
+ - change the `base_dir` option to your root_dir of data.
+ - change the `env_conf_folder` option to the directory that contains the following two files :
+    - prod_share.csv : The csv file that links production equipments to their type
+    - coords.csv : The csv file that lists the coordinates of nodes in the network
 
-In the config.ini of this repo, change the `base_dir` option to your root_dir of data, and pick a `scenario` and `agent_ref` to visualize.
-Changing this file will require a restart of the server to update.
+Changing this config.ini file will require a restart of the server to update.
 
 To launch the server :
 - Set the environment variable `export FLASK_APP=/path/to/src/index.py`
 - In the grid2viz folder, run `pipenv shell`'
 - Run `flask run`
+
+##  Caching
+
+The cache system allows you to only compute long calculations of the app once per agent/scenario.
+The app will create a folder `_cache` in the `base_dir` of the config.ini which will contain these long calculations serialized.
+
+If you add a new folder in your `base_dir` (either an agent, or a scenario) you will have to restart the server so the app
+reads the folder tree again.
+
+**_WARNING_** : If you overwrite the agents while they were already cached, you will have to manually reset the cache so the app
+knows to compute everything again with the updated data. To do so, you just need to delete the `_cache` folder.

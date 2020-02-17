@@ -168,7 +168,7 @@ def update_user_timestamps_value(data):
 @app.callback(Output("enlarge_left", "n_clicks"),
               [Input("user_timestamps", "value")])
 def reset_n_cliks_left(value):
-        return 0
+    return 0
 
 
 @app.callback(Output("enlarge_right", "n_clicks"),
