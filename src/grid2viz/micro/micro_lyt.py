@@ -79,14 +79,21 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                         html.H6(className="text-center",
                                 children="Voltage and Flow"),
                         dac.Radio(options=[
+                            {'label': 'Voltage', 'value': 'voltage'},
+                            {'label': 'Flow', 'value': 'flow'}
+                        ],
+                            value="voltage",
+                            id="voltage_flow_choice",
+                            buttonStyle="solid"
+                        ),
+                        dac.Radio(options=[
                             {'label': 'Active Flow', "value": "active_flow"},
                             {'label': 'Current Flow', 'value': 'current_flow'},
-                            {'label': 'Flow Usage Rate', 'value': 'flow_usage_rate'},
-                            {'label': 'Voltage', 'value': 'voltage'}
+                            {'label': 'Flow Usage Rate', 'value': 'flow_usage_rate'}
                         ],
-                            value="active_flow",
-                            id="voltage_flow_selector",
-                            buttonStyle="solid"
+                            value='active_flow',
+                            id='flow_radio',
+                            style={'display': 'none'}
                         ),
                         dac.Select(
                             id="line_side_choices",

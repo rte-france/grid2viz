@@ -15,15 +15,12 @@ import plotly.graph_objects as go
 from grid2op.PlotPlotly import PlotObs
 
 graph = None
-graph_layout = [(280, -81), (100, -270), (-366, -270), (-366, -54), (64, -54), (64, 54), (-450, 0),
-                (-550, 0), (-326, 54), (-222, 108), (-79, 162), (170, 270), (64, 270), (-222, 216)]
-
 
 def make_network(new_episode):
     global graph
     if graph is None:
         graph = PlotObs(
-            substation_layout=graph_layout, observation_space=new_episode.observation_space)
+            substation_layout=network_layout, observation_space=new_episode.observation_space)
     return graph
 
 
@@ -213,7 +210,6 @@ path = os.path.join(
 
 parser = configparser.ConfigParser()
 parser.read(path)
-
 episode_name = parser.get("DEFAULT", "scenario")
 base_dir = parser.get("DEFAULT", "base_dir")
 cache_dir = os.path.join(base_dir, "_cache")
@@ -231,17 +227,32 @@ for agent in agents:
 
 scenarios = set(scenarios)
 
+env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
+
 prod_types = {}
+network_layout = []
 try:
-    prod_types_file = parser.get("DEFAULT", "prod_types")
+    prod_types_file = 'prods_charac.csv'
+    network_layout_file = 'coords.csv'
     if prod_types_file is not None:
-        with open(base_dir + prod_types_file) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=",")
+        with open(env_conf_folder + prod_types_file) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=";")
             line = 0
             for row in csv_reader:
                 if line == 0:
                     line = line + 1
                 else:
                     prod_types[row[1]] = row[2]
+
+    if network_layout_file is not None:
+        with open(env_conf_folder + network_layout_file) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=';')
+            line = 0
+            test = csv_reader
+            [network_layout.append(
+                (int(row[0].split(',')[1]),
+                 int(row[0].split(',')[2]))
+            ) for row in csv_reader]  # the row is a string which contain the coordinate and an index
+
 except configparser.NoOptionError:
     pass  # ignoring this error

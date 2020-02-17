@@ -26,7 +26,7 @@ def load_scenario_cards(url):
         'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
     }
     if cards_count < 15:
-        for scenario in scenarios:
+        for scenario in sorted(scenarios):
             best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)
             prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode, prod_types)
             consumption = profiles_traces(best_agent_episode, freq="30T")
@@ -45,13 +45,8 @@ def load_scenario_cards(url):
                                 ]),
                                 dbc.Col(className="mb-4", children=[
                                     html.P(className="border-bottom h3 mb-0 text-right",
-                                           children=meta_json[scenario]['chronics_max_timestep']),
-                                    html.P(className="text-muted", children="Scenario's Timestep")
-                                ]),
-                                dbc.Col(className="mb-4", children=[
-                                    html.P(className="border-bottom h3 mb-0 text-right",
-                                           children=best_agents[scenario]['value']),
-                                    html.P(className="text-muted", children="Agent's Max step")
+                                           children='{}/{}'.format(best_agents[scenario]['value'], meta_json[scenario]['chronics_max_timestep'])),
+                                    html.P(className="text-muted", children="Agent's Survival")
                                 ]),
                                 dbc.Col(className="mb-4", children=[
                                     html.P(className="border-bottom h3 mb-0 text-right",

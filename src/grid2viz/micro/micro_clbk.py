@@ -9,7 +9,8 @@ import numpy as np
 from src.app import app
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
-from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, prod_types, make_network, get_network_graph
+from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, prod_types, make_network, \
+    get_network_graph
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2viz.utils.common_controllers import action_tooltip
 
@@ -185,15 +186,16 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
 @app.callback(
     [Output('line_side_choices', 'options'),
      Output('line_side_choices', 'value')],
-    [Input('voltage_flow_selector', 'value')],
+    [Input('voltage_flow_choice', 'value'),
+     Input('flow_radio', 'value')],
     [State('agent_study', 'data')]
 )
-def load_voltage_flow_line_choice(value, study_agent):
+def load_voltage_flow_line_choice(category, flow_choice, study_agent):
     option = []
     new_episode = make_episode(study_agent, episode_name)
 
     for name in new_episode.line_names:
-        if value == 'voltage':
+        if category == 'voltage':
             option.append({
                 'label': 'ex_' + name,
                 'value': 'ex_' + name
@@ -202,30 +204,31 @@ def load_voltage_flow_line_choice(value, study_agent):
                 'label': 'or_' + name,
                 'value': 'or_' + name
             })
-        if value == 'active_flow':
-            option.append({
-                'label': 'ex_active_' + name,
-                'value': 'ex_active_' + name
-            })
-            option.append({
-                'label': 'or_active_' + name,
-                'value': 'or_active_' + name
-            })
-        if value == 'current_flow':
-            option.append({
-                'label': 'ex_current_' + name,
-                'value': 'ex_current_' + name
-            })
-            option.append({
-                'label': 'or_current_' + name,
-                'value': 'or_current_' + name
-            })
+        if category == 'flow':
+            if flow_choice == 'active_flow':
+                option.append({
+                    'label': 'ex_active_' + name,
+                    'value': 'ex_active_' + name
+                })
+                option.append({
+                    'label': 'or_active_' + name,
+                    'value': 'or_active_' + name
+                })
+            if flow_choice == 'current_flow':
+                option.append({
+                    'label': 'ex_current_' + name,
+                    'value': 'ex_current_' + name
+                })
+                option.append({
+                    'label': 'or_current_' + name,
+                    'value': 'or_current_' + name
+                })
 
-        if value == 'flow_usage_rate':
-            option.append({
-                'label': 'usage_rate_' + name,
-                'value': 'usage_rate_' + name
-            })
+            if flow_choice == 'flow_usage_rate':
+                option.append({
+                    'label': 'usage_rate_' + name,
+                    'value': 'usage_rate_' + name
+                })
 
     return option, [option[0]['value']]
 
@@ -233,13 +236,13 @@ def load_voltage_flow_line_choice(value, study_agent):
 @app.callback(
     Output('voltage_flow_graph', 'figure'),
     [Input('line_side_choices', 'value'),
-     Input('voltage_flow_selector', 'value'),
+     Input('voltage_flow_choice', 'value'),
      Input('relayoutStoreMicro', 'data'),
      Input("window", "data")],
     [State('voltage_flow_graph', 'figure'),
      State('agent_study', 'data')]
 )
-def load_flow_voltage_graph(selected_lines, select_cat, relayout_data_store, window, figure, study_agent):
+def load_flow_voltage_graph(selected_lines, choice, relayout_data_store, window, figure, study_agent):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -249,11 +252,10 @@ def load_flow_voltage_graph(selected_lines, select_cat, relayout_data_store, win
             return figure
     new_episode = make_episode(study_agent, episode_name)
     if selected_lines is not None:
-        if select_cat == 'voltage':
+        if choice == 'voltage':
             figure['data'] = load_voltage_for_lines(selected_lines, new_episode)
-        if 'flow' in select_cat:
+        if 'flow' in choice:
             figure['data'] = load_flow_for_lines(selected_lines, new_episode)
-
 
     if window is not None:
         figure["layout"].update(
@@ -261,6 +263,17 @@ def load_flow_voltage_graph(selected_lines, select_cat, relayout_data_store, win
         )
 
     return figure
+
+
+@app.callback(
+    Output('flow_radio', 'style'),
+    [Input('voltage_flow_choice', 'value')],
+)
+def load_flow_graph(choice):
+    if choice == 'flow':
+        return {'display': 'block'}
+    else:
+        return {'display': 'none'}
 
 
 def load_voltage_for_lines(lines, new_episode):
@@ -309,9 +322,9 @@ def load_flow_for_lines(lines, new_episode):
                 name=value)
             )
         else:  # this concern usage rate
-            name = value.split('_', 2)[2] # get the powerline name
+            name = value.split('_', 2)[2]  # get the powerline name
             index_powerline = list(new_episode.line_names).index(name)
-            usage_rate_powerline = new_episode.rho.loc[new_episode.rho['equipment'] ==index_powerline]['value']
+            usage_rate_powerline = new_episode.rho.loc[new_episode.rho['equipment'] == index_powerline]['value']
 
             traces.append(go.Scatter(
                 x=x,
