@@ -160,7 +160,7 @@ def overview_line(study_agent=episode, timestamps=None):
 def inspector_line(table_cols, table_data, episode):
     actions_distribution = action_distrubtion(episode)
     return html.Div(className="lineBlock card ", children=[
-        html.H4("Inspector"),
+        html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
         html.Div(className="card-body col row", children=[
             html.Div(className="col", children=[
                 dt.DataTable(

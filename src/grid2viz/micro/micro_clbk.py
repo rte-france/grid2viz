@@ -122,7 +122,8 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
     figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
                       action_trace]
     figure['layout'] = {**figure['layout'],
-                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+                        'yaxis': {'title': 'Instant Reward'},
+                        'yaxis2': {'title': 'Cumulated Reward', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
 
     if window is not None:
         figure["layout"].update(
@@ -175,7 +176,8 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
                    y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
     figure['layout'] = {**figure['layout'],
-                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+                        'yaxis': {'title': 'Actions'},
+                        'yaxis2': {'title': 'Distance', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
 
     if window is not None:
         figure["layout"].update(
