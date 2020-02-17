@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
+from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
 from src.grid2kpi.manager import make_episode, base_dir, episode_name, episode, agent_ref, agents
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
 from src.grid2kpi.episode_analytics import actions_model
@@ -32,7 +33,7 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 
     new_episode = make_episode(study_agent, episode_name)
     ref_episode = make_episode(ref_agent, episode_name)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
+    actions_ts = new_episode.action_data_table.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
     df = observation_model.get_df_computed_reward(new_episode)
@@ -67,7 +68,7 @@ def update_action_repartition_pie(study_agent, figure):
 
 
 def action_repartition_pie(agent):
-    nb_actions = agent.action_data[['action_line', 'action_subs']].sum()
+    nb_actions = agent.action_data_table[['action_line', 'action_subs']].sum()
     return [go.Pie(
         labels=["Actions on Lines", "Actions on Substations"],
         values=[nb_actions["action_line"], nb_actions["action_subs"]]
@@ -149,7 +150,7 @@ def get_nb_overflow_agent(agent):
 
 
 def get_nb_action_agent(agent):
-    return agent.action_data[['action_line', 'action_subs']].sum(
+    return agent.action_data_table[['action_line', 'action_subs']].sum(
         axis=1).sum()
 
 
@@ -208,25 +209,21 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref):
             return figure
 
     new_episode = make_episode(study_agent, episode_name)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
+    actions_ts = get_actions_sum(new_episode)
     ref_episode = make_episode(agent_ref, episode_name)
-    ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
+    ref_agent_actions_ts = get_actions_sum(ref_episode)
     figure["data"] = [
-        go.Scatter(x=new_episode.action_data.timestamp,
+        go.Scatter(x=new_episode.action_data_table.timestamp,
                    y=actions_ts["Nb Actions"], name=study_agent,
                    text=action_tooltip(new_episode.actions)),
-        go.Scatter(x=new_episode.action_data.timestamp,
+        go.Scatter(x=ref_episode.action_data_table.timestamp,
                    y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
                    text=action_tooltip(ref_episode.actions)),
 
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=new_episode.action_data["distance"], name=study_agent + " distance", yaxis='y2'),
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
+        go.Scatter(x=new_episode.action_data_table.timestamp,
+                   y=new_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
+        go.Scatter(x=ref_episode.action_data_table.timestamp,
+                   y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
     figure['layout'] = {**figure['layout'],
                         'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
@@ -254,10 +251,7 @@ def update_agent_log_action_table(study_agent):
 def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line):
     new_episode = make_episode(study_agent, episode_name)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
-    # figure_line["data"] = actions_model.get_action_set_line_trace(new_episode)
-    # figure_bus["data"] = actions_model.get_action_change_bus_trace(new_episode)
-    figure_switch_line["data"] = actions_model.get_action_switch_line_trace(
-        new_episode)
+    figure_switch_line["data"] = actions_model.get_action_per_line(new_episode)
     return figure_sub, figure_switch_line
 
 

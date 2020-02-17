@@ -8,6 +8,7 @@ import numpy as np
 
 from src.app import app
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
+from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
 from src.grid2kpi.manager import episode, make_episode, base_dir, episode_name, prod_types, make_network, get_network_graph
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2viz.utils.common_controllers import action_tooltip
@@ -102,7 +103,7 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
 
     new_episode = make_episode(study_agent, episode_name)
     ref_episode = make_episode(agent_ref, episode_name)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
+    actions_ts = new_episode.action_data_table.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
     df = observation_model.get_df_computed_reward(new_episode)
@@ -153,25 +154,21 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
             return figure
 
     new_episode = make_episode(study_agent, episode_name)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
+    actions_ts = get_actions_sum(new_episode)
     ref_episode = make_episode(agent_ref, episode_name)
-    ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
+    ref_agent_actions_ts = get_actions_sum(ref_episode)
     figure["data"] = [
-        go.Scatter(x=new_episode.action_data.timestamp,
+        go.Scatter(x=new_episode.action_data_table.timestamp,
                    y=actions_ts["Nb Actions"], name=study_agent,
                    text=action_tooltip(new_episode.actions)),
-        go.Scatter(x=new_episode.action_data.timestamp,
+        go.Scatter(x=ref_episode.action_data_table.timestamp,
                    y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
                    text=action_tooltip(ref_episode.actions)),
 
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=new_episode.action_data["distance"], name=study_agent + " distance", yaxis='y2'),
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
+        go.Scatter(x=new_episode.action_data_table.timestamp,
+                   y=new_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
+        go.Scatter(x=ref_episode.action_data_table.timestamp,
+                   y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
     ]
     figure['layout'] = {**figure['layout'],
                         'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }

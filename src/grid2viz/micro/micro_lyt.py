@@ -11,6 +11,7 @@ from collections import namedtuple
 
 from src.grid2kpi.episode_analytics import EpisodeTrace
 from src.grid2kpi.episode_analytics import observation_model
+from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
 from src.grid2kpi.manager import (
     episode, make_episode, base_dir, episode_name, make_network, get_network_graph)
 
@@ -231,9 +232,7 @@ def compute_window(user_selected_timestamp, study_agent):
 def reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
     new_episode = make_episode(study_agent, episode_name)
     ref_episode = make_episode(agent_ref, episode_name)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
+    actions_ts = get_actions_sum(new_episode)
     figure = {}
     df = observation_model.get_df_computed_reward(new_episode)
     action_events_df = pd.DataFrame(
@@ -267,29 +266,28 @@ from src.grid2viz.micro.micro_clbk import action_tooltip
 
 def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_name, agent_ref):
     new_episode = make_episode(study_agent, episode_name)
-    actions_ts = new_episode.action_data.set_index("timestamp")[[
+    actions_ts = new_episode.action_data_table.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
     ref_episode = make_episode(agent_ref, episode_name)
-    ref_agent_actions_ts = ref_episode.action_data.set_index("timestamp")[[
+    ref_agent_actions_ts = ref_episode.action_data_table.set_index("timestamp")[[
         'action_line', 'action_subs'
     ]].sum(axis=1).to_frame(name="Nb Actions")
-    figure = {}
-    figure["data"] = [
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=actions_ts["Nb Actions"], name=study_agent,
-                   text=action_tooltip(new_episode.actions)),
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
-                   text=action_tooltip(ref_episode.actions)),
+    figure = {
+        "data": [
+            go.Scatter(x=new_episode.action_data_table.timestamp,
+                       y=actions_ts["Nb Actions"], name=study_agent,
+                       text=action_tooltip(new_episode.actions)),
+            go.Scatter(x=ref_episode.action_data_table.timestamp,
+                       y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
+                       text=action_tooltip(ref_episode.actions)),
 
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=new_episode.action_data["distance"], name=study_agent + " distance", yaxis='y2'),
-        go.Scatter(x=new_episode.action_data.timestamp,
-                   y=ref_episode.action_data["distance"], name=agent_ref + " distance", yaxis='y2'),
-    ]
-    figure['layout'] = {**layout_def,
-                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+            go.Scatter(x=new_episode.action_data_table.timestamp,
+                       y=new_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
+            go.Scatter(x=ref_episode.action_data_table.timestamp,
+                       y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
+        ], 'layout': {**layout_def, 'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+    }
 
     window = compute_window(user_selected_timestamp, study_agent)
 
@@ -304,7 +302,6 @@ def actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_nam
 def layout(user_selected_timestamp, study_agent, ref_agent):
     new_episode = make_episode(study_agent, episode_name)
     center_indx = center_index(user_selected_timestamp, new_episode)
-    centered_date = new_episode.timestamps[center_indx]
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
     rw_graph = reward_graph(user_selected_timestamp, base_dir, study_agent, episode_name, ref_agent)
     act_graph = actions_ts_graph(user_selected_timestamp, base_dir, study_agent, episode_name, ref_agent)

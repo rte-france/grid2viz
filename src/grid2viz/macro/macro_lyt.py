@@ -237,7 +237,7 @@ def action_distrubtion(episode):
     )
     figure_lines = go.Figure(
         layout=layout_def,
-        data=actions_model.get_action_switch_line_trace(episode)
+        data=actions_model.get_action_per_line(episode)
     )
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines)
 
