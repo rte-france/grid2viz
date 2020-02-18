@@ -17,102 +17,47 @@ from grid2op.PlotPlotly import PlotObs
 graph = None
 
 
-def make_network(new_episode):
+def make_network(episode):
+    """
+        Create a Plotly network graph with the layout configuration and the selected episode.
+
+        Parameters
+        ----------
+        episode: :class:`grid2viz.grid2Kpi.EpisodeAnalytics`
+            An episode containing targeted data for the graph.
+
+        Returns
+        -------
+        res: :class:`grid2op.PlotPlotly.PlotObs`
+         Plotly network graph.
+    """
     global graph
     if graph is None:
         graph = PlotObs(
-            substation_layout=network_layout, observation_space=new_episode.observation_space)
+            substation_layout=network_layout, observation_space=episode.observation_space)
     return graph
-
-
-def get_network_graph(network, episode):
-    fig_dict = network.get_plot_observation(episode.observations[0]).to_dict()
-    fig_dict["frames"] = []
-    fig_dict["layout"]["sliders"] = {
-        "args": [
-            "transition", {
-                "duration": 400,
-                "easing": "cubic-in-out"
-            }
-        ],
-        "initialValue": str(episode.timestamp(episode.observations[0])),
-        "plotlycommand": "animate",
-        "values": episode.timestamps,
-        "visible": True
-    }
-    fig_dict["layout"]["updatemenus"] = [
-        {
-            "buttons": [
-                {
-                    "args": [None, {"frame": {"duration": 500, "redraw": False},
-                                    "fromcurrent": True, "transition": {"duration": 300,
-                                                                        "easing": "quadratic-in-out"}}],
-                    "label": "Play",
-                    "method": "animate"
-                },
-                {
-                    "args": [[None], {"frame": {"duration": 0, "redraw": False},
-                                      "mode": "immediate",
-                                      "transition": {"duration": 0}}],
-                    "label": "Pause",
-                    "method": "animate"
-                }
-            ],
-            "direction": "left",
-            "pad": {"r": 10, "t": 87},
-            "showactive": False,
-            "type": "buttons",
-            "x": 0.1,
-            "xanchor": "right",
-            "y": 0,
-            "yanchor": "top"
-        }
-    ]
-
-    sliders_dict = {
-        "active": 0,
-        "yanchor": "top",
-        "xanchor": "left",
-        "currentvalue": {
-            "font": {"size": 20},
-            "prefix": "Timestamp:",
-            "visible": True,
-            "xanchor": "right"
-        },
-        "transition": {"duration": 300, "easing": "cubic-in-out"},
-        "pad": {"b": 10, "t": 50},
-        "len": 0.9,
-        "x": 0.1,
-        "y": 0,
-        "steps": []
-    }
-    for obs in episode.observations[:-1]:
-        timestamp = episode.timestamp(obs)
-        frame = {"data": [], "name": str(timestamp)}
-        current_fig_dict = network.get_plot_observation(obs).to_dict()
-        frame["data"] = current_fig_dict["data"]
-        fig_dict["frames"].append(frame)
-        slider_step = {"args": [
-            [timestamp],
-            {"frame": {"duration": 300, "redraw": False},
-             "mode": "immediate",
-             "transition": {"duration": 300}}
-        ],
-            "label": str(timestamp),
-            "method": "animate"}
-        sliders_dict["steps"].append(slider_step)
-
-    fig_dict["layout"]["sliders"] = [sliders_dict]
-
-    fig = go.Figure(fig_dict)
-
-    return fig
 
 
 store = {}
 
 
 def make_episode(agent, episode_name):
+    """
+    Load episode from cache. If not already in, compute episode data
+    and save it in cache.
+
+    Parameters
+    ----------
+    agent: :class:`str`
+        agent name.
+    episode_name :class:`str`
+        name of the studied episode
+
+    Returns
+    -------
+    res: :class:`grid2viz.grid2Kpi.EpisodeAnalytics`
+        Episode with computed data
+    """
     if is_in_ram_cache(episode_name, agent):
         return get_from_ram_cache(episode_name, agent)
     elif is_in_fs_cache(episode_name, agent):
@@ -225,10 +170,11 @@ for agent in agents:
 
 scenarios = set(scenarios)
 
+env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
+
 prod_types = {}
 network_layout = []
 try:
-    env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
     prod_types_file = 'prods_charac.csv'
     network_layout_file = 'coords.csv'
     with open(env_conf_folder + prod_types_file) as csv_file:
@@ -243,10 +189,9 @@ try:
     with open(env_conf_folder + network_layout_file) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
         line = 0
-        test = csv_reader
         [network_layout.append(
             (int(row[0].split(',')[1]),
              int(row[0].split(',')[2]))
         ) for row in csv_reader]  # the row is a string which contain the coordinate and an index
-except configparser.NoOptionError:
+except configparser.NoOptionError as ex:
     pass  # ignoring this error

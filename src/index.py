@@ -41,7 +41,7 @@ navbar = dbc.Navbar(
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
         html.Div([
-            html.Div(
+            html.Div([
                 dbc.Button(
                     id="enlarge_left",
                     children="-5",
@@ -50,10 +50,10 @@ navbar = dbc.Navbar(
                 ),
                 dbc.Tooltip('Enlarge left', target='enlarge_left',
                             placement='bottom'),
-            ),
+            ]),
             dcc.Dropdown(id="user_timestamps", className="",
                          style={"width": "200px"}),
-            html.Div(
+            html.Div([
                 dbc.Button(
                     id="enlarge_right",
                     children="+5",
@@ -62,7 +62,7 @@ navbar = dbc.Navbar(
                 ),
                 dbc.Tooltip('Enlarge right', target='enlarge_right',
                             placement='bottom')
-            )
+            ])
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"
