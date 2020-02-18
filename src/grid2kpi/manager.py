@@ -188,10 +188,15 @@ try:
 
     with open(env_conf_folder + network_layout_file) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
-        line = 1  # skip the header part
-        [network_layout.append(
-            (coords[0], coords[1])
-        ) for coords in csv_reader]  # the row is a string which contain the coordinate and an index
+        line = 0  # skip the header part
+        for coords in csv_reader:
+            if line == 0:
+                line = line + 1
+                continue
+            network_layout.append(
+                (int(coords[0]),
+                 int(coords[1]))
+            )
 
         # Due to the difference of delimiter from the iee14 files anf iee118 it's better to keep this in commentary
         # until they give us a better file conf
