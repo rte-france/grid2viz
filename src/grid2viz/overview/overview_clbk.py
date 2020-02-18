@@ -6,8 +6,6 @@ import pandas as pd
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
-from src.grid2kpi.episode_analytics.consumption_profiles import profiles_traces
-from src.grid2kpi.episode_analytics.env_actions import env_actions
 from src.grid2kpi.manager import make_episode, prod_types, best_agents
 
 
@@ -144,47 +142,32 @@ def update_table(loads, prods, children, agent_ref, data, scenario):
 
 
 @app.callback(
-    Output("nb_steps_card", "children"),
-    [Input('scenario', 'data')]
-)
-def update_card_step(scenario):
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    return '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
-
-
-@app.callback(
-    Output("nb_maintenance_card", "children"),
-    [Input('scenario', 'data')]
-)
-def update_card_maintenance(scenario):
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    return env_actions(best_agent_ep, which="maintenances", kind="nb", aggr=True)
-
-
-@app.callback(
-    Output("nb_hazard_card", "children"),
-    [Input('scenario', 'data')]
-)
-def update_card_hazard(scenario):
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    return env_actions(best_agent_ep, which="hazards", kind="nb", aggr=True)
-
-
-@app.callback(
-    Output("duration_maintenance_card", "children"),
-    [Input('scenario', 'data')]
-)
-def update_card_duration_maintenances(scenario):
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    return observation_model.get_duration_maintenances(best_agent_ep)
-
-
-@app.callback(
     Output("agent_ref", "data"),
-    [Input("input_agent_selector", "value")]
+    [Input("input_agent_selector", "value")],
+    [State("scenario", "data")]
 )
-def update_selected_ref_agent(ref_agent):
+def update_selected_ref_agent(ref_agent, scenario):
+    make_episode(ref_agent, scenario)
     return ref_agent
+
+
+@app.callback(
+    [Output('nb_steps_card', 'children'),
+     Output('nb_maintenance_card', 'children'),
+     Output('nb_hazard_card', 'children'),
+     Output('duration_maintenance_card', 'children')],
+    [Input('scenario', 'data')]
+)
+def nb_line(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    nb_step = '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
+    nb_maintenance = best_agent_ep.nb_maintenances
+    nb_hazard = best_agent_ep.nb_hazards
+    duration_maintenance = best_agent_ep.total_maintenance_duration
+
+    return nb_step, nb_maintenance, nb_hazard, duration_maintenance
+
+
 
 
 @app.callback(
@@ -216,7 +199,7 @@ def update_agent_ref_graph(ref_agent, scenario, relayout_data_store, figure_over
 )
 def update_profile_conso_graph(scenario, figure):
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    figure["data"] = profiles_traces(best_agent_ep, freq="30T")
+    figure["data"] = best_agent_ep.profile_traces
     return figure
 
 
