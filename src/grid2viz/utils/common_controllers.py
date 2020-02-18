@@ -1,15 +1,17 @@
-
-
 def action_tooltip(episode_actions):
     """
-        This is used to get a detailled impact action in tooltip format in order to diplay this tooltip on a
-        plotly graph
+        This is used to get a detailed impact action in tooltip format in order to display this tooltip on a
+        plotly graph.
 
         Parameters
         ----------
         episode_actions: :class:`grid2viz.grid2Kpi.EpisodeAnalytics`
             Representation of the episode used in the scenario
 
+        Returns
+        -------
+        res: :class:`list`
+         list of string detailed action.
         """
     tooltip = []
     # avoid reevaluation of append() see: https://wiki.python.org/moin/PythonSpeed/PerformanceTips

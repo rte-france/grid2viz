@@ -260,7 +260,7 @@ def load_flow_voltage_graph(selected_lines, choice, relayout_data_store, window,
         if choice == 'voltage':
             figure['data'] = load_voltage_for_lines(selected_lines, new_episode)
         if 'flow' in choice:
-            figure['data'] = load_flow_for_lines(selected_lines, new_episode)
+            figure['data'] = load_flows_for_lines(selected_lines, new_episode)
 
     if window is not None:
         figure["layout"].update(
@@ -305,7 +305,7 @@ def load_voltage_for_lines(lines, new_episode):
     return traces
 
 
-def load_flow_for_lines(lines, new_episode):
+def load_flows_for_lines(lines, new_episode):
     flow = new_episode.flow_and_voltage_line
     traces = []
 

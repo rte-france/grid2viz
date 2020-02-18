@@ -100,7 +100,7 @@ def overview_line(timestamps=None):
                     },
                 ),
                 html.Div(html.P(
-                    'Select an Actions on the "Instant and Accumulated Reward" '
+                    'Select a timestep on the "Instant and Accumulated Reward" '
                     'Time Serie to study it on the next page'
                 ), className='mt-1')
             ]),

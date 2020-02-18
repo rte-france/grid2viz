@@ -71,12 +71,6 @@ def get_usage_rate(episode):
     ])[["value"]].reset_index()
 
 
-def get_duration_maintenances(episode):
-    timestep_duration = (episode.timestamps[1] - episode.timestamps[0])
-    nb_maintenance = env_actions(episode, which="maintenances", kind="dur", aggr=False).sum()
-    return (timestep_duration * nb_maintenance).total_seconds() / 60.0
-
-
 def init_table_inspection_data(episode):
     ts_hazards = env_actions(episode, which="hazards", kind="ts", aggr=True)
     ts_maintenances = env_actions(

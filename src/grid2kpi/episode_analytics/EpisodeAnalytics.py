@@ -1,12 +1,13 @@
 import datetime as dt
 import time
 
+from grid2kpi.episode_analytics.env_actions import env_actions
 from grid2op.EpisodeData import EpisodeData
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from . import EpisodeTrace
+from . import EpisodeTrace, maintenances, consumption_profiles
 
 
 class EpisodeAnalytics:
@@ -31,16 +32,38 @@ class EpisodeAnalytics:
         self.usage_rate_trace = EpisodeTrace.get_usage_rate_trace(self)
         self.reward_trace = EpisodeTrace.get_df_rewards_trace(self)
         self.total_overflow_ts = EpisodeTrace.get_total_overflow_ts(self)
+        self.profile_traces = consumption_profiles.profiles_traces(self)
+        self.total_maintenance_duration = maintenances.total_duration_maintenance(self)
+        self.nb_hazards = env_actions(self, which="hazards", kind="nb", aggr=True)
+        self.nb_maintenances = env_actions(self, which="maintenances", kind="nb", aggr=True)
+
         end = time.time()
         print(f"end computing df: {end - beg}")
 
     @staticmethod
     def timestamp(obs):
-        return dt.datetime(obs.year, obs.month, obs.day, obs.hour_of_day,
-                           obs.minute_of_hour)
+        return dt.datetime(obs.year[0], obs.month[0], obs.day[0], obs.hour_of_day[0],
+                           obs.minute_of_hour[0])
 
     # @jit(forceobj=True)
     def _make_df_from_data(self):
+        """
+        Convert all episode's data into comprehensible dataframes usable by
+        the application.
+
+        The generated dataframes are:
+            - loads
+            - production
+            - rho
+            - action data table
+            - instant and cumulated rewards
+            - flow and voltage by line
+
+        Returns
+        -------
+        res: :class:`tuple`
+         generated dataframes
+    """
         size = len(self.actions)
         timesteps = list(range(size))
         load_size = size * len(self.observations[0].load_p)

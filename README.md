@@ -33,7 +33,9 @@ In order to use this tool, you need to have serialized the RL process of grid2op
         - scenario_3
 
 Each of the scenario_* files have to contain all files given by serialisation of your RL through grid2op.
-For the update process of this folder chain, see the section `Caching`
+In order to add a new agent to the app, you will have to add the agent's folder to this root_dir
+For the update process of this folder chain, see the section `Caching` (in particular, when you want to overwrite the current
+agents in root_dir with new versions with the same names)
 
 In the config.ini of this repo:
  - change the `base_dir` option to your root_dir of data.

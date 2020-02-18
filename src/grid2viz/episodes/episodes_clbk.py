@@ -28,7 +28,7 @@ def load_scenario_cards(url):
         for scenario in sorted(scenarios):
             best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)
             prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode, prod_types)
-            consumption = profiles_traces(best_agent_episode, freq="30T")
+            consumption = best_agent_episode.profile_traces
 
             cards_list.append(
                 dbc.Col(lg=4, width=12, children=[
@@ -44,7 +44,8 @@ def load_scenario_cards(url):
                                 ]),
                                 dbc.Col(className="mb-4", children=[
                                     html.P(className="border-bottom h3 mb-0 text-right",
-                                           children='{}/{}'.format(best_agents[scenario]['value'], meta_json[scenario]['chronics_max_timestep'])),
+                                           children='{}/{}'.format(best_agents[scenario]['value'],
+                                                                   meta_json[scenario]['chronics_max_timestep'])),
                                     html.P(className="text-muted", children="Agent's Survival")
                                 ]),
                                 dbc.Col(className="mb-4", children=[
@@ -55,8 +56,8 @@ def load_scenario_cards(url):
                                 dbc.Col(className="mb-4", children=[
                                     html.P(className="border-bottom h3 mb-0 text-right",
                                            children='{} min'.format(round(
-                                               observation_model.get_duration_maintenances(best_agent_episode))
-                                           )),
+                                               best_agent_episode.total_maintenance_duration
+                                           ))),
                                     html.P(className="text-muted", children="Total Maintenance Duration")
                                 ]),
                             ]),
