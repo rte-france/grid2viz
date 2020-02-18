@@ -142,6 +142,42 @@ def update_table(loads, prods, children, agent_ref, data, scenario):
 
 
 @app.callback(
+    Output("nb_steps_card", "children"),
+    [Input('scenario', 'data')]
+)
+def update_card_step(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
+
+
+@app.callback(
+    Output("nb_maintenance_card", "children"),
+    [Input('scenario', 'data')]
+)
+def update_card_maintenance(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return best_agent_ep.nb_maintenances
+
+
+@app.callback(
+    Output("nb_hazard_card", "children"),
+    [Input('scenario', 'data')]
+)
+def update_card_hazard(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return best_agent_ep.nb_hazards
+
+
+@app.callback(
+    Output("duration_maintenance_card", "children"),
+    [Input('scenario', 'data')]
+)
+def update_card_duration_maintenances(scenario):
+    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    return best_agent_ep.total_maintenance_duration
+
+
+@app.callback(
     Output("agent_ref", "data"),
     [Input("input_agent_selector", "value")],
     [State("scenario", "data")]
@@ -149,25 +185,6 @@ def update_table(loads, prods, children, agent_ref, data, scenario):
 def update_selected_ref_agent(ref_agent, scenario):
     make_episode(ref_agent, scenario)
     return ref_agent
-
-
-@app.callback(
-    [Output('nb_steps_card', 'children'),
-     Output('nb_maintenance_card', 'children'),
-     Output('nb_hazard_card', 'children'),
-     Output('duration_maintenance_card', 'children')],
-    [Input('scenario', 'data')]
-)
-def nb_line(scenario):
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    nb_step = '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
-    nb_maintenance = best_agent_ep.nb_maintenances
-    nb_hazard = best_agent_ep.nb_hazards
-    duration_maintenance = best_agent_ep.total_maintenance_duration
-
-    return nb_step, nb_maintenance, nb_hazard, duration_maintenance
-
-
 
 
 @app.callback(
