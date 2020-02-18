@@ -41,28 +41,33 @@ navbar = dbc.Navbar(
                   html.Span("None", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
         html.Div([
-            html.Div([
-                dbc.Button(
+            html.Div(
+                [
+                    dbc.Button(
                     id="enlarge_left",
                     children="-5",
                     color="dark",
                     className="float-left mr-1"
-                ),
-                dbc.Tooltip('Enlarge left', target='enlarge_left',
-                            placement='bottom'),
-            ]),
+                    ),
+                    dbc.Tooltip('Enlarge left', target='enlarge_left',
+                                placement='bottom'),
+                ]
+            ),
             dcc.Dropdown(id="user_timestamps", className="",
                          style={"width": "200px"}),
-            html.Div([
-                dbc.Button(
-                    id="enlarge_right",
-                    children="+5",
-                    color="dark",
-                    className="float-left ml-1"
-                ),
-                dbc.Tooltip('Enlarge right', target='enlarge_right',
-                            placement='bottom')
-            ])
+            html.Div(
+                [
+                    dbc.Button(
+                        id="enlarge_right",
+                        children="+5",
+                        color="dark",
+                        className="float-left ml-1"
+                    ),
+                    dbc.Tooltip('Enlarge right', target='enlarge_right',
+                                placement='bottom')
+                ]
+                
+            )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
             dbc.Nav(nav_items, navbar=True), className="nav_menu"

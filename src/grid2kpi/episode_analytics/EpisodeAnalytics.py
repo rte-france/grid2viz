@@ -87,8 +87,13 @@ class EpisodeAnalytics:
 
             if not len(sub_action):
                 sub_action = None
+            else: 
+                sub_action = " - ".join(sub_action)
             if not len(line_action):
                 line_action = None
+            else: 
+                line_action = " - ".join(line_action)
+
             # Building load DF
             begin = time_step * self.n_loads
             end = (time_step + 1) * self.n_loads - 1

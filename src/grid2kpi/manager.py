@@ -178,7 +178,7 @@ try:
     prod_types_file = 'prods_charac.csv'
     network_layout_file = 'coords.csv'
     with open(env_conf_folder + prod_types_file) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=";")
+        csv_reader = csv.reader(csv_file, delimiter=",")
         line = 0
         for row in csv_reader:
             if line == 0:
