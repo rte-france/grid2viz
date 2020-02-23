@@ -3,7 +3,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
-from src.grid2kpi.manager import agents, make_episode, best_agents
+from ..manager import agents, make_episode, best_agents, scenarios
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -71,7 +71,7 @@ indicators_line = html.Div(id="temporaryid", children=[
 ], className="lineBlock card")
 
 
-def summary_line(episode):
+def summary_line(episode, ref_agent):
     return html.Div(children=[
         html.H4("Summary"),
         html.Div(children=[
@@ -111,7 +111,7 @@ def summary_line(episode):
                     id="input_agent_selector", placeholder="select a ref agent",
                     options=[{'label': agent, 'value': agent}
                              for agent in agents],
-                    value=agents[0]
+                    value=ref_agent
                 ),
                 html.Div(children=[
                     dcc.Graph(
@@ -181,11 +181,18 @@ ref_agent_line = html.Div(children=[
 ], className="lineBlock card")
 
 
-def layout(scenario):
-    episode = make_episode(best_agents[scenario]["agent"], scenario)
+def layout(scenario, ref_agent):
+    try:
+        episode = make_episode(best_agents[scenario]["agent"], scenario)
+    except:
+        return
+    if ref_agent is None:
+        ref_agent = agents[0]
+    # if scenario is None:
+    #     scenario = list(scenarios)[0]
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line,
-        summary_line(episode),
+        summary_line(episode, ref_agent),
         ref_agent_line
     ])

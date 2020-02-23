@@ -8,9 +8,9 @@ import numpy as np
 import datetime
 from collections import namedtuple
 
-from src.grid2kpi.episode_analytics import observation_model
-from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
-from src.grid2kpi.manager import make_episode, make_network
+from grid2kpi.episode import observation_model
+from grid2kpi.episode.actions_model import get_actions_sum
+from ..manager import make_episode, make_network, best_agents, scenarios, agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -113,13 +113,13 @@ def flux_inspector_line(network_graph=None, slider_params=None):
     ])
 
 
-def context_inspector_line(episode):
+def context_inspector_line(best_episode, study_episode):
     return html.Div(id="context_inspector_line_id", className="lineBlock card ", children=[
         html.H4("Context"),
         html.Div(className="card-body col row", children=[
 
             html.Div(className="col-xl-5", children=[
-                html.H5("Environments Time Series"),
+                html.H5("Best Agent's Environments Time Series"),
                 dac.Radio(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
@@ -134,8 +134,8 @@ def context_inspector_line(episode):
                     id='asset_selector',
                     options=[{'label': load_name,
                               'value': load_name}
-                             for load_name in episode.load_names],
-                    value=episode.load_names[0],
+                             for load_name in best_episode.load_names],
+                    value=best_episode.load_names[0],
                     mode='multiple',
                     showArrow=True
                 ),
@@ -156,7 +156,7 @@ def context_inspector_line(episode):
                         style={'margin-top': '1em'},
                         figure=go.Figure(
                             layout=layout_def,
-                            data=episode.usage_rate_trace
+                            data=study_episode.usage_rate_trace
                         ),
                         config=dict(displayModeBar=False)
                     ),
@@ -166,7 +166,7 @@ def context_inspector_line(episode):
                         style={'margin-top': '1em'},
                         figure=go.Figure(
                             layout=layout_def,
-                            data=episode.total_overflow_trace
+                            data=study_episode.total_overflow_trace
                         ),
                         config=dict(displayModeBar=False)
                     ),
@@ -217,7 +217,8 @@ def slider_params(user_selected_timestamp, episode):
     timestamp_range = episode.timestamps[
                       min_:max_
                       ]
-    marks = dict(zip(range(min_, max_), timestamp_range))
+    timestamp_range = [timestamp.time() for timestamp in timestamp_range]
+    marks = dict(enumerate(timestamp_range))
     return SliderParams(min_, max_, marks, value)
 
 
@@ -306,6 +307,13 @@ def actions_ts_graph(user_selected_timestamp, study_agent, episode_name, agent_r
 
 
 def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
+    # if scenario is None:
+    #     scenario = list(scenarios)[0]
+    # if ref_agent is None:
+    #     ref_agent = agents[0]
+    # if study_agent is None:
+    #     study_agent = agents[0]
+    best_episode = make_episode(best_agents[scenario]["agent"], scenario)
     new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
@@ -315,8 +323,7 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
         dcc.Store(id="relayoutStoreMicro"),
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(rw_graph, act_graph),
-        # TODO : episode.observations[1] will change
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
-        context_inspector_line(new_episode),
+        context_inspector_line(best_episode, new_episode),
         all_info_line
     ])

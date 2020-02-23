@@ -5,12 +5,12 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
-from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
-from src.grid2kpi.manager import make_episode, agents
-from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
-from src.grid2kpi.episode_analytics import actions_model
+from grid2kpi.episode.actions_model import get_actions_sum
+from ..manager import make_episode, agents
+from grid2kpi.episode import observation_model, EpisodeTrace
+from grid2kpi.episode import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
-from src.grid2kpi.episode_analytics.maintenances import (hist_duration_maintenances)
+from grid2kpi.episode.maintenances import (hist_duration_maintenances)
 from src.grid2viz.utils.common_controllers import action_tooltip
 from src.grid2viz.utils.perf_analyser import timeit
 
@@ -94,10 +94,14 @@ def maintenance_duration_hist(study_agent, figure, scenario):
 
 @app.callback(
     Output("timeseries_table", "data"),
-    [Input("cumulated_rewards_timeserie", "clickData")],
-    [State("timeseries_table", "data")]
+    [Input("cumulated_rewards_timeserie", "clickData"),
+     Input("agent_log_selector", "value")],
+    [State("timeseries_table", "data"), 
+     State("agent_study", "data")]
 )
-def add_timestamp(clickData, data):
+def add_timestamp(clickData, new_agent, data, agent_stored):
+    if new_agent != agent_stored:
+        return []
     if data is None:
         data = []
     new_data = {"Timestamps": clickData["points"][0]["x"]}

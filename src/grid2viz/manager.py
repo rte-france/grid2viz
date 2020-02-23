@@ -1,7 +1,7 @@
 import json
 import time
 
-from src.grid2kpi.episode_analytics.EpisodeAnalytics import EpisodeAnalytics
+from grid2kpi.episode.EpisodeAnalytics import EpisodeAnalytics
 from grid2op.EpisodeData import EpisodeData
 import os
 import configparser
@@ -11,7 +11,7 @@ import pickle
 
 import plotly.graph_objects as go
 
-# TEMPORARY: should be moved to a proper class
+
 from grid2op.PlotPlotly import PlotObs
 
 graph = None
@@ -158,8 +158,8 @@ parser = configparser.ConfigParser()
 parser.read(path)
 base_dir = parser.get("DEFAULT", "base_dir")
 cache_dir = os.path.join(base_dir, "_cache")
-agents = [file for file in os.listdir(
-    base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")]
+agents = sorted([file for file in os.listdir(
+    base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
 scenarios = []
 for agent in agents:
@@ -187,7 +187,7 @@ try:
                 prod_types[row[1]] = row[2]
 
     with open(env_conf_folder + network_layout_file) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=';')
+        csv_reader = csv.reader(csv_file, delimiter=',')
         line = 0  # skip the header part
         for coords in csv_reader:
             if line == 0:

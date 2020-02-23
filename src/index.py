@@ -3,6 +3,7 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from flask import flash
 
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
@@ -15,12 +16,12 @@ import src.grid2viz.micro.micro_lyt as micro
 import src.grid2viz.overview.overview_clbk as overview_clbk
 import src.grid2viz.overview.overview_lyt as overview
 
-decorate_all_in_module(macro_clbk, timeit)
-decorate_all_in_module(macro, timeit)
-decorate_all_in_module(micro_clbk, timeit)
-decorate_all_in_module(micro, timeit)
-decorate_all_in_module(overview_clbk, timeit)
-decorate_all_in_module(overview, timeit)
+# decorate_all_in_module(macro_clbk, timeit)
+# decorate_all_in_module(macro, timeit)
+# decorate_all_in_module(micro_clbk, timeit)
+# decorate_all_in_module(micro, timeit)
+# decorate_all_in_module(overview_clbk, timeit)
+# decorate_all_in_module(overview, timeit)
 
 nav_items = [
     dbc.NavItem(dbc.NavLink("Scenario Selection", href="/episodes")),
@@ -32,13 +33,13 @@ nav_items = [
 navbar = dbc.Navbar(
     [
         html.Div([html.Span("Scenario:", className="badge badge-secondary"),
-                  html.Span("None", className="badge badge-light", id="scen_lbl")],
+                  html.Span("", className="badge badge-light", id="scen_lbl")],
                  className="reminder float-left"),
         html.Div([html.Span("Ref Agent:", className="badge badge-secondary"),
-                  html.Span("None", className="badge badge-light", id="ref_ag_lbl")],
+                  html.Span("", className="badge badge-light", id="ref_ag_lbl")],
                  className="reminder float-left"),
         html.Div([html.Span("Studied Agent:", className="badge badge-secondary"),
-                  html.Span("None", className="badge badge-light", id="study_ag_lbl")],
+                  html.Span("", className="badge badge-light", id="study_ag_lbl")],
                  className="reminder float-left"),
         html.Div([
             html.Div(
@@ -120,10 +121,16 @@ def display_page(pathname, scenario, ref_agent, study_agent, user_selected_times
     if pathname == "/episodes" or pathname == "/":
         return episodes_lyt, "episodes"
     elif pathname == "/overview":
-        return overview.layout(scenario), "overview"
+        # if ref_agent is None:
+        #     raise PreventUpdate
+        return overview.layout(scenario, ref_agent), "overview"
     elif pathname == "/macro":
-        return macro.layout(timestamps, scenario), "macro"
+        if ref_agent is None:
+            raise PreventUpdate
+        return macro.layout(timestamps, scenario, study_agent), "macro"
     elif pathname == "/micro":
+        if ref_agent is None or study_agent is None:
+            raise PreventUpdate
         return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro"
     else:
         return 404, ""
@@ -132,18 +139,24 @@ def display_page(pathname, scenario, ref_agent, study_agent, user_selected_times
 @app.callback(Output('scen_lbl', 'children'),
               [Input('scenario', 'data')])
 def update_scenario_label(scenario):
+    if scenario is None:
+        scenario = ""
     return scenario
 
 
 @app.callback(Output("ref_ag_lbl", "children"),
               [Input("agent_ref", "data")])
 def update_ref_agent_label(agent):
+    if agent is None:
+        agent = ""
     return agent
 
 
 @app.callback(Output("study_ag_lbl", "children"),
               [Input("agent_study", "data")])
 def update_study_agent_label(agent):
+    if agent is None:
+        agent = ""
     return agent
 
 

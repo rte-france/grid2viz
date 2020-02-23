@@ -5,8 +5,8 @@ from src.app import app
 import pandas as pd
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
-from src.grid2kpi.manager import make_episode, prod_types, best_agents
+from grid2kpi.episode import observation_model, EpisodeTrace
+from ..manager import make_episode, prod_types, best_agents
 
 
 @app.callback(

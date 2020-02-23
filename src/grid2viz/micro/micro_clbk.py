@@ -7,9 +7,9 @@ from dash.exceptions import PreventUpdate
 import numpy as np
 
 from src.app import app
-from src.grid2kpi.episode_analytics import observation_model, EpisodeTrace
-from src.grid2kpi.episode_analytics.actions_model import get_actions_sum
-from src.grid2kpi.manager import make_episode, prod_types, make_network
+from grid2kpi.episode import observation_model, EpisodeTrace
+from grid2kpi.episode.actions_model import get_actions_sum
+from ..manager import make_episode, prod_types, make_network
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 from src.grid2viz.utils.common_controllers import action_tooltip
 
@@ -32,7 +32,10 @@ def update_slider(window, value, study_agent, scenario):
     )
     if value not in range(min_, max_):
         value = min_
-    marks = dict(list(enumerate(new_episode.timestamps[min_:(max_ + 1)])))
+    # marks = dict(enumerate(
+    #     map(lambda x: x.time(), new_episode.timestamps[min_:(max_ + 1)])))
+
+    marks = dict(enumerate(map(lambda x: x.time(), new_episode.timestamps)))
 
     return min_, max_, value, marks
 

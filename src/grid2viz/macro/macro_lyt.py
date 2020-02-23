@@ -7,9 +7,9 @@ from collections import namedtuple
 
 from src.grid2viz.macro.macro_clbk import agents, get_score_agent, get_nb_action_agent, get_nb_overflow_agent, \
     action_repartition_pie
-from src.grid2kpi.episode_analytics import actions_model
-from src.grid2kpi.episode_analytics.maintenances import hist_duration_maintenances
-from src.grid2kpi.manager import make_episode
+from grid2kpi.episode import actions_model
+from grid2kpi.episode.maintenances import hist_duration_maintenances
+from ..manager import make_episode, agents, scenarios
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -17,7 +17,26 @@ layout_def = {
 }
 
 
-def indicator_line(scenario):
+def indicator_line(scenario, study_agent):
+
+    episode = make_episode(study_agent, scenario)
+
+    nb_actions = episode.action_data_table[['action_line', 'action_subs']].sum()
+    pie_figure = go.Figure(
+        layout=layout_def,
+        data=[go.Pie(
+            labels=["Actions on Lines", "Actions on Substations"],
+            values=[nb_actions["action_line"], nb_actions["action_subs"]]
+        )]  
+    )
+
+    maintenance_figure = go.Figure(
+        layout=layout_def,
+        data=[go.Histogram(
+            x=hist_duration_maintenances(episode)
+        )]
+    )
+
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
@@ -26,26 +45,27 @@ def indicator_line(scenario):
                     id='agent_log_selector',
                     options=[{'label': agent, 'value': agent}
                              for agent in agents],
-                    value=agents[0],
+                    value=study_agent,
                     placeholder="Agent log"
                 ),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_score_output",
                            className="border-bottom h3 mb-0 text-right",
-                           children=""),
+                           children=round(episode.meta["cumulative_reward"])),
                     html.P(className="text-muted", children="Score")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_overflow",
                            className="border-bottom h3 mb-0 text-right",
-                           children=""),
+                           children=episode.total_overflow_ts["value"].sum()),
                     html.P(className="text-muted",
                            children="Number of Overflow")
                 ]),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_action",
                            className="border-bottom h3 mb-0 text-right",
-                           children=""),
+                           children=episode.action_data_table[['action_line', 'action_subs']].sum(
+        axis=1).sum()),
                     html.P(className="text-muted ",
                            children="Number of Action")
                 ])
@@ -56,21 +76,16 @@ def indicator_line(scenario):
                         children="Type Action Repartition"),
                 dcc.Graph(
                     id="agent_study_pie_chart",
-                    figure=go.Figure(
-                        layout=layout_def
-                    )
+                    figure=pie_figure
                 )
-
             ]),
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="Action Maintenance Duration"),
+                        children="Action Maintenance Duration (on the whole episode)"),
                 dcc.Graph(
                     id="maintenance_duration",
-                    figure=go.Figure(
-                        layout=layout_def
-                    )
+                    figure=maintenance_figure
                 )
             ])
         ]),
@@ -159,13 +174,19 @@ def overview_line(timestamps=None):
     ])
 
 
-def inspector_line():
+def inspector_line(study_agent, scenario):
+    new_episode = make_episode(study_agent, scenario)
+    cols, data = get_table(new_episode)
+    figures_distribution = action_distrubtion(new_episode)
+    
     return html.Div(className="lineBlock card ", children=[
         html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
         html.Div(className="card-body col row", children=[
             html.Div(className="col", children=[
                 dt.DataTable(
                     id="inspector_datable",
+                    columns=cols,
+                    data=data,
                     filter_action="native",
                     sort_action="native",
                     sort_mode="multi",
@@ -196,9 +217,7 @@ def inspector_line():
                             children="Distribution of Substation action"),
                     dcc.Graph(
                         id="distribution_substation_action_chart",
-                        figure=go.Figure(
-                            layout=layout_def,
-                        )
+                        figure=figures_distribution.on_subs
                     )
                 ]),
                 html.Div(className="col", children=[
@@ -206,9 +225,7 @@ def inspector_line():
                             children="Distribution of line action"),
                     dcc.Graph(
                         id="distribution_line_action_chart",
-                        figure=go.Figure(
-                            layout=layout_def,
-                        )
+                        figure=figures_distribution.on_lines
                     )
                 ]),
             ]),
@@ -237,10 +254,14 @@ def action_distrubtion(episode):
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines)
 
 
-def layout(timestamps, scenario):
+def layout(timestamps, scenario, study_agent):
+    if study_agent is None:
+        study_agent = agents[0]
+    # if scenario is None:
+    #     scenario = list(scenarios)[0]
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
-        indicator_line(scenario),
+        indicator_line(scenario, study_agent),
         overview_line(timestamps),
-        inspector_line()
+        inspector_line(study_agent, scenario)
     ])
