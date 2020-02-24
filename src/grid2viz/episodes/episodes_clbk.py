@@ -1,8 +1,7 @@
 from dash.dependencies import Input, Output, State
 from dash import callback_context
-from grid2kpi.episode import EpisodeTrace, observation_model
+from grid2kpi.episode import EpisodeTrace
 from src.app import app
-from grid2kpi.episode.consumption_profiles import profiles_traces
 from ..manager import scenarios, best_agents, meta_json, make_episode, prod_types
 import dash_html_components as html
 import dash_core_components as dcc
@@ -15,6 +14,10 @@ import plotly.graph_objects as go
     [Input('url', 'pathname')]
 )
 def load_scenario_cards(url):
+    """
+        Create and display html cards with scenario's kpi for
+        the 15 first scenarios using cache file.
+    """
     cards_list = []
     cards_count = 0
     episode_graph_layout = {
@@ -101,10 +104,15 @@ def load_scenario_cards(url):
     [State(scenario, 'key') for scenario in scenarios]
 )
 def open_scenario(*input_state):
-    # use callback context to get triggered input then parse it to get triggered input id
-    # finaly get the state key value from context with the dict key = input_id + .key
-    # see : https://dash.plot.ly/faqs How do I determine which Input has changed?
+    """
+        Open scenario into the overview layout when button
+        corresponding button is clicked.
 
+        Use callback context to get triggered input then parse it to get triggered input id
+        then get the state key value from context with is the dict key (input_id + '.key').
+
+        .. note:: you may need to see https://dash.plot.ly/faqs to get how I determine which Input has changed
+    """
     ctx = callback_context
     input_id = ctx.triggered[0]['prop_id'].split('.')[0]
     input_key = ctx.states[input_id + '.key']

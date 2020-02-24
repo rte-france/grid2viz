@@ -10,7 +10,8 @@ from collections import namedtuple
 
 from grid2kpi.episode import observation_model
 from grid2kpi.episode.actions_model import get_actions_sum
-from ..manager import make_episode, make_network, best_agents, scenarios, agents
+from ..manager import make_episode, make_network, best_agents
+from . import micro_shared_function as micro_function
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -228,12 +229,10 @@ def compute_window(user_selected_timestamp, study_agent, scenario):
         n_clicks_right = 0
         new_episode = make_episode(study_agent, scenario)
         center_indx = center_index(user_selected_timestamp, new_episode)
-        timestamp_range = new_episode.timestamps[
-                          max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
-                          ]
-        xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
-        xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
-        return xmin, xmax
+
+        return micro_function.compute_windows_range(
+            new_episode, center_indx, n_clicks_left, n_clicks_right
+        )
 
 
 def reward_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
@@ -268,7 +267,7 @@ def reward_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
     return figure
 
 
-from src.grid2viz.micro.micro_clbk import action_tooltip
+from ..utils.common_graph import action_tooltip
 
 
 def actions_ts_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
@@ -307,12 +306,6 @@ def actions_ts_graph(user_selected_timestamp, study_agent, episode_name, agent_r
 
 
 def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
-    # if scenario is None:
-    #     scenario = list(scenarios)[0]
-    # if ref_agent is None:
-    #     ref_agent = agents[0]
-    # if study_agent is None:
-    #     study_agent = agents[0]
     best_episode = make_episode(best_agents[scenario]["agent"], scenario)
     new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)

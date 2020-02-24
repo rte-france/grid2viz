@@ -3,7 +3,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_table as dt
 import plotly.graph_objects as go
-from ..manager import agents, make_episode, best_agents, scenarios
+from ..manager import agents, make_episode, best_agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -19,7 +19,7 @@ layout_pie = {
 
 }
 
-indicators_line = html.Div(id="temporaryid", children=[
+indicators_line = html.Div(id="indicator_line", children=[
     html.H4("Indicators"),
     html.Div(children=[
 

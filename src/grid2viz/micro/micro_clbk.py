@@ -7,11 +7,13 @@ from dash.exceptions import PreventUpdate
 import numpy as np
 
 from src.app import app
-from grid2kpi.episode import observation_model, EpisodeTrace
+from grid2kpi.episode import observation_model
 from grid2kpi.episode.actions_model import get_actions_sum
 from ..manager import make_episode, prod_types, make_network
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-from src.grid2viz.utils.common_controllers import action_tooltip
+from ..utils.common_graph import action_tooltip
+import grid2viz.utils.common_graph as common_graph
+from . import micro_shared_function as micro_function
 
 
 @app.callback(
@@ -32,8 +34,6 @@ def update_slider(window, value, study_agent, scenario):
     )
     if value not in range(min_, max_):
         value = min_
-    # marks = dict(enumerate(
-    #     map(lambda x: x.time(), new_episode.timestamps[min_:(max_ + 1)])))
 
     marks = dict(enumerate(map(lambda x: x.time(), new_episode.timestamps)))
 
@@ -73,13 +73,9 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
     center_indx = new_episode.timestamps.index(
         dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
     )
-    timestamp_range = new_episode.timestamps[
-                      max([0, (center_indx - 10 - 5 * n_clicks_left)]):(center_indx + 10 + 5 * n_clicks_right)
-                      ]
-    xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
-    xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
-
-    return (xmin, xmax)
+    return micro_function.compute_windows_range(
+        new_episode, center_indx, n_clicks_left, n_clicks_right
+    )
 
 
 # indicator line
@@ -159,26 +155,7 @@ def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, stu
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(study_agent, scenario)
-    actions_ts = get_actions_sum(new_episode)
-    ref_episode = make_episode(agent_ref, scenario)
-    ref_agent_actions_ts = get_actions_sum(ref_episode)
-    figure["data"] = [
-        go.Scatter(x=new_episode.action_data_table.timestamp,
-                   y=actions_ts["Nb Actions"], name=study_agent,
-                   text=action_tooltip(new_episode.actions)),
-        go.Scatter(x=ref_episode.action_data_table.timestamp,
-                   y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
-                   text=action_tooltip(ref_episode.actions)),
-
-        go.Scatter(x=new_episode.action_data_table.timestamp,
-                   y=new_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
-        go.Scatter(x=ref_episode.action_data_table.timestamp,
-                   y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
-    ]
-    figure['layout'] = {**figure['layout'],
-                        'yaxis': {'title': 'Actions'},
-                        'yaxis2': {'title': 'Distance', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
+    figure = common_graph.action_ts(study_agent, agent_ref, scenario, figure)
 
     if window is not None:
         figure["layout"].update(
@@ -353,21 +330,7 @@ def load_flows_for_lines(lines, new_episode):
 )
 def update_ts_graph_avail_assets(kind, study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
-    if kind in ["Hazards", "Maintenances"]:
-        options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in [*new_episode.line_names, 'total']], new_episode.line_names[0]
-    elif kind == 'Production':
-        options = [{'label': prod_name,
-                    'value': prod_name}
-                   for prod_name in [*new_episode.prod_names, *list(set(prod_types.values())), 'total']]
-        value = new_episode.prod_names[0]
-    else:
-        options = [{'label': load_name,
-                    'value': load_name}
-                   for load_name in [*new_episode.load_names, 'total']]
-        value = new_episode.load_names[0]
-
-    return options, value
+    return common_graph.ts_graph_avail_assets(kind, new_episode, prod_types)
 
 
 @app.callback(
@@ -388,19 +351,13 @@ def load_context_data(equipments, relayout_data_store, window, figure, kind, sce
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
+
     if kind is None:
         return figure
     if isinstance(equipments, str):
         equipments = [equipments]  # to make pd.series.isin() work
     episode = make_episode(agent_study, scenario)
-    if kind == "Load":
-        figure["data"] = EpisodeTrace.get_load_trace_per_equipment(episode, equipments)
-    if kind == "Production":
-        figure["data"] = EpisodeTrace.get_all_prod_trace(episode, prod_types, equipments)
-    if kind == "Hazards":
-        figure["data"] = EpisodeTrace.get_hazard_trace(episode, equipments)
-    if kind == "Maintenances":
-        figure["data"] = EpisodeTrace.get_maintenance_trace(episode, equipments)
+    figure['data'] = common_graph.environment_ts_data(kind, episode, equipments, prod_types)
 
     if window is not None:
         figure["layout"].update(
@@ -430,9 +387,6 @@ def update_agent_ref_graph(relayout_data_store, window,
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    new_episode = make_episode(study_agent, scenario)
-    figure_overflow["data"] = new_episode.total_overflow_trace
-    figure_usage["data"] = new_episode.usage_rate_trace
 
     if window is not None:
         figure_overflow["layout"].update(
@@ -442,7 +396,11 @@ def update_agent_ref_graph(relayout_data_store, window,
             xaxis=dict(range=window, autorange=False)
         )
 
-    return figure_overflow, figure_usage
+    return common_graph.agent_overflow_usage_rate_trace(
+        make_episode(study_agent, scenario),
+        figure_overflow,
+        figure_usage
+    )
 
 
 @app.callback(

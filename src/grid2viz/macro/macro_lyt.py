@@ -5,11 +5,9 @@ import dash_table as dt
 
 from collections import namedtuple
 
-from src.grid2viz.macro.macro_clbk import agents, get_score_agent, get_nb_action_agent, get_nb_overflow_agent, \
-    action_repartition_pie
 from grid2kpi.episode import actions_model
 from grid2kpi.episode.maintenances import hist_duration_maintenances
-from ..manager import make_episode, agents, scenarios
+from ..manager import make_episode, agents
 
 layout_def = {
     'legend': {'orientation': 'h'},

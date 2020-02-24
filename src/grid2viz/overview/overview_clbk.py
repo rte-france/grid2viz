@@ -5,6 +5,7 @@ from src.app import app
 import pandas as pd
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
+import grid2viz.utils.common_graph as common_graph
 from grid2kpi.episode import observation_model, EpisodeTrace
 from ..manager import make_episode, prod_types, best_agents
 
@@ -27,23 +28,14 @@ def relayout_store_overview(*args):
     [State('scenario', 'data')]
 )
 def update_ts_graph_avail_assets(kind, scenario):
+    """
+        Change the selector's options according to the kind of trace selected.
+
+        Triggered when user click on one of the input in the scen_overview_ts_switch
+        component in overview layout.
+    """
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-
-    if kind in ["Hazards", "Maintenances"]:
-        options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in [*best_agent_ep.line_names, 'total']], best_agent_ep.line_names[0]
-    elif kind == 'Production':
-        options = [{'label': prod_name,
-                    'value': prod_name}
-                   for prod_name in [*best_agent_ep.prod_names, *list(set(prod_types.values())), 'total']]
-        value = best_agent_ep.prod_names[0]
-    else:
-        options = [{'label': load_name,
-                    'value': load_name}
-                   for load_name in [*best_agent_ep.load_names, 'total']]
-        value = best_agent_ep.load_names[0]
-
-    return options, value
+    return common_graph.ts_graph_avail_assets(kind, best_agent_ep, prod_types)
 
 
 @app.callback(
@@ -55,38 +47,46 @@ def update_ts_graph_avail_assets(kind, scenario):
      State('scenario', 'data')]
 )
 def load_environments_ts(equipments, relayout_data_store, figure, kind, scenario):
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    """
+        Load selected kind of environment for chosen equipments in a scenario.
 
-    if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        Triggered when user click on a equipment displayed in the
+        input_assets_selector in the overview layout.
+    """
+    if relayout_data_store is not None and relayout_data_store['relayout_data']:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
         new_axis_layout = get_axis_relayout(figure, relayout_data)
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
+
     if kind is None:
         return figure
     if isinstance(equipments, str):
         equipments = [equipments]  # to make pd.series.isin() work
 
-    if kind == "Load":
-        figure["data"] = EpisodeTrace.get_load_trace_per_equipment(best_agent_ep, equipments)
-    if kind == "Production":
-        figure["data"] = EpisodeTrace.get_all_prod_trace(best_agent_ep, prod_types, equipments)
-    if kind == "Hazards":
-        figure["data"] = EpisodeTrace.get_hazard_trace(best_agent_ep, equipments)
-    if kind == "Maintenances":
-        figure["data"] = EpisodeTrace.get_maintenance_trace(best_agent_ep, equipments)
+    figure['data'] = common_graph.environment_ts_data(
+        kind,
+        make_episode(best_agents[scenario]['agent'], scenario),
+        equipments,
+        prod_types
+    )
 
     return figure
 
 
 @app.callback(
     Output("select_loads_for_tb", "options"),
-    [Input('temporaryid', 'children')],
+    [Input('indicator_line', 'children')],
     [State('scenario', 'data')]
 )
 def update_select_loads(children, scenario):
+    """
+        Display list of loads in a the select_loads_for_tb component.
+
+        Triggered when indicator line is loaded.
+    """
     episode = make_episode(best_agents[scenario]["agent"], scenario)
     return [
         {'label': load, "value": load} for load in [*episode.load_names, 'total']
@@ -95,10 +95,15 @@ def update_select_loads(children, scenario):
 
 @app.callback(
     Output("select_prods_for_tb", "options"),
-    [Input('temporaryid', 'children')],
+    [Input('indicator_line', 'children')],
     [State('scenario', 'data')]
 )
 def update_select_prods(children, scenario):
+    """
+        Display list of production in a the select_prods_for_tb component.
+
+        Triggered when indicator line is loaded.
+    """
     episode = make_episode(best_agents[scenario]["agent"], scenario)
     return [
         {'label': prod, "value": prod} for prod in episode.prod_names
@@ -110,12 +115,17 @@ def update_select_prods(children, scenario):
      Output("inspection_table", "data")],
     [Input("select_loads_for_tb", "value"),
      Input("select_prods_for_tb", "value"),
-     Input("temporaryid", "children"),
+     Input("indicator_line", "children"),
      Input('agent_ref', 'data')
      ],
     [State("inspection_table", "data"), State('scenario', 'data')]
 )
 def update_table(loads, prods, children, agent_ref, data, scenario):
+    """
+        Update the inspection table with the loads and prods selected.
+
+        Triggered when the select a load or a prods and when the ref agent is changed.
+    """
     if agent_ref is None:
         raise PreventUpdate
     episode = make_episode(agent_ref, scenario)
@@ -146,6 +156,7 @@ def update_table(loads, prods, children, agent_ref, data, scenario):
     [Input('scenario', 'data')]
 )
 def update_card_step(scenario):
+    """Display the best agent number of step when the page is loaded."""
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
     return '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
 
@@ -155,6 +166,7 @@ def update_card_step(scenario):
     [Input('scenario', 'data')]
 )
 def update_card_maintenance(scenario):
+    """Display the number of maintenance of the best agent when page is loaded."""
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
     return best_agent_ep.nb_maintenances
 
@@ -164,6 +176,7 @@ def update_card_maintenance(scenario):
     [Input('scenario', 'data')]
 )
 def update_card_hazard(scenario):
+    """Display the number of hazard of the best agent when page is loaded."""
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
     return best_agent_ep.nb_hazards
 
@@ -173,6 +186,10 @@ def update_card_hazard(scenario):
     [Input('scenario', 'data')]
 )
 def update_card_duration_maintenances(scenario):
+    """
+        Display the total duration of maintenances made by the best agent when
+        page is loaded.
+    """
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
     return best_agent_ep.total_maintenance_duration
 
@@ -183,6 +200,11 @@ def update_card_duration_maintenances(scenario):
     [State("scenario", "data")]
 )
 def update_selected_ref_agent(ref_agent, scenario):
+    """
+        Change the agent of reference for the given scenario.
+
+        Triggered when user select a new agent with the agent selector on layout.
+    """
     make_episode(ref_agent, scenario)
     return ref_agent
 
@@ -203,10 +225,12 @@ def update_agent_ref_graph(ref_agent, scenario, relayout_data_store, figure_over
             layout_usage.update(new_axis_layout)
             figure_overflow["layout"].update(new_axis_layout)
             return figure_overflow, figure_usage
-    new_episode = make_episode(ref_agent, scenario)
-    figure_overflow["data"] = new_episode.total_overflow_trace
-    figure_usage["data"] = new_episode.usage_rate_trace
-    return figure_overflow, figure_usage
+
+    return common_graph.agent_overflow_usage_rate_trace(
+        make_episode(ref_agent, scenario),
+        figure_overflow,
+        figure_usage
+    )
 
 
 @app.callback(
@@ -215,6 +239,7 @@ def update_agent_ref_graph(ref_agent, scenario, relayout_data_store, figure_over
     [State("indicator_line_charts", "figure")]
 )
 def update_profile_conso_graph(scenario, figure):
+    """Display best agent's consumption profile when page is loaded"""
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
     figure["data"] = best_agent_ep.profile_traces
     return figure
@@ -226,6 +251,7 @@ def update_profile_conso_graph(scenario, figure):
     [State("production_share_graph", "figure")]
 )
 def update_production_share_graph(scenario, figure):
+    """Display best agent's production share when page load"""
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
     share_prod = EpisodeTrace.get_prod_share_trace(best_agent_ep, prod_types)
     figure["data"] = share_prod
@@ -234,11 +260,12 @@ def update_production_share_graph(scenario, figure):
 
 @app.callback(
     [Output("date_range", "start_date"), Output("date_range", "end_date")],
-    [Input('temporaryid', 'children'),
+    [Input('indicator_line', 'children'),
      Input('agent_ref', 'data')],
     [State('scenario', 'data')]
 )
 def update_date_range(children, agent_ref, scenario):
+    """Change the date range for the date picker in inspector line"""
     episode = make_episode(agent_ref, scenario)
     return episode.production["timestamp"].dt.date.values[0], \
            episode.production["timestamp"].dt.date.values[-1]

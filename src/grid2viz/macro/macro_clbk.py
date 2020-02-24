@@ -6,13 +6,12 @@ import plotly.graph_objects as go
 
 from src.app import app
 from grid2kpi.episode.actions_model import get_actions_sum
-from ..manager import make_episode, agents
+from ..manager import make_episode
 from grid2kpi.episode import observation_model, EpisodeTrace
 from grid2kpi.episode import actions_model
-from src.grid2viz.utils.graph_utils import get_axis_relayout, RelayoutX, relayout_callback
+from src.grid2viz.utils.graph_utils import get_axis_relayout, relayout_callback
 from grid2kpi.episode.maintenances import (hist_duration_maintenances)
-from src.grid2viz.utils.common_controllers import action_tooltip
-from src.grid2viz.utils.perf_analyser import timeit
+from ..utils.common_graph import action_tooltip
 
 
 @app.callback(

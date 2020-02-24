@@ -6,11 +6,7 @@ from grid2op.EpisodeData import EpisodeData
 import os
 import configparser
 import csv
-import pandas as pd
 import pickle
-
-import plotly.graph_objects as go
-
 
 from grid2op.PlotPlotly import PlotObs
 
@@ -21,15 +17,8 @@ def make_network(episode):
     """
         Create a Plotly network graph with the layout configuration and the selected episode.
 
-        Parameters
-        ----------
-        episode: :class:`grid2viz.grid2Kpi.EpisodeAnalytics`
-            An episode containing targeted data for the graph.
-
-        Returns
-        -------
-        res: :class:`grid2op.PlotPlotly.PlotObs`
-         Plotly network graph.
+        :param episode: An episode containing targeted data for the graph.
+        :return: Network graph
     """
     global graph
     if graph is None:
@@ -43,20 +32,12 @@ store = {}
 
 def make_episode(agent, episode_name):
     """
-    Load episode from cache. If not already in, compute episode data
-    and save it in cache.
+        Load episode from cache. If not already in, compute episode data
+        and save it in cache.
 
-    Parameters
-    ----------
-    agent: :class:`str`
-        agent name.
-    episode_name :class:`str`
-        name of the studied episode
-
-    Returns
-    -------
-    res: :class:`grid2viz.grid2Kpi.EpisodeAnalytics`
-        Episode with computed data
+        :param agent: Agent Name
+        :param episode_name: Name of the studied episode
+        :return: Episode with computed data
     """
     if is_in_ram_cache(episode_name, agent):
         return get_from_ram_cache(episode_name, agent)
@@ -103,7 +84,7 @@ def get_from_fs_cache(episode_name, agent):
 
 
 def compute_episode(episode_name, agent):
-    path = base_dir + agent
+    path = os.path.join(base_dir, agent)
     return EpisodeAnalytics(EpisodeData.from_disk(
         path, episode_name
     ), episode_name, agent)
@@ -130,7 +111,7 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     meta_json = {}
 
     for agent in agents:
-        for scenario_name in os.listdir(base_dir + agent):
+        for scenario_name in os.listdir(os.path.join(base_dir, agent)):
             scenario_folder = os.path.join(base_dir, agent, scenario_name)
             if not os.path.isdir(scenario_folder):
                 continue
@@ -159,11 +140,11 @@ parser.read(path)
 base_dir = parser.get("DEFAULT", "base_dir")
 cache_dir = os.path.join(base_dir, "_cache")
 agents = sorted([file for file in os.listdir(
-    base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")])
+    base_dir) if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
 scenarios = []
 for agent in agents:
-    scen_path = base_dir + agent
+    scen_path = os.path.join(base_dir, agent)
     scens = [file for file in os.listdir(
         scen_path) if os.path.isdir(os.path.join(scen_path, file))]
     scenarios = scenarios + scens
@@ -178,7 +159,7 @@ try:
     prod_types_file = 'prods_charac.csv'
     network_layout_file = 'coords.csv'
     with open(env_conf_folder + prod_types_file) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=",")
+        csv_reader = csv.reader(csv_file, delimiter=";")
         line = 0
         for row in csv_reader:
             if line == 0:
@@ -197,12 +178,5 @@ try:
                 (int(coords[0]),
                  int(coords[1]))
             )
-
-        # Due to the difference of delimiter from the iee14 files anf iee118 it's better to keep this in commentary
-        # until they give us a better file conf
-        # [network_layout.append(
-        #     (int(row[0].split(',')[1]),
-        #      int(row[0].split(',')[2]))
-        # ) for row in csv_reader]  # the row is a string which contain the coordinate and an index
 except configparser.NoOptionError as ex:
     pass  # ignoring this error
