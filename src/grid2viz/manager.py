@@ -147,17 +147,21 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     return meta_json, best_agents
 
 
+"""
+Initialisation routine
+"""
+''' Parsing of config file'''
 path = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
     os.path.pardir,
     os.path.pardir,
     "config.ini"
 )
-
 parser = configparser.ConfigParser()
 parser.read(path)
 base_dir = parser.get("DEFAULT", "base_dir")
 cache_dir = os.path.join(base_dir, "_cache")
+'''Parsing of agent folder tree'''
 agents = sorted([file for file in os.listdir(
     base_dir) if os.path.isdir(base_dir + file) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
@@ -170,8 +174,8 @@ for agent in agents:
 
 scenarios = set(scenarios)
 
+'''Parsing of the environment configuration'''
 env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
-
 prod_types = {}
 network_layout = []
 try:
@@ -197,12 +201,5 @@ try:
                 (int(coords[0]),
                  int(coords[1]))
             )
-
-        # Due to the difference of delimiter from the iee14 files anf iee118 it's better to keep this in commentary
-        # until they give us a better file conf
-        # [network_layout.append(
-        #     (int(row[0].split(',')[1]),
-        #      int(row[0].split(',')[2]))
-        # ) for row in csv_reader]  # the row is a string which contain the coordinate and an index
 except configparser.NoOptionError as ex:
     pass  # ignoring this error
