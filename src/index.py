@@ -1,27 +1,18 @@
-import dash_html_components as html
-import dash_core_components as dcc
+"""
+This file handles the html entry point of the application through dash components.
+It will generate the layout of a given page and handle the routing
+"""
 import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from flask import flash
 
+import src.grid2viz.macro.macro_lyt as macro
+import src.grid2viz.micro.micro_lyt as micro
+import src.grid2viz.overview.overview_lyt as overview
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
-from src.grid2viz.utils.perf_analyser import timeit, decorate_all_in_module
-
-import src.grid2viz.macro.macro_clbk as macro_clbk
-import src.grid2viz.macro.macro_lyt as macro
-import src.grid2viz.micro.micro_clbk as micro_clbk
-import src.grid2viz.micro.micro_lyt as micro
-import src.grid2viz.overview.overview_clbk as overview_clbk
-import src.grid2viz.overview.overview_lyt as overview
-
-# decorate_all_in_module(macro_clbk, timeit)
-# decorate_all_in_module(macro, timeit)
-# decorate_all_in_module(micro_clbk, timeit)
-# decorate_all_in_module(micro, timeit)
-# decorate_all_in_module(overview_clbk, timeit)
-# decorate_all_in_module(overview, timeit)
 
 nav_items = [
     dbc.NavItem(dbc.NavLink("Scenario Selection", href="/episodes")),
@@ -45,10 +36,10 @@ navbar = dbc.Navbar(
             html.Div(
                 [
                     dbc.Button(
-                    id="enlarge_left",
-                    children="-5",
-                    color="dark",
-                    className="float-left mr-1"
+                        id="enlarge_left",
+                        children="-5",
+                        color="dark",
+                        className="float-left mr-1"
                     ),
                     dbc.Tooltip('Enlarge left', target='enlarge_left',
                                 placement='bottom'),
@@ -67,7 +58,7 @@ navbar = dbc.Navbar(
                     dbc.Tooltip('Enlarge right', target='enlarge_right',
                                 placement='bottom')
                 ]
-                
+
             )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
