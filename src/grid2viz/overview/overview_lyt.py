@@ -76,7 +76,7 @@ def summary_line(episode, ref_agent):
         html.H4("Summary"),
         html.Div(children=[
             html.Div(children=[
-                html.H5("Best Agent's Environments Time Series"),
+                html.H5("Best Agent's Environment Time Series"),
                 dac.Radio(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
