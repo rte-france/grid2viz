@@ -128,17 +128,21 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     return meta_json, best_agents
 
 
+"""
+Initialisation routine
+"""
+''' Parsing of config file'''
 path = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
     os.path.pardir,
     os.path.pardir,
     "config.ini"
 )
-
 parser = configparser.ConfigParser()
 parser.read(path)
 base_dir = parser.get("DEFAULT", "base_dir")
 cache_dir = os.path.join(base_dir, "_cache")
+'''Parsing of agent folder tree'''
 agents = sorted([file for file in os.listdir(
     base_dir) if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
@@ -151,8 +155,8 @@ for agent in agents:
 
 scenarios = set(scenarios)
 
+'''Parsing of the environment configuration'''
 env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
-
 prod_types = {}
 network_layout = []
 try:

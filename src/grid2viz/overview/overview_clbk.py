@@ -2,6 +2,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from src.app import app
+from datetime import datetime
 import pandas as pd
 
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
@@ -115,12 +116,13 @@ def update_select_prods(children, scenario):
      Output("inspection_table", "data")],
     [Input("select_loads_for_tb", "value"),
      Input("select_prods_for_tb", "value"),
-     Input("indicator_line", "children"),
-     Input('agent_ref', 'data')
+     Input('agent_ref', 'data'),
+     Input('date_range', 'start_date'),
+     Input('date_range', 'end_date'),
      ],
     [State("inspection_table", "data"), State('scenario', 'data')]
 )
-def update_table(loads, prods, children, agent_ref, data, scenario):
+def update_table(loads, prods, agent_ref, start_date, end_date, data, scenario):
     """
         Update the inspection table with the loads and prods selected.
 
@@ -129,14 +131,13 @@ def update_table(loads, prods, children, agent_ref, data, scenario):
     if agent_ref is None:
         raise PreventUpdate
     episode = make_episode(agent_ref, scenario)
+    df = observation_model.init_table_inspection_data(episode)
     if data is None:
-        table = observation_model.init_table_inspection_data(episode)
-        return [{"name": i, "id": i} for i in table.columns], table.to_dict('records')
+        return [{"name": i, "id": i} for i in df.columns], df.to_dict('records')
     if loads is None:
         loads = []
     if prods is None:
         prods = []
-    df = pd.DataFrame.from_records(data)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     cols_to_drop = []
     for col in df.columns[4:]:
@@ -147,6 +148,10 @@ def update_table(loads, prods, children, agent_ref, data, scenario):
     if cols_to_add:
         df = df.merge(
             observation_model.get_prod_and_conso(episode)[cols_to_add], left_on="timestamp", right_index=True)
+    if start_date is not None:
+        df = df[df["timestamp"] >= start_date]
+    if end_date is not None:
+        df = df[df["timestamp"] <= end_date]
     cols = [{"name": i, "id": i} for i in df.columns]
     return cols, df.to_dict('records')
 
@@ -260,11 +265,10 @@ def update_production_share_graph(scenario, figure):
 
 @app.callback(
     [Output("date_range", "start_date"), Output("date_range", "end_date")],
-    [Input('indicator_line', 'children'),
-     Input('agent_ref', 'data')],
+    [Input('agent_ref', 'data')],
     [State('scenario', 'data')]
 )
-def update_date_range(children, agent_ref, scenario):
+def update_date_range(agent_ref, scenario):
     """Change the date range for the date picker in inspector line"""
     episode = make_episode(agent_ref, scenario)
     return episode.production["timestamp"].dt.date.values[0], \

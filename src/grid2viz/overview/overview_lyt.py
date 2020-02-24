@@ -1,8 +1,14 @@
+"""
+This file builds the layout for the scenario overview tab.
+This tab handles the generic information about the environment and the selection of a reference agent for future analysis.
+"""
+
 import dash_antd_components as dac
-import dash_html_components as html
 import dash_core_components as dcc
+import dash_html_components as html
 import dash_table as dt
 import plotly.graph_objects as go
+
 from ..manager import agents, make_episode, best_agents
 
 layout_def = {
@@ -170,7 +176,6 @@ ref_agent_line = html.Div(children=[
                 page_size=20,
             ),
             html.Label(
-                # className="col row",
                 children=[
                     'The documentation for the filtering syntax can be found ',
                     html.A('here.', href='https://dash.plot.ly/datatable/filtering',
@@ -188,8 +193,6 @@ def layout(scenario, ref_agent):
         return
     if ref_agent is None:
         ref_agent = agents[0]
-    # if scenario is None:
-    #     scenario = list(scenarios)[0]
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line,
