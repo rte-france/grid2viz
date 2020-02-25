@@ -6,10 +6,8 @@ import dash_table as dt
 import datetime
 from collections import namedtuple
 
-
 import grid2viz.utils.common_graph
 from ..manager import make_episode, make_network, best_agents
-from ..utils import common_graph
 
 layout_def = {
     'legend': {'orientation': 'h'},

@@ -4,13 +4,11 @@
 """
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
 from ..manager import make_episode
-from grid2kpi.episode import observation_model, EpisodeTrace
+from grid2kpi.episode import EpisodeTrace
 from grid2kpi.episode import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, relayout_callback
 from grid2kpi.episode.maintenances import (hist_duration_maintenances)
@@ -36,7 +34,7 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
             layout.update(new_axis_layout)
             return figure
 
-    return make_rewards_ts(study_agent,ref_agent, scenario, layout)
+    return make_rewards_ts(study_agent, ref_agent, scenario, layout)
 
 
 @app.callback(
@@ -77,15 +75,15 @@ def maintenance_duration_hist(study_agent, figure, scenario):
     Output("timeseries_table", "data"),
     [Input("cumulated_rewards_timeserie", "clickData"),
      Input("agent_log_selector", "value")],
-    [State("timeseries_table", "data"), 
+    [State("timeseries_table", "data"),
      State("agent_study", "data")]
 )
-def add_timestamp(clickData, new_agent, data, agent_stored):
+def add_timestamp(click_data, new_agent, data, agent_stored):
     if new_agent != agent_stored:
         return []
     if data is None:
         data = []
-    new_data = {"Timestamps": clickData["points"][0]["x"]}
+    new_data = {"Timestamps": click_data["points"][0]["x"]}
     if new_data not in data:
         data.append(new_data)
     return data

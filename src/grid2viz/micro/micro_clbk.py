@@ -1,14 +1,11 @@
 import datetime as dt
 
-import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import numpy as np
 
 import grid2viz.utils.common_graph
 from src.app import app
-from grid2kpi.episode import observation_model
 from ..manager import make_episode, prod_types, make_network
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
 import grid2viz.utils.common_graph as common_graph
