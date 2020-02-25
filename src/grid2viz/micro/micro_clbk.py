@@ -6,12 +6,11 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import numpy as np
 
-import grid2viz.utils.common_graph
 from src.app import app
 from grid2kpi.episode import observation_model
 from ..manager import make_episode, prod_types, make_network
-from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-import grid2viz.utils.common_graph as common_graph
+from ..utils.graph_utils import relayout_callback, get_axis_relayout
+from ..utils import common_graph
 
 
 @app.callback(
@@ -71,7 +70,7 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
     center_indx = new_episode.timestamps.index(
         dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
     )
-    return grid2viz.utils.common_graph.compute_windows_range(
+    return common_graph.compute_windows_range(
         new_episode, center_indx, n_clicks_left, n_clicks_right
     )
 

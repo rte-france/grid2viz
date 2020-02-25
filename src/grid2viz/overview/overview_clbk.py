@@ -5,8 +5,8 @@ from src.app import app
 from datetime import datetime
 import pandas as pd
 
-from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-import grid2viz.utils.common_graph as common_graph
+from ..utils.graph_utils import relayout_callback, get_axis_relayout
+from ..utils import common_graph
 from grid2kpi.episode import observation_model, EpisodeTrace
 from ..manager import make_episode, prod_types, best_agents
 

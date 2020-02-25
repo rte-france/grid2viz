@@ -7,7 +7,7 @@ from plotly import graph_objects as go
 from grid2kpi.episode import EpisodeTrace, observation_model
 from grid2kpi.episode.actions_model import get_actions_sum
 
-from grid2viz.manager import make_episode
+from ..manager import make_episode
 
 
 def ts_graph_avail_assets(ts_kind, episode, prod_types):

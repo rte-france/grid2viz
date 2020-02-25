@@ -7,7 +7,6 @@ import datetime
 from collections import namedtuple
 
 
-import grid2viz.utils.common_graph
 from ..manager import make_episode, make_network, best_agents
 from ..utils import common_graph
 
@@ -231,7 +230,7 @@ def compute_window(user_selected_timestamp, study_agent, scenario):
         new_episode = make_episode(study_agent, scenario)
         center_indx = center_index(user_selected_timestamp, new_episode)
 
-        return grid2viz.utils.common_graph.compute_windows_range(
+        return common_graph.compute_windows_range(
             new_episode, center_indx, n_clicks_left, n_clicks_right
         )
 
