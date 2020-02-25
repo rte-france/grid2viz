@@ -1,3 +1,7 @@
+"""
+    This files handles the generic information about the agent of reference of the selected scenario
+    and let choose and compute study agent information.
+"""
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import numpy as np
@@ -5,13 +9,13 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from src.app import app
-from grid2kpi.episode.actions_model import get_actions_sum
 from ..manager import make_episode
 from grid2kpi.episode import observation_model, EpisodeTrace
 from grid2kpi.episode import actions_model
 from src.grid2viz.utils.graph_utils import get_axis_relayout, relayout_callback
 from grid2kpi.episode.maintenances import (hist_duration_maintenances)
-from ..utils.common_graph import action_tooltip
+
+from ..utils.common_graph import make_action_ts, make_rewards_ts
 
 
 @app.callback(
@@ -23,38 +27,16 @@ from ..utils.common_graph import action_tooltip
      State("scenario", "data")]
 )
 def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent, scenario):
+    """Compute and  create figure with instant and cumulated rewards of the study and ref agent"""
+    layout = figure["layout"]
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
-        layout = figure["layout"]
         new_axis_layout = get_axis_relayout(figure, relayout_data)
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(study_agent, scenario)
-    ref_episode = make_episode(ref_agent, scenario)
-    actions_ts = new_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
-    df = observation_model.get_df_computed_reward(new_episode)
-    action_events_df = pd.DataFrame(
-        index=df["timestep"], data=np.nan, columns=["action_events"])
-    action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
-        df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
-    action_trace = go.Scatter(
-        x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
-        mode='markers', marker_color='#FFEB3B',
-        marker={"symbol": "hexagon", "size": 10}
-    )
-    ref_episode_reward_trace = ref_episode.reward_trace
-    studied_agent_reward_trace = new_episode.reward_trace
-
-    figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
-                      action_trace]
-    figure['layout'] = {**figure['layout'],
-                        'yaxis': {'title': 'Instant Reward'},
-                        'yaxis2': {'title': 'Cumulated Reward', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
-    return figure
+    return make_rewards_ts(study_agent,ref_agent, scenario, layout)
 
 
 @app.callback(
@@ -219,27 +201,7 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, sc
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(study_agent, scenario)
-    actions_ts = get_actions_sum(new_episode)
-    ref_episode = make_episode(agent_ref, scenario)
-    ref_agent_actions_ts = get_actions_sum(ref_episode)
-    figure["data"] = [
-        go.Scatter(x=new_episode.action_data_table.timestamp,
-                   y=actions_ts["Nb Actions"], name=study_agent,
-                   text=action_tooltip(new_episode.actions)),
-        go.Scatter(x=ref_episode.action_data_table.timestamp,
-                   y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
-                   text=action_tooltip(ref_episode.actions)),
-
-        go.Scatter(x=new_episode.action_data_table.timestamp,
-                   y=new_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
-        go.Scatter(x=ref_episode.action_data_table.timestamp,
-                   y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
-    ]
-    figure['layout'] = {**figure['layout'],
-                        'yaxis': {'title': 'Actions'},
-                        'yaxis2': {'title': 'Distance','side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
-    return figure
+    return make_action_ts(study_agent, agent_ref, scenario, figure['layout'])
 
 
 @app.callback(

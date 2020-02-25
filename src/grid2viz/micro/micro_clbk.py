@@ -6,14 +6,12 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import numpy as np
 
+import grid2viz.utils.common_graph
 from src.app import app
 from grid2kpi.episode import observation_model
-from grid2kpi.episode.actions_model import get_actions_sum
 from ..manager import make_episode, prod_types, make_network
 from src.grid2viz.utils.graph_utils import relayout_callback, get_axis_relayout
-from ..utils.common_graph import action_tooltip
 import grid2viz.utils.common_graph as common_graph
-from . import micro_shared_function as micro_function
 
 
 @app.callback(
@@ -73,7 +71,7 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
     center_indx = new_episode.timestamps.index(
         dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
     )
-    return micro_function.compute_windows_range(
+    return grid2viz.utils.common_graph.compute_windows_range(
         new_episode, center_indx, n_clicks_left, n_clicks_right
     )
 
@@ -90,40 +88,16 @@ def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
      State("scenario", "data")]
 )
 def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, study_agent, agent_ref, scenario):
-    if selected_timestamp is None:
-        raise PreventUpdate
 
+    layout = figure["layout"]
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
-        layout = figure["layout"]
         new_axis_layout = get_axis_relayout(figure, relayout_data)
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
 
-    new_episode = make_episode(study_agent, scenario)
-    ref_episode = make_episode(agent_ref, scenario)
-    actions_ts = new_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
-    df = observation_model.get_df_computed_reward(new_episode)
-    action_events_df = pd.DataFrame(
-        index=df["timestep"], data=np.nan, columns=["action_events"])
-    action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
-        df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
-    action_trace = go.Scatter(
-        x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
-        mode='markers', marker_color='#FFEB3B',
-        marker={"symbol": "hexagon", "size": 10}
-    )
-    ref_episode_reward_trace = ref_episode.reward_trace
-    studied_agent_reward_trace = make_episode(study_agent, scenario).reward_trace
-
-    figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
-                      action_trace]
-    figure['layout'] = {**figure['layout'],
-                        'yaxis': {'title': 'Instant Reward'},
-                        'yaxis2': {'title': 'Cumulated Reward', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
+    figure = common_graph.make_rewards_ts(study_agent, agent_ref, scenario, layout)
 
     if window is not None:
         figure["layout"].update(
@@ -144,18 +118,17 @@ def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, stud
      State("scenario", "data")]
 )
 def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, study_agent, agent_ref, scenario):
-    if selected_timestamp is None:
-        raise PreventUpdate
 
+    layout = figure["layout"]
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
-        layout = figure["layout"]
+
         new_axis_layout = get_axis_relayout(figure, relayout_data)
         if new_axis_layout is not None:
             layout.update(new_axis_layout)
             return figure
 
-    figure = common_graph.action_ts(study_agent, agent_ref, scenario, figure)
+    figure = common_graph.make_action_ts(study_agent, agent_ref, scenario, layout)
 
     if window is not None:
         figure["layout"].update(

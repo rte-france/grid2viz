@@ -3,44 +3,45 @@ import dash_core_components as dcc
 import dash_antd_components as dac
 import plotly.graph_objects as go
 import dash_table as dt
-import pandas as pd
-import numpy as np
 import datetime
 from collections import namedtuple
 
-from grid2kpi.episode import observation_model
-from grid2kpi.episode.actions_model import get_actions_sum
+
+import grid2viz.utils.common_graph
 from ..manager import make_episode, make_network, best_agents
-from . import micro_shared_function as micro_function
+from ..utils import common_graph
 
 layout_def = {
     'legend': {'orientation': 'h'},
-    "showlegend": True,
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
 }
 
 SliderParams = namedtuple("SliderParams", ['min', 'max', 'marks', 'value'])
 
 
-def indicator_line(reward_graph, actions_ts_graph):
+def indicator_line():
     return html.Div(id="indicator_line_id", className="lineBlock card", children=[
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
-            html.Div(className="col-xl-6", children=[
+            html.Div(className="col-6", children=[
                 html.H6(className="text-center",
                         children="Rewards instant + cumulated for 2 agent"),
                 dcc.Graph(
                     id="cum_instant_reward_ts",
-                    figure=reward_graph
+                    figure=go.Figure(
+                        layout=layout_def,
+                    )
                 )
             ]),
 
-            html.Div(className="col-xl-6", children=[
+            html.Div(className="col-6", children=[
                 html.H6(className="text-center",
                         children="Actions"),
                 dcc.Graph(
                     id="actions_ts",
-                    figure=actions_ts_graph
+                    figure=go.Figure(
+                        layout=layout_def,
+                    )
                 )
             ])
         ])
@@ -230,79 +231,9 @@ def compute_window(user_selected_timestamp, study_agent, scenario):
         new_episode = make_episode(study_agent, scenario)
         center_indx = center_index(user_selected_timestamp, new_episode)
 
-        return micro_function.compute_windows_range(
+        return grid2viz.utils.common_graph.compute_windows_range(
             new_episode, center_indx, n_clicks_left, n_clicks_right
         )
-
-
-def reward_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
-    new_episode = make_episode(study_agent, episode_name)
-    ref_episode = make_episode(agent_ref, episode_name)
-    actions_ts = get_actions_sum(new_episode)
-    figure = {}
-    df = observation_model.get_df_computed_reward(new_episode)
-    action_events_df = pd.DataFrame(
-        index=df["timestep"], data=np.nan, columns=["action_events"])
-    action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
-        df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
-    action_trace = go.Scatter(
-        x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
-        mode='markers', marker_color='#FFEB3B',
-        marker={"symbol": "hexagon", "size": 10}
-    )
-    ref_episode_reward_trace = ref_episode.reward_trace
-    studied_agent_reward_trace = make_episode(study_agent, episode_name).reward_trace
-
-    figure['data'] = [*ref_episode_reward_trace, *studied_agent_reward_trace,
-                      action_trace]
-    figure['layout'] = {**layout_def,
-                        'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
-
-    window = compute_window(user_selected_timestamp, study_agent, episode_name)
-
-    if window is not None:
-        figure["layout"].update(
-            xaxis=dict(range=window, autorange=False)
-        )
-    return figure
-
-
-from ..utils.common_graph import action_tooltip
-
-
-def actions_ts_graph(user_selected_timestamp, study_agent, episode_name, agent_ref):
-    new_episode = make_episode(study_agent, episode_name)
-    actions_ts = new_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
-    ref_episode = make_episode(agent_ref, episode_name)
-    ref_agent_actions_ts = ref_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
-    figure = {
-        "data": [
-            go.Scatter(x=new_episode.action_data_table.timestamp,
-                       y=actions_ts["Nb Actions"], name=study_agent,
-                       text=action_tooltip(new_episode.actions)),
-            go.Scatter(x=ref_episode.action_data_table.timestamp,
-                       y=ref_agent_actions_ts["Nb Actions"], name=agent_ref,
-                       text=action_tooltip(ref_episode.actions)),
-
-            go.Scatter(x=new_episode.action_data_table.timestamp,
-                       y=new_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
-            go.Scatter(x=ref_episode.action_data_table.timestamp,
-                       y=ref_episode.action_data_table["distance"], name=agent_ref + " distance", yaxis='y2'),
-        ], 'layout': {**layout_def, 'yaxis2': {'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
-    }
-
-    window = compute_window(user_selected_timestamp, study_agent, episode_name)
-
-    if window is not None:
-        figure["layout"].update(
-            xaxis=dict(range=window, autorange=False)
-        )
-
-    return figure
 
 
 def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
@@ -310,12 +241,11 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
-    rw_graph = reward_graph(user_selected_timestamp, study_agent, scenario, ref_agent)
-    act_graph = actions_ts_graph(user_selected_timestamp, study_agent, scenario, ref_agent)
+
     return html.Div(id="micro_page", children=[
         dcc.Store(id="relayoutStoreMicro"),
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
-        indicator_line(rw_graph, act_graph),
+        indicator_line(),
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
         context_inspector_line(best_episode, new_episode),
         all_info_line

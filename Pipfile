@@ -16,11 +16,11 @@ jupyter = "*"
 matplotlib = "*"
 pylint = "*"
 seaborn = "*"
-dash-antd-components = {index = "https://test.pypi.org/simple/",version = "==0.0.1rc1"}
 tqdm = "*"
 grid2op = "*"
 numba = "*"
-grid2kpi = {index = "https://test.pypi.org/simple/",version = "==0.1.1"}
+dash-antd-components = {index = "https://test.pypi.org/simple/",version = "==0.0.1rc1"}
+grid2kpi = {index = "https://test.pypi.org/simple/",version = "==0.1.0rc3"}
 
 [requires]
 python_version = "3.7"

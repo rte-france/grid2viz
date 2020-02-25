@@ -1,8 +1,10 @@
 """
     Utility functions for creation of graph and graph component used several times.
 """
+import pandas as pd
+import numpy as np
 from plotly import graph_objects as go
-from grid2kpi.episode import EpisodeTrace
+from grid2kpi.episode import EpisodeTrace, observation_model
 from grid2kpi.episode.actions_model import get_actions_sum
 
 from grid2viz.manager import make_episode
@@ -156,34 +158,92 @@ def action_tooltip(episode_actions):
     return tooltip
 
 
-def action_ts(study_agent, ref_agent, scenario, figure):
+def make_action_ts(study_agent, ref_agent, scenario, layout_def = None):
     """
-    Make the action timeseries trace of study and reference agents.
+        Make the action timeseries trace of study and reference agents.
 
-    :param study_agent: studied agent to compare
-    :param ref_agent: reference agent to compare with
-    :param scenario:
-    :param figure: figure on layout page
-    :return: nb action and distance for each agents
+        :param study_agent: studied agent to compare
+        :param ref_agent: reference agent to compare with
+        :param scenario:
+        :param figure: figure on layout page
+        :return: nb action and distance for each agents
     """
     ref_episode = make_episode(ref_agent, scenario)
     study_episode = make_episode(study_agent, scenario)
     actions_ts = get_actions_sum(study_episode)
     ref_agent_actions_ts = get_actions_sum(ref_episode)
-    figure["data"] = [
-        go.Scatter(x=study_episode.action_data_table.timestamp,
-                   y=actions_ts["Nb Actions"], name=study_agent,
-                   text=action_tooltip(study_episode.actions)),
-        go.Scatter(x=ref_episode.action_data_table.timestamp,
-                   y=ref_agent_actions_ts["Nb Actions"], name=ref_agent,
-                   text=action_tooltip(ref_episode.actions)),
 
-        go.Scatter(x=study_episode.action_data_table.timestamp,
-                   y=study_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
-        go.Scatter(x=ref_episode.action_data_table.timestamp,
-                   y=ref_episode.action_data_table["distance"], name=ref_agent + " distance", yaxis='y2'),
-    ]
-    figure['layout'] = {**figure['layout'],
-                        'yaxis': {'title': 'Actions'},
-                        'yaxis2': {'title': 'Distance', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
+    figure = {
+        'data': [
+            go.Scatter(x=study_episode.action_data_table.timestamp,
+                       y=actions_ts["Nb Actions"], name=study_agent,
+                       text=action_tooltip(study_episode.actions)),
+            go.Scatter(x=ref_episode.action_data_table.timestamp,
+                       y=ref_agent_actions_ts["Nb Actions"], name=ref_agent,
+                       text=action_tooltip(ref_episode.actions)),
+
+            go.Scatter(x=study_episode.action_data_table.timestamp,
+                       y=study_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
+            go.Scatter(x=ref_episode.action_data_table.timestamp,
+                       y=ref_episode.action_data_table["distance"], name=ref_agent + " distance", yaxis='y2'),
+        ],
+        'layout': {**layout_def,
+                   'yaxis': {'title': 'Actions'},
+                   'yaxis2': {'title': 'Distance', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
+    }
+
     return figure
+
+
+def make_rewards_ts(study_agent, ref_agent, scenario, layout):
+    """
+        Make kpi with rewards and cumulated reward for both reference agent and study agent.
+
+        :param study_agent: agent studied
+        :param ref_agent: agent to compare with
+        :param scenario:
+        :param layout: display configuration
+        :return: rewards and cumulated rewards for each agents
+    """
+    study_episode = make_episode(study_agent, scenario)
+    ref_episode = make_episode(ref_agent, scenario)
+    actions_ts = study_episode.action_data_table.set_index("timestamp")[[
+        'action_line', 'action_subs'
+    ]].sum(axis=1).to_frame(name="Nb Actions")
+    df = observation_model.get_df_computed_reward(study_episode)
+    action_events_df = pd.DataFrame(
+        index=df["timestep"], data=np.nan, columns=["action_events"])
+    action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
+        df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
+    action_trace = go.Scatter(
+        x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
+        mode='markers', marker_color='#FFEB3B',
+        marker={"symbol": "hexagon", "size": 10}
+    )
+    ref_episode_reward_trace = ref_episode.reward_trace
+    studied_agent_reward_trace = study_episode.reward_trace
+    return {
+        'data': [*ref_episode_reward_trace, *studied_agent_reward_trace,
+                 action_trace],
+        'layout': {**layout,
+                   'yaxis': {'title': 'Instant Reward'},
+                   'yaxis2': {'title': 'Cumulated Reward', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+    }
+
+
+def compute_windows_range(episode, center_idx, n_clicks_left, n_clicks_right):
+    """
+        Compute the timestamp range for the time window
+        :param episode: studied episode
+        :param center_idx: timestamp at the center of the range
+        :param n_clicks_left: number of times user as click on enlarge left
+        :param n_clicks_right: number of times user as click on enlarge right
+        :return: the timesteps minimum and maximum
+    """
+    timestamp_range = episode.timestamps[
+                      max([0, (center_idx - 10 - 5 * n_clicks_left)]):(center_idx + 10 + 5 * n_clicks_right)
+                      ]
+    xmin = timestamp_range[0].strftime("%Y-%m-%dT%H:%M:%S")
+    xmax = timestamp_range[-1].strftime("%Y-%m-%dT%H:%M:%S")
+
+    return xmin, xmax

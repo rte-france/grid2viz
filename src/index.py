@@ -8,9 +8,21 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
+'''
+WARNING :
+These imports are mandatory to build the dependance tree and actually add the callbacks to the dash decoration routine
+Do not remove !
+'''
+import src.grid2viz.macro.macro_clbk as macro_clbk
 import src.grid2viz.macro.macro_lyt as macro
+import src.grid2viz.micro.micro_clbk as micro_clbk
 import src.grid2viz.micro.micro_lyt as micro
 import src.grid2viz.overview.overview_lyt as overview
+import src.grid2viz.overview.overview_clbk as overview_clbk
+'''
+End Warning
+'''
+
 from src.app import app
 from src.grid2viz.episodes import episodes_lyt
 

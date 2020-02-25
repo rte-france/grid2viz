@@ -189,7 +189,8 @@ ref_agent_line = html.Div(children=[
 def layout(scenario, ref_agent):
     try:
         episode = make_episode(best_agents[scenario]["agent"], scenario)
-    except:
+    except Exception as ex:
+        print(ex)
         return
     if ref_agent is None:
         ref_agent = agents[0]
