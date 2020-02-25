@@ -121,7 +121,7 @@ def context_inspector_line(best_episode, study_episode):
         html.Div(className="card-body col row", children=[
 
             html.Div(className="col-xl-5", children=[
-                html.H5("Best Agent's Environments Time Series"),
+                html.H5("Best Agent's Environment Time Series"),
                 dac.Radio(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
