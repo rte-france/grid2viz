@@ -1,24 +1,60 @@
-# grid2viz
+# Grid2Viz
 
-This tool provides visualization views to help analyse reinforcement learning of agents in the grid2op challenge.
+Grid2Viz is a web application that offers different interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
 
-## Installation (Temporary mode)
+*   [1 Installation](#installation)
+*   [2 Run the application](#run-the-application)
+*   [3 Getting Started](#getting-started)
+*   [4 Caching](#caching)
 
-### Virtualenv creation
+## Installation
+### Requirements:
+*   Python >= 3.6
 
-Use `pipenv` (recommanded) to build and manage your virtualenv for this project.
+### Instructions
 
-If `pipenv` is not installed yet:
-
-`$ pip install pipenv`
-
-Create the virtualenv from the requirements.txt:
-
+#### Step 1: Install Python3
+On Debian-like systems (Ubuntu):
+```commandline
+sudo apt-get install python3
 ```
-...$ cd Grid2Viz
-.../Grid2Viz$ pipenv install
+
+On Fedora-like systems:
+```commandline
+sudo dnf install python3
 ```
 
+If you have any trouble with this step, please refer to
+[the official webpage of Python](https://www.python.org/downloads/release/python-366/).
+
+#### Step 2: Clone Grid2Op
+```commandline
+git clone https://github.com/mjothy/Grid2Viz.git
+```
+
+This should create a folder Grid2Viz with the current sources.
+#### (Optional, recommended) Step 2bis: Create a virtual environment
+```commandline
+pip3 install -U virtualenv
+cd Grid2Viz
+python3 -m virtualenv venv_grid2viz
+```
+
+#### Step 3: Run the installation script of Grid2Viz
+Finally, run the following Python command to install the Grid2Viz necessary Python depencies:
+```commandline
+cd Grid2Viz/
+source venv_grid2viz/bin/activate
+pip install -U -r requirements.txt
+```
+
+## Run the application
+Tu run the Grid2Viz application, run the foolowing command:
+```commandline
+cd Grid2Viz/
+source venv_grid2viz/bin/activate
+python launch_grid2viz.py
+```
 
 ## Getting started
 
