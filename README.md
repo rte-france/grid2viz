@@ -1,6 +1,6 @@
 # Grid2Viz
 
-Grid2Viz is a web application that offers different interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
+Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
 
 *   [1 Installation](#installation)
 *   [2 Run the application](#run-the-application)
@@ -27,7 +27,7 @@ sudo dnf install python3
 If you have any trouble with this step, please refer to
 [the official webpage of Python](https://www.python.org/downloads/release/python-366/).
 
-#### Step 2: Clone Grid2Op
+#### Step 2: Clone Grid2Viz
 ```commandline
 git clone https://github.com/mjothy/Grid2Viz.git
 ```
