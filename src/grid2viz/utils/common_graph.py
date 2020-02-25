@@ -158,14 +158,14 @@ def action_tooltip(episode_actions):
     return tooltip
 
 
-def make_action_ts(study_agent, ref_agent, scenario, layout_def = None):
+def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     """
         Make the action timeseries trace of study and reference agents.
 
         :param study_agent: studied agent to compare
         :param ref_agent: reference agent to compare with
         :param scenario:
-        :param figure: figure on layout page
+        :param layout_def: layout page
         :return: nb action and distance for each agents
     """
     ref_episode = make_episode(ref_agent, scenario)

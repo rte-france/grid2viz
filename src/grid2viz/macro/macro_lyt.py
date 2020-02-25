@@ -16,7 +16,6 @@ layout_def = {
 
 
 def indicator_line(scenario, study_agent):
-
     episode = make_episode(study_agent, scenario)
 
     nb_actions = episode.action_data_table[['action_line', 'action_subs']].sum()
@@ -25,7 +24,7 @@ def indicator_line(scenario, study_agent):
         data=[go.Pie(
             labels=["Actions on Lines", "Actions on Substations"],
             values=[nb_actions["action_line"], nb_actions["action_subs"]]
-        )]  
+        )]
     )
 
     maintenance_figure = go.Figure(
@@ -63,7 +62,7 @@ def indicator_line(scenario, study_agent):
                     html.P(id="indicator_nb_action",
                            className="border-bottom h3 mb-0 text-right",
                            children=episode.action_data_table[['action_line', 'action_subs']].sum(
-        axis=1).sum()),
+                               axis=1).sum()),
                     html.P(className="text-muted ",
                            children="Number of Action")
                 ])
@@ -176,7 +175,7 @@ def inspector_line(study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
     cols, data = get_table(new_episode)
     figures_distribution = action_distrubtion(new_episode)
-    
+
     return html.Div(className="lineBlock card ", children=[
         html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
         html.Div(className="card-body col row", children=[
