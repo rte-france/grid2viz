@@ -81,11 +81,6 @@ In the config.ini of this repo:
 
 Changing this config.ini file will require a restart of the server to update.
 
-To launch the server :
-- Set the environment variable `export FLASK_APP=/path/to/src/index.py`
-- In the grid2viz folder, run `pipenv shell`'
-- Run `flask run`
-
 ##  Caching
 
 The cache system allows you to only compute long calculations of the app once per agent/scenario.
