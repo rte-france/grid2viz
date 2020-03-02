@@ -55,6 +55,8 @@ cd Grid2Viz/
 source venv_grid2viz/bin/activate
 python launch_grid2viz.py
 ```
+> **_WARNING_** Due to the caching operation the first run can take a while. All the agent present in the configuration files
+will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min.
 
 ## Getting started
 
@@ -79,6 +81,13 @@ In the config.ini of this repo:
     - coords.csv : The csv file that lists the coordinates of nodes in the network
 
 Changing this config.ini file will require a restart of the server to update.
+
+Grid2Viz provide 2 agents with a scenario for one day and for one month available in data/agent folder:
+
+- nodisc_powerlinegreedy
+- withdisc_deter
+
+By default the config.ini is targeting these agents as well as the environment configuration folders.
 
 ##  Caching
 

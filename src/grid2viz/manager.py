@@ -160,8 +160,8 @@ env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
 network_layout = []
 try:
     network_layout_file = 'coords.csv'
-    with open(env_conf_folder + network_layout_file) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+    with open(os.path.join(env_conf_folder, network_layout_file)) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';')
         line = 0  # skip the header part
         for coords in csv_reader:
             if line == 0:

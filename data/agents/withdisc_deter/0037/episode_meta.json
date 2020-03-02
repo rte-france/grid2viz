@@ -1,0 +1,9 @@
+{
+    "backend_type": "PandaPowerBackend",
+    "chronics_max_timestep": "7488",
+    "chronics_path": "/home/donnotben/Documents/L2RPN_2ndEdition/chronics_testset_adapted_with1month/0037",
+    "cumulative_reward": 463.82854657988855,
+    "env_type": "Environment",
+    "grid_path": "/home/donnotben/.local/lib/python3.6/site-packages/grid2op/data/test_PandaPower/L2RPN_2019_grid.json",
+    "nb_timestep_played": 31
+}
