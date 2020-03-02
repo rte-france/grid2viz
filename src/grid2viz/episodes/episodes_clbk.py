@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 from dash import callback_context
 from grid2kpi.episode import EpisodeTrace
 from src.app import app
-from ..manager import scenarios, best_agents, meta_json, make_episode, prod_types
+from ..manager import scenarios, best_agents, meta_json, make_episode
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -30,7 +30,7 @@ def load_scenario_cards(url):
     if cards_count < 15:
         for scenario in sorted(scenarios):
             best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)
-            prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode, prod_types)
+            prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode)
             consumption = best_agent_episode.profile_traces
 
             cards_list.append(
