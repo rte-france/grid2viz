@@ -30,7 +30,7 @@ indicators_line = html.Div(id="indicator_line", children=[
     html.Div(children=[
 
         html.Div([
-            html.H5("Best Agent's Consumption Profiles"),
+            html.H5("Best Agent's Consumption Profiles (MW)"),
             dcc.Graph(
                 id="indicator_line_charts",
                 style={'margin-top': '1em'},
@@ -84,8 +84,8 @@ def summary_line(episode, ref_agent):
             html.Div(children=[
                 html.H5("Best Agent's Environment Time Series"),
                 dac.Radio(options=[
-                    {'label': 'Load', "value": "Load"},
-                    {'label': 'Production', "value": "Production"},
+                    {'label': 'Load (MW)', "value": "Load"},
+                    {'label': 'Production (MW)', "value": "Production"},
                     {'label': 'Hazards', "value": "Hazards"},
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
@@ -112,7 +112,7 @@ def summary_line(episode, ref_agent):
             ], className="col-xl-5"),
 
             html.Div(children=[
-                html.H5("OverFlow and Usage rate"),
+
                 dcc.Dropdown(
                     id="input_agent_selector", placeholder="select a ref agent",
                     options=[{'label': agent, 'value': agent}
@@ -120,24 +120,28 @@ def summary_line(episode, ref_agent):
                     value=ref_agent
                 ),
                 html.Div(children=[
-                    dcc.Graph(
-                        id='usage_rate_graph',
-                        className="col-6",
-                        style={'margin-top': '1em'},
-                        figure=go.Figure(
-                            layout=layout_def
-                        ),
-                        config=dict(displayModeBar=False)
-                    ),
-                    dcc.Graph(
-                        id='overflow_graph',
-                        className="col-6",
-                        style={'margin-top': '1em'},
-                        figure=go.Figure(
-                            layout=layout_def
-                        ),
-                        config=dict(displayModeBar=False)
-                    ),
+                    html.Div(children=[
+                        html.H5("Usage rate", className='text-center'),
+                        dcc.Graph(
+                            id='usage_rate_graph',
+                            style={'margin-top': '1em'},
+                            figure=go.Figure(
+                                layout=layout_def
+                            ),
+                            config=dict(displayModeBar=False)
+                        )
+                    ], className='col-6'),
+                    html.Div(children=[
+                        html.H5("Overflow", className='text-center'),
+                        dcc.Graph(
+                            id='overflow_graph',
+                            style={'margin-top': '1em'},
+                            figure=go.Figure(
+                                layout=layout_def
+                            ),
+                            config=dict(displayModeBar=False)
+                        )
+                    ],  className='col-6')
                 ], className="row"),
             ], className="col-xl-7"),
         ], className="card-body row"),

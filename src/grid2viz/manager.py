@@ -162,7 +162,7 @@ network_layout = []
 try:
     prod_types_file = 'prods_charac.csv'
     network_layout_file = 'coords.csv'
-    with open(env_conf_folder + prod_types_file) as csv_file:
+    with open(os.path.join(env_conf_folder, prod_types_file)) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=";")
         line = 0
         for row in csv_reader:
@@ -171,8 +171,8 @@ try:
             else:
                 prod_types[row[1]] = row[2]
 
-    with open(env_conf_folder + network_layout_file) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+    with open(os.path.join(env_conf_folder, network_layout_file)) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';')
         line = 0  # skip the header part
         for coords in csv_reader:
             if line == 0:
