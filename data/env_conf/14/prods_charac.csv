@@ -1,0 +1,6 @@
+Pmax;name;type;bus;x;y;V
+140;gen_0_0;thermal;0;-280;-81;104
+150;gen_1_2;wind;1;-100;-270;106
+150;gen_2_3;nuclear;2;366;-270;99
+50;gen_5_4;solar;5;-64;54;108
+100;gen_7_5;solar;7;438;0;110
