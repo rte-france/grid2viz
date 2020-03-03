@@ -13,7 +13,7 @@ decorator==4.4.1
 Flask==1.1.1
 Flask-Compress==1.4.0
 future==0.18.2
-Grid2Kpi==0.1.1
+Grid2Kpi==0.1.2
 Grid2Op==0.5.5
 itsdangerous==1.1.0
 Jinja2==2.11.1

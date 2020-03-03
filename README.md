@@ -55,8 +55,8 @@ cd Grid2Viz/
 source venv_grid2viz/bin/activate
 python launch_grid2viz.py
 ```
-> **_WARNING_** Due to the caching operation the first run can take a while. All the agent present in the configuration files
-will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min.
+> **_WARNING_** Due to the caching operation the first run can take a while. All the agents present in the configuration files
+will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min. You can follow the progress in the console.
 
 ## Getting started
 
