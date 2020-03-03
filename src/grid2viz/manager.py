@@ -140,7 +140,12 @@ path = os.path.join(
 )
 parser = configparser.ConfigParser()
 parser.read(path)
+default_dir = os.environ.get("GRID2VIZ_ROOT")
+if default_dir is None:
+    default_dir = os.getcwd()
 base_dir = parser.get("DEFAULT", "base_dir")
+if base_dir == "":
+    base_dir = os.path.join(default_dir, "data", "agents")
 cache_dir = os.path.join(base_dir, "_cache")
 '''Parsing of agent folder tree'''
 agents = sorted([file for file in os.listdir(
@@ -157,6 +162,8 @@ scenarios = set(scenarios)
 
 '''Parsing of the environment configuration'''
 env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
+if env_conf_folder == "":
+    env_conf_folder = os.path.join(default_dir, "data", "env_conf")
 network_layout = []
 try:
     network_layout_file = 'coords.csv'

@@ -11,6 +11,8 @@ my_env = os.environ.copy()
 
 my_env["FLASK_APP"] = os.path.join(cur_dir, "src", "index.py")
 
+my_env["GRID2VIZ_ROOT"] = cur_dir
+
 my_cmd = "flask run".split(" ")
 
 proc = subprocess.Popen(
