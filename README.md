@@ -102,23 +102,23 @@ knows to compute everything again with the updated data. To do so, you just need
 
 ## Interface
 #### Scenario Selection
-This page display up to 15 scenarios with for each one a brief resume using the best agent's performances.
+This page display up to 15 scenarios with for each one a brief summary using the best agent's performances.
 
 ![scenario selection](src/assets/screenshots/scenario_selection.png "Scenario Selection") 
 
 
 #### Scenario Overview
-On this page are display the best agent's kpi to see his performances. It's also here that you can select an agent that will
-be used as reference agent in the other pages.
+On this page are displayed the best agent's kpi to see his performances. It's also here that you can select an agent that will
+be used as reference agent in the other pages to compare to the studied agents.
 
 ![scenario overview](src/assets/screenshots/scenario_overview.png "Scenario Overview")
 
 #### Agent Overview
 Here's displayed your reference agent's performances. You can select an agent to study to compare it with your reference via the
-dropdown on the page. The study agent selected will be used as study agent on the other page.
+dropdown on the page. The study agent selected will be used as study agent on the last page.
 
 In the *"instant and cumulated reward"* graph you can point timestep that will be use in the next page to study 
-action in a specific timestep area
+action in a specific timestep area.
 
 ![agent overview](src/assets/screenshots/agent_overview.png "Agent Overview")
 
