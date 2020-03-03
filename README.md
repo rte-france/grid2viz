@@ -128,3 +128,8 @@ The Agent Study page will display kpi of your reference agent compared to your s
 You will also see a summary of the previous page's kpi.
 
 ![agent study](src/assets/screenshots/agent_study.png "Agent Study")
+
+## Limitations
+The app is still missing a couple features, namely a graph for visualising the flow through time, and the last line of the last screen, which will show all informations regarding the actions and observations at the selected timestep.
+
+The Actions KPIs and the distances as well as the topological action cluster "object changed" is in alpha feature. We will need some new features from the core API to finish these features.
