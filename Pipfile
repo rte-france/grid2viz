@@ -17,10 +17,10 @@ matplotlib = "*"
 pylint = "*"
 seaborn = "*"
 tqdm = "*"
-grid2op = "*"
+grid2op = "==0.5.6"
 numba = "*"
 dash-antd-components = {index = "https://test.pypi.org/simple/",version = "==0.0.1rc1"}
-grid2kpi = {index = "https://test.pypi.org/simple/",version = "==0.1.0rc3"}
+grid2kpi = {index = "https://test.pypi.org/simple/",version = "==0.1.1"}
 
 [requires]
 python_version = "3.7"

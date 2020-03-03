@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from src.app import app
-from ..manager import make_episode, prod_types, make_network
+from ..manager import make_episode, make_network
 from ..utils.graph_utils import relayout_callback, get_axis_relayout
 from ..utils import common_graph
 
@@ -299,7 +299,7 @@ def load_flows_for_lines(lines, new_episode):
 )
 def update_ts_graph_avail_assets(kind, study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
-    return common_graph.ts_graph_avail_assets(kind, new_episode, prod_types)
+    return common_graph.ts_graph_avail_assets(kind, new_episode)
 
 
 @app.callback(
@@ -326,7 +326,7 @@ def load_context_data(equipments, relayout_data_store, window, figure, kind, sce
     if isinstance(equipments, str):
         equipments = [equipments]  # to make pd.series.isin() work
     episode = make_episode(agent_study, scenario)
-    figure['data'] = common_graph.environment_ts_data(kind, episode, equipments, prod_types)
+    figure['data'] = common_graph.environment_ts_data(kind, episode, equipments)
 
     if window is not None:
         figure["layout"].update(

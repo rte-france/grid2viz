@@ -10,7 +10,7 @@ from grid2kpi.episode.actions_model import get_actions_sum
 from ..manager import make_episode
 
 
-def ts_graph_avail_assets(ts_kind, episode, prod_types):
+def ts_graph_avail_assets(ts_kind, episode):
     """
         Get a list of available assets for a selected kind of timeserie of an episode.
 
@@ -31,6 +31,7 @@ def ts_graph_avail_assets(ts_kind, episode, prod_types):
         options, value = [{'label': line_name, 'value': line_name}
                           for line_name in [*episode.line_names, 'total']], episode.line_names[0]
     elif ts_kind == 'Production':
+        prod_types = episode.get_prod_types()
         options = [{'label': prod_name,
                     'value': prod_name}
                    for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
@@ -44,7 +45,7 @@ def ts_graph_avail_assets(ts_kind, episode, prod_types):
     return options, value
 
 
-def environment_ts_data(kind, episode, equipments, prod_types):
+def environment_ts_data(kind, episode, equipments):
     """
         Get the selected kind of timeserie trace for an equipment used in episode.
 
@@ -63,6 +64,7 @@ def environment_ts_data(kind, episode, equipments, prod_types):
     if kind == "Load":
         return EpisodeTrace.get_load_trace_per_equipment(episode, equipments)
     if kind == "Production":
+        prod_types = episode.get_prod_types()
         return EpisodeTrace.get_all_prod_trace(episode, prod_types, equipments)
     if kind == "Hazards":
         return EpisodeTrace.get_hazard_trace(episode, equipments)

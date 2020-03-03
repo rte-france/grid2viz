@@ -7,7 +7,7 @@ import pandas as pd
 from ..utils.graph_utils import relayout_callback, get_axis_relayout
 from ..utils import common_graph
 from grid2kpi.episode import observation_model, EpisodeTrace
-from ..manager import make_episode, prod_types, best_agents
+from ..manager import make_episode, best_agents
 
 
 @app.callback(
@@ -35,7 +35,7 @@ def update_ts_graph_avail_assets(kind, scenario):
         component in overview layout.
     """
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    return common_graph.ts_graph_avail_assets(kind, best_agent_ep, prod_types)
+    return common_graph.ts_graph_avail_assets(kind, best_agent_ep)
 
 
 @app.callback(
@@ -69,8 +69,7 @@ def load_environments_ts(equipments, relayout_data_store, figure, kind, scenario
     figure['data'] = common_graph.environment_ts_data(
         kind,
         make_episode(best_agents[scenario]['agent'], scenario),
-        equipments,
-        prod_types
+        equipments
     )
 
     return figure
@@ -257,7 +256,7 @@ def update_profile_conso_graph(scenario, figure):
 def update_production_share_graph(scenario, figure):
     """Display best agent's production share when page load"""
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
-    share_prod = EpisodeTrace.get_prod_share_trace(best_agent_ep, prod_types)
+    share_prod = EpisodeTrace.get_prod_share_trace(best_agent_ep)
     figure["data"] = share_prod
     return figure
 
