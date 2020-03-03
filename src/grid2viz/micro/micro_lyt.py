@@ -76,7 +76,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                         html.H6(className="text-center",
                                 children="Voltage and Flow"),
                         dac.Radio(options=[
-                            {'label': 'Voltage', 'value': 'voltage'},
+                            {'label': 'Voltage (V)', 'value': 'voltage'},
                             {'label': 'Flow', 'value': 'flow'}
                         ],
                             value="voltage",
@@ -84,8 +84,8 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                             buttonStyle="solid"
                         ),
                         dac.Radio(options=[
-                            {'label': 'Active Flow', "value": "active_flow"},
-                            {'label': 'Current Flow', 'value': 'current_flow'},
+                            {'label': 'Active Flow (MW)', "value": "active_flow"},
+                            {'label': 'Current Flow (A)', 'value': 'current_flow'},
                             {'label': 'Flow Usage Rate', 'value': 'flow_usage_rate'}
                         ],
                             value='active_flow',
@@ -148,29 +148,33 @@ def context_inspector_line(best_episode, study_episode):
             ]),
 
             html.Div(className="col-xl-7", children=[
-                html.H5("OverFlow and Usage rate"),
+
                 html.Div(className="row", children=[
-                    dcc.Graph(
-                        id='usage_rate_ts',
-                        className="col-6",
-                        style={'margin-top': '1em'},
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=study_episode.usage_rate_trace
+                    html.Div(className='col-6', children=[
+                        html.H5("Usage rate", className='text-center'),
+                        dcc.Graph(
+                            id='usage_rate_ts',
+                            style={'margin-top': '1em'},
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=study_episode.usage_rate_trace
+                            ),
+                            config=dict(displayModeBar=False)
+                        )
+                    ]),
+                    html.Div(className='col-6', children=[
+                        html.H5("Overflow", className='text-center'),
+                        dcc.Graph(
+                            id='overflow_ts',
+                            style={'margin-top': '1em'},
+                            figure=go.Figure(
+                                layout=layout_def,
+                                data=study_episode.total_overflow_trace
+                            ),
+                            config=dict(displayModeBar=False)
                         ),
-                        config=dict(displayModeBar=False)
-                    ),
-                    dcc.Graph(
-                        id='overflow_ts',
-                        className="col-6",
-                        style={'margin-top': '1em'},
-                        figure=go.Figure(
-                            layout=layout_def,
-                            data=study_episode.total_overflow_trace
-                        ),
-                        config=dict(displayModeBar=False)
-                    ),
-                ], ),
+                    ])
+                ]),
             ]),
 
         ])
