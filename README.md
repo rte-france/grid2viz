@@ -99,3 +99,32 @@ reads the folder tree again.
 
 **_WARNING_** : If you overwrite the agents while they were already cached, you will have to manually reset the cache so the app
 knows to compute everything again with the updated data. To do so, you just need to delete the `_cache` folder.
+
+## Interface
+#### Scenario Selection
+This page display up to 15 scenarios with for each one a brief resume using the best agent's performances.
+
+![scenario selection](src/assets/screenshots/scenario_selection.png "Scenario Selection") 
+
+
+#### Scenario Overview
+On this page are display the best agent's kpi to see his performances. It's also here that you can select an agent that will
+be used as reference agent in the other pages.
+
+![scenario overview](src/assets/screenshots/scenario_overview.png "Scenario Overview")
+
+#### Agent Overview
+Here's displayed your reference agent's performances. You can select an agent to study to compare it with your reference via the
+dropdown on the page. The study agent selected will be used as study agent on the other page.
+
+In the *"instant and cumulated reward"* graph you can point timestep that will be use in the next page to study 
+action in a specific timestep area
+
+![agent overview](src/assets/screenshots/agent_overview.png "Agent Overview")
+
+
+#### Agent Study
+The Agent Study page will display kpi of your reference agent compared to your study agent on your selected timestep area.
+You will also see a summary of the previous page's kpi.
+
+![agent study](src/assets/screenshots/agent_study.png "Agent Study")

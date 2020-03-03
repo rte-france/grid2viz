@@ -166,7 +166,6 @@ def context_inspector_line(best_episode, study_episode):
                         html.H5("Overflow", className='text-center'),
                         dcc.Graph(
                             id='overflow_ts',
-                            className="col-6",
                             style={'margin-top': '1em'},
                             figure=go.Figure(
                                 layout=layout_def,
