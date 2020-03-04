@@ -1,7 +1,7 @@
 from dash.dependencies import Input, Output, State
 from dash import callback_context
 from grid2kpi.episode import EpisodeTrace
-from src.app import app
+from grid2viz.app import app
 from ..manager import scenarios, best_agents, meta_json, make_episode
 import dash_html_components as html
 import dash_core_components as dcc

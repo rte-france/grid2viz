@@ -148,8 +148,8 @@ if base_dir == "":
     base_dir = os.path.join(default_dir, "data", "agents")
 cache_dir = os.path.join(base_dir, "_cache")
 '''Parsing of agent folder tree'''
-agents = sorted([file for file in os.listdir(
-    base_dir) if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
+agents = sorted([file for file in os.listdir(base_dir)
+                 if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
 scenarios = []
 for agent in agents:

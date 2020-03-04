@@ -6,11 +6,11 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 
-from src.app import app
+from grid2viz.app import app
 from ..manager import make_episode
 from grid2kpi.episode import EpisodeTrace
 from grid2kpi.episode import actions_model
-from src.grid2viz.utils.graph_utils import get_axis_relayout, relayout_callback
+from grid2viz.src.utils.graph_utils import get_axis_relayout, relayout_callback
 from grid2kpi.episode.maintenances import (hist_duration_maintenances)
 
 from ..utils.common_graph import make_action_ts, make_rewards_ts
