@@ -133,12 +133,13 @@ Initialisation routine
 """
 ''' Parsing of config file'''
 path = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)),
-    os.path.pardir,
-    os.path.pardir,
+    os.path.abspath(os.path.dirname(__name__)),
+    # os.path.pardir,
+    # os.path.pardir,
     "config.ini"
 )
 parser = configparser.ConfigParser()
+print("the config file used is located at: {}".format(path))
 parser.read(path)
 default_dir = os.environ.get("GRID2VIZ_ROOT")
 if default_dir is None:

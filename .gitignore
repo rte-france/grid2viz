@@ -114,3 +114,4 @@ venv.bak/
 #cache
 data/agents/_cache/
 **_cache
+**config.ini
