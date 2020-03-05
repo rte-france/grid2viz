@@ -12,13 +12,14 @@ from dash.exceptions import PreventUpdate
 WARNING :
 These imports are mandatory to build the dependance tree and actually add the callbacks to the dash decoration routine
 Do not remove !
+The "as ..." are also mandatory, other nothing is done.
 '''
-from .src.macro import macro_clbk
+from .src.macro import macro_clbk as macro_clbk
 from .src.macro import macro_lyt as macro
-from .src.micro import micro_clbk
+from .src.micro import micro_clbk as micro_clbk
 from .src.micro import micro_lyt as micro
 from .src.overview import overview_lyt as overview
-from .src.overview import overview_clbk
+from .src.overview import overview_clbk as overview_clbk
 
 '''
 End Warning

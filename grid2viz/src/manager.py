@@ -144,6 +144,7 @@ parser.read(path_cfg)
 default_dir = os.environ.get("GRID2VIZ_ROOT")
 if default_dir is None:
     default_dir = os.getcwd()
+
 base_dir = parser.get("DEFAULT", "base_dir")
 if base_dir == "":
     base_dir = os.path.join(default_dir, "data", "agents")
