@@ -8,7 +8,7 @@ import pkg_resources
 import argparse
 PARSER_MAIN = argparse.ArgumentParser(description='Launch the Grid2Viz application to study your agent.')
 PARSER_MAIN.add_argument('--path', default=None,
-                    help='The path where the log of the experience are stored (default None to study the example'
+                         help='The path where the log of the experience are stored (default None to study the example'
                          'data provided in the package)')
 
 # cur_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -34,12 +34,12 @@ env_conf_folder =
 
 
 def main(args):
-    if args.path is not None:
-        with open("config.ini", "w") as f:
+    with open("config.ini", "w") as f:
+        if args.path is not None:
             f.write(config_file.format(base_dir=os.path.abspath(args.path)))
-    else:
-        print("Using the default")
-
+        else:
+            print("INFO Using the default provided environment")
+            f.write(config_file.format(base_dir=""))
     proc = subprocess.Popen(my_cmd, env=my_env)
     while True:
         try:
