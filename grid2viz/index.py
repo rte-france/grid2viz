@@ -12,20 +12,21 @@ from dash.exceptions import PreventUpdate
 WARNING :
 These imports are mandatory to build the dependance tree and actually add the callbacks to the dash decoration routine
 Do not remove !
+The "as ..." are also mandatory, other nothing is done.
 '''
-import src.grid2viz.macro.macro_clbk as macro_clbk
-import src.grid2viz.macro.macro_lyt as macro
-import src.grid2viz.micro.micro_clbk as micro_clbk
-import src.grid2viz.micro.micro_lyt as micro
-import src.grid2viz.overview.overview_lyt as overview
-import src.grid2viz.overview.overview_clbk as overview_clbk
+from .src.macro import macro_clbk as macro_clbk
+from .src.macro import macro_lyt as macro
+from .src.micro import micro_clbk as micro_clbk
+from .src.micro import micro_lyt as micro
+from .src.overview import overview_lyt as overview
+from .src.overview import overview_clbk as overview_clbk
 
 '''
 End Warning
 '''
 
-from src.app import app
-from src.grid2viz.episodes import episodes_lyt
+from .app import app
+from .src.episodes import episodes_lyt
 
 nav_items = [
     dbc.NavItem(dbc.NavLink("Scenario Selection", href="/episodes")),

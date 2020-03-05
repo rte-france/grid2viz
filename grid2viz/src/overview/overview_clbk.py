@@ -1,7 +1,7 @@
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from src.app import app
+from grid2viz.app import app
 import pandas as pd
 
 from ..utils.graph_utils import relayout_callback, get_axis_relayout

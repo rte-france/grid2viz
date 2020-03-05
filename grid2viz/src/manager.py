@@ -132,24 +132,28 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
 Initialisation routine
 """
 ''' Parsing of config file'''
-path = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)),
-    os.path.pardir,
-    os.path.pardir,
+path_cfg = os.path.join(
+    os.path.abspath(os.path.dirname(__name__)),
+    # os.path.pardir,
+    # os.path.pardir,
     "config.ini"
 )
 parser = configparser.ConfigParser()
-parser.read(path)
+print("the config file used is located at: {}".format(path_cfg))
+parser.read(path_cfg)
 default_dir = os.environ.get("GRID2VIZ_ROOT")
 if default_dir is None:
     default_dir = os.getcwd()
+
 base_dir = parser.get("DEFAULT", "base_dir")
 if base_dir == "":
     base_dir = os.path.join(default_dir, "data", "agents")
+
+print("Agents ata used are located at: {}".format(base_dir))
 cache_dir = os.path.join(base_dir, "_cache")
 '''Parsing of agent folder tree'''
-agents = sorted([file for file in os.listdir(
-    base_dir) if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
+agents = sorted([file for file in os.listdir(base_dir)
+                 if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
 scenarios = []
 for agent in agents:
@@ -164,6 +168,7 @@ scenarios = set(scenarios)
 env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
 if env_conf_folder == "":
     env_conf_folder = os.path.join(default_dir, "data", "env_conf")
+print("Data used are located at: {}".format(base_dir))
 network_layout = []
 try:
     network_layout_file = 'coords.csv'
@@ -180,3 +185,5 @@ try:
             )
 except configparser.NoOptionError as ex:
     pass  # ignoring this error
+except FileNotFoundError as e:
+    pass  # ignoring that too

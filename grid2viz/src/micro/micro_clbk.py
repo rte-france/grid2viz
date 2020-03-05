@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from src.app import app
+from grid2viz.app import app
 from ..manager import make_episode, make_network
 from ..utils.graph_utils import relayout_callback, get_axis_relayout
 from ..utils import common_graph
