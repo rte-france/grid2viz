@@ -236,7 +236,6 @@ def make_rewards_ts(study_agent, ref_agent, scenario, layout):
     # Make sure the timeframe is the study agent one
     ref_reward_trace.x = studied_agent_reward_trace.x
     ref_reward_trace.y = ref_reward_trace.y[:len(studied_agent_reward_trace.y)]
-
     ref_reward_cum_trace.x = ref_reward_cum_trace.x
     ref_reward_cum_trace.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
 
