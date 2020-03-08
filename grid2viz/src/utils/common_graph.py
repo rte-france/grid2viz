@@ -175,19 +175,27 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     actions_ts = get_actions_sum(study_episode)
     ref_agent_actions_ts = get_actions_sum(ref_episode)
 
+    # used below to make sure the x-axis length is the study agent one
+    study_agent_length = len(study_episode.action_data_table)
+
     figure = {
         'data': [
             go.Scatter(x=study_episode.action_data_table.timestamp,
                        y=actions_ts["Nb Actions"], name=study_agent,
                        text=action_tooltip(study_episode.actions)),
-            go.Scatter(x=ref_episode.action_data_table.timestamp,
-                       y=ref_agent_actions_ts["Nb Actions"], name=ref_agent,
-                       text=action_tooltip(ref_episode.actions)),
+            go.Scatter(
+                x=ref_episode.action_data_table.timestamp[:study_agent_length],
+                y=ref_agent_actions_ts["Nb Actions"][:study_agent_length],
+                name=ref_agent,
+                text=action_tooltip(ref_episode.actions)),
 
             go.Scatter(x=study_episode.action_data_table.timestamp,
-                       y=study_episode.action_data_table["distance"], name=study_agent + " distance", yaxis='y2'),
-            go.Scatter(x=ref_episode.action_data_table.timestamp,
-                       y=ref_episode.action_data_table["distance"], name=ref_agent + " distance", yaxis='y2'),
+                       y=study_episode.action_data_table["distance"],
+                       name=study_agent + " distance", yaxis='y2'),
+            go.Scatter(
+                x=ref_episode.action_data_table.timestamp[:study_agent_length],
+                y=ref_episode.action_data_table["distance"][:study_agent_length],
+                name=ref_agent + " distance", yaxis='y2'),
         ],
         'layout': {**layout_def,
                    'yaxis': {'title': 'Actions'},
@@ -222,10 +230,19 @@ def make_rewards_ts(study_agent, ref_agent, scenario, layout):
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10}
     )
-    ref_episode_reward_trace = ref_episode.reward_trace
-    studied_agent_reward_trace = study_episode.reward_trace
+    ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
+    studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
+
+    # Make sure the timeframe is the study agent one
+    ref_reward_trace.x = studied_agent_reward_trace.x
+    ref_reward_trace.y = ref_reward_trace.y[:len(studied_agent_reward_trace.y)]
+
+    ref_reward_cum_trace.x = ref_reward_cum_trace.x
+    ref_reward_cum_trace.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
+
     return {
-        'data': [*ref_episode_reward_trace, *studied_agent_reward_trace,
+        'data': [ref_reward_trace, ref_reward_cum_trace,
+                 studied_agent_reward_trace, studied_agent_reward_cum_trace,
                  action_trace],
         'layout': {**layout,
                    'yaxis': {'title': 'Instant Reward'},
