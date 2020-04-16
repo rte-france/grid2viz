@@ -11,28 +11,21 @@ Grid2Viz is a web application that offers several interactive views into the res
 ### Requirements:
 *   Python >= 3.6
 
-#### Step 1: Clone Grid2Viz
-```commandline
-git clone https://github.com/mjothy/Grid2Viz.git
-```
-
-This should create a folder Grid2Viz with the current sources.
-#### (Optional, recommended) Step 12bis: Ceate a virtual environment
+#### (Optional, recommended) Step 1: Create a virtual environment
 ```commandline
 pip3 install -U virtualenv
-cd Grid2Viz
 python3 -m virtualenv venv_grid2viz
 ```
 
-#### Step 2: Run the installation script of Grid2Viz
-Finally, run the following Python command to install the Grid2Viz necessary Python depencies:
+#### Step 2: Install from source
 ```commandline
-cd Grid2Viz/
 source venv_grid2viz/bin/activate
+git clone https://github.com/mjothy/Grid2Viz.git
+cd Grid2Viz/
 pip install -U .
 ```
 
-## Run the application
+## Run grid2viz
 ```
 usage: grid2viz [-h] [--agents_path AGENTS_PATH] [--env_path ENV_PATH]
                 [--port PORT] [--debug]
@@ -43,21 +36,20 @@ optional arguments:
   -h, --help            show this help message and exit
   --agents_path AGENTS_PATH
                         The path where the log of the Agents experiences are
-                        stored(default None to study the example agents
-                        provided in the package)
-  --env_path ENV_PATH   The path where the environment config is
-                        stored(default None to use the provided default
-                        environment
-  --port PORT           The port to serve grid2viz on
-  --debug               Enable debug mode (for developers)
+                        stored. (default to None to study the example agents
+                        provided with the package)
+  --env_path ENV_PATH   The path where the environment config is stored.
+                        (default to None to use the provided default
+                        environment)
+  --port PORT           The port to serve grid2viz on. (default to 8050)
+  --debug               Enable debug mode for developers. (default to False)
 ```
 
 For example:
 
 ```commandline
-cd Grid2Viz/
 source venv_grid2viz/bin/activate
-grid2viz
+grid2viz --port 8000
 ```
 
 > **_WARNING_** Due to the caching operation the first run can take a while. All the agents present in the configuration files

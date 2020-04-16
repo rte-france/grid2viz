@@ -16,11 +16,13 @@ env_dir={env_dir}
 """
 
 ARG_AGENTS_PATH_DESC = 'The path where the log of the Agents experiences are stored.' \
-                       ' (default None to study the example agents provided with the package)'
+                       ' (default to None to study the example agents provided with the package)'
 ARG_ENV_PATH_DESC = 'The path where the environment config is stored.' \
-                    ' (default None to use the provided default environment'
-ARG_PORT_DESC = 'The port to serve grid2viz on'
-ARG_DEBUG_DESC = 'Enable debug mode (for developers)'
+                    ' (default to None to use the provided default environment)'
+ARG_PORT_DESC = 'The port to serve grid2viz on.'\
+                ' (default to 8050)'
+ARG_DEBUG_DESC = 'Enable debug mode for developers.' \
+                 ' (default to False)'
 
 def main():
     parser_main = argparse.ArgumentParser(description='Grid2Viz')
