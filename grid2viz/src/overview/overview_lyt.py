@@ -3,13 +3,12 @@ This file builds the layout for the scenario overview tab.
 This tab handles the generic information about the environment and the selection of a reference agent for future analysis.
 """
 
-import dash_antd_components as dac
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
 import plotly.graph_objects as go
 
-from ..manager import agents, make_episode, best_agents
+from grid2viz.src.manager import agents, make_episode, best_agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -83,7 +82,7 @@ def summary_line(episode, ref_agent):
         html.Div(children=[
             html.Div(children=[
                 html.H5("Best Agent's Environment Time Series"),
-                dac.Radio(options=[
+                dcc.RadioItems(options=[
                     {'label': 'Load (MW)', "value": "Load"},
                     {'label': 'Production (MW)', "value": "Production"},
                     {'label': 'Hazards', "value": "Hazards"},
@@ -91,16 +90,15 @@ def summary_line(episode, ref_agent):
                 ],
                     value="Load",
                     id="scen_overview_ts_switch",
-                    buttonStyle="solid"
+                    style="solid"
                 ),
-                dac.Select(
+                dcc.Dropdown(
                     id='input_assets_selector',
                     options=[{'label': load_name,
                               'value': load_name}
                              for load_name in episode.load_names],
                     value=episode.load_names[0],
-                    mode='multiple',
-                    showArrow=True
+                    multi=True
                 ),
                 dcc.Graph(
                     id='input_env_charts',

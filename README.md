@@ -11,50 +11,55 @@ Grid2Viz is a web application that offers several interactive views into the res
 ### Requirements:
 *   Python >= 3.6
 
-### Instructions
-
-#### Step 1: Install Python3
-On Debian-like systems (Ubuntu):
-```commandline
-sudo apt-get install python3
-```
-
-On Fedora-like systems:
-```commandline
-sudo dnf install python3
-```
-
-If you have any trouble with this step, please refer to
-[the official webpage of Python](https://www.python.org/downloads/release/python-366/).
-
-#### Step 2: Clone Grid2Viz
+#### Step 1: Clone Grid2Viz
 ```commandline
 git clone https://github.com/mjothy/Grid2Viz.git
 ```
 
 This should create a folder Grid2Viz with the current sources.
-#### (Optional, recommended) Step 2bis: Create a virtual environment
+#### (Optional, recommended) Step 12bis: Ceate a virtual environment
 ```commandline
 pip3 install -U virtualenv
 cd Grid2Viz
 python3 -m virtualenv venv_grid2viz
 ```
 
-#### Step 3: Run the installation script of Grid2Viz
+#### Step 2: Run the installation script of Grid2Viz
 Finally, run the following Python command to install the Grid2Viz necessary Python depencies:
 ```commandline
 cd Grid2Viz/
 source venv_grid2viz/bin/activate
-pip install -U -r requirements.txt
+pip install -U .
 ```
 
 ## Run the application
-Tu run the Grid2Viz application, run the foolowing command:
+```
+usage: grid2viz [-h] [--agents_path AGENTS_PATH] [--env_path ENV_PATH]
+                [--port PORT] [--debug]
+
+Grid2Viz
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --agents_path AGENTS_PATH
+                        The path where the log of the Agents experiences are
+                        stored(default None to study the example agents
+                        provided in the package)
+  --env_path ENV_PATH   The path where the environment config is
+                        stored(default None to use the provided default
+                        environment
+  --port PORT           The port to serve grid2viz on
+  --debug               Enable debug mode (for developers)
+```
+
+For example:
+
 ```commandline
 cd Grid2Viz/
 source venv_grid2viz/bin/activate
-python launch_grid2viz.py
+grid2viz
 ```
+
 > **_WARNING_** Due to the caching operation the first run can take a while. All the agents present in the configuration files
 will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min. You can follow the progress in the console.
 

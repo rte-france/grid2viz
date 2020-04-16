@@ -4,10 +4,10 @@ from dash.exceptions import PreventUpdate
 from grid2viz.app import app
 import pandas as pd
 
-from ..utils.graph_utils import relayout_callback, get_axis_relayout
-from ..utils import common_graph
-from grid2kpi.episode import observation_model, EpisodeTrace
-from ..manager import make_episode, best_agents
+from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
+from grid2viz.src.utils import common_graph
+from grid2viz.src.kpi import observation_model, EpisodeTrace
+from grid2viz.src.manager import make_episode, best_agents
 
 
 @app.callback(

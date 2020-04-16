@@ -1,13 +1,12 @@
 import dash_html_components as html
 import dash_core_components as dcc
-import dash_antd_components as dac
 import plotly.graph_objects as go
 import dash_table as dt
 import datetime
 from collections import namedtuple
 
-from ..manager import make_episode, make_network, best_agents
-from ..utils import common_graph
+from grid2viz.src.manager import make_episode, make_network, best_agents
+from grid2viz.src.utils import common_graph
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -75,15 +74,15 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                     html.Div(className="col", children=[
                         html.H6(className="text-center",
                                 children="Voltage and Flow"),
-                        dac.Radio(options=[
+                        dcc.RadioItems(options=[
                             {'label': 'Voltage (V)', 'value': 'voltage'},
                             {'label': 'Flow', 'value': 'flow'}
                         ],
                             value="voltage",
                             id="voltage_flow_choice",
-                            buttonStyle="solid"
+                            style="solid"
                         ),
-                        dac.Radio(options=[
+                        dcc.RadioItems(options=[
                             {'label': 'Active Flow (MW)', "value": "active_flow"},
                             {'label': 'Current Flow (A)', 'value': 'current_flow'},
                             {'label': 'Flow Usage Rate', 'value': 'flow_usage_rate'}
@@ -92,12 +91,11 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                             id='flow_radio',
                             style={'display': 'none'}
                         ),
-                        dac.Select(
+                        dcc.Dropdown(
                             id="line_side_choices",
                             options=[],
                             value=[],
-                            mode='multiple',
-                            showArrow=True
+                            multi=True
                         ),
                         dcc.Graph(
                             id="voltage_flow_graph",
@@ -120,7 +118,7 @@ def context_inspector_line(best_episode, study_episode):
 
             html.Div(className="col-xl-5", children=[
                 html.H5("Best Agent's Environment Time Series"),
-                dac.Radio(options=[
+                dcc.RadioItems(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
                     {'label': 'Hazards', "value": "Hazards"},
@@ -128,16 +126,15 @@ def context_inspector_line(best_episode, study_episode):
                 ],
                     value="Load",
                     id="environment_choices_buttons",
-                    buttonStyle="solid"
+                    style="solid"
                 ),
-                dac.Select(
+                dcc.Dropdown(
                     id='asset_selector',
                     options=[{'label': load_name,
                               'value': load_name}
                              for load_name in best_episode.load_names],
                     value=best_episode.load_names[0],
-                    mode='multiple',
-                    showArrow=True
+                    multi=True
                 ),
                 dcc.Graph(
                     id='env_charts_ts',

@@ -1,11 +1,12 @@
 from dash.dependencies import Input, Output, State
 from dash import callback_context
-from grid2kpi.episode import EpisodeTrace
+from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.app import app
-from ..manager import scenarios, best_agents, meta_json, make_episode
+from grid2viz.src.manager import scenarios, best_agents, meta_json, make_episode
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 
 
@@ -113,9 +114,19 @@ def open_scenario(*input_state):
 
         .. note:: you may need to see https://dash.plot.ly/faqs to get how I determine which Input has changed
     """
+
     ctx = callback_context
+
+    # No clicks
+    if not ctx.triggered: 
+        raise PreventUpdate
+    # No clicks again
+    # https://github.com/plotly/dash/issues/684
+    if ctx.triggered[0]['value'] is None:
+        raise PreventUpdate
+    
     input_id = ctx.triggered[0]['prop_id'].split('.')[0]
     input_key = ctx.states[input_id + '.key']
     scenario = input_key
-
+    print ("Click on", input_key)
     return scenario, '/overview'

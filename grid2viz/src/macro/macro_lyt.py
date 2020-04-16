@@ -5,9 +5,9 @@ import dash_table as dt
 
 from collections import namedtuple
 
-from grid2kpi.episode import actions_model
-from grid2kpi.episode.maintenances import hist_duration_maintenances
-from ..manager import make_episode, agents
+from grid2viz.src.kpi import actions_model
+from grid2viz.src.kpi.maintenances import hist_duration_maintenances
+from grid2viz.src.manager import make_episode, agents
 
 layout_def = {
     'legend': {'orientation': 'h'},

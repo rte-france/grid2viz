@@ -5,9 +5,9 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from grid2viz.app import app
-from ..manager import make_episode, make_network
-from ..utils.graph_utils import relayout_callback, get_axis_relayout
-from ..utils import common_graph
+from grid2viz.src.manager import make_episode, make_network
+from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
+from grid2viz.src.utils import common_graph
 
 
 @app.callback(

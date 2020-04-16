@@ -1,14 +1,14 @@
 import json
 import time
 
-from grid2kpi.episode.EpisodeAnalytics import EpisodeAnalytics
+from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 from grid2op.EpisodeData import EpisodeData
 import os
 import configparser
 import csv
 import pickle
 
-from grid2op.PlotPlotly import PlotObs
+from grid2op.Plot import PlotPlotly
 
 graph = None
 
@@ -22,7 +22,7 @@ def make_network(episode):
     """
     global graph
     if graph is None:
-        graph = PlotObs(
+        graph = PlotPlotly(
             substation_layout=network_layout, observation_space=episode.observation_space)
     return graph
 
@@ -84,7 +84,7 @@ def get_from_fs_cache(episode_name, agent):
 
 
 def compute_episode(episode_name, agent):
-    path = os.path.join(base_dir, agent)
+    path = os.path.join(agents_dir, agent)
     return EpisodeAnalytics(EpisodeData.from_disk(
         path, episode_name
     ), episode_name, agent)
@@ -132,32 +132,21 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
 Initialisation routine
 """
 ''' Parsing of config file'''
-path_cfg = os.path.join(
-    os.path.abspath(os.path.dirname(__name__)),
-    # os.path.pardir,
-    # os.path.pardir,
-    "config.ini"
-)
+path_cfg = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
 parser = configparser.ConfigParser()
 print("the config file used is located at: {}".format(path_cfg))
 parser.read(path_cfg)
-default_dir = os.environ.get("GRID2VIZ_ROOT")
-if default_dir is None:
-    default_dir = os.getcwd()
 
-base_dir = parser.get("DEFAULT", "base_dir")
-if base_dir == "":
-    base_dir = os.path.join(default_dir, "data", "agents")
-
-print("Agents ata used are located at: {}".format(base_dir))
-cache_dir = os.path.join(base_dir, "_cache")
+agents_dir = parser.get("DEFAULT", "agents_dir")
+print("Agents data used is located at: {}".format(agents_dir))
+cache_dir = os.path.join(agents_dir, "_cache")
 '''Parsing of agent folder tree'''
-agents = sorted([file for file in os.listdir(base_dir)
-                 if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
-meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
+agents = sorted([file for file in os.listdir(agents_dir)
+                 if os.path.isdir(os.path.join(agents_dir, file)) and not file.startswith("_")])
+meta_json, best_agents = check_all_tree_and_get_meta_and_best(agents_dir, agents)
 scenarios = []
 for agent in agents:
-    scen_path = os.path.join(base_dir, agent)
+    scen_path = os.path.join(agents_dir, agent)
     scens = [file for file in os.listdir(
         scen_path) if os.path.isdir(os.path.join(scen_path, file))]
     scenarios = scenarios + scens
@@ -165,10 +154,8 @@ for agent in agents:
 scenarios = set(scenarios)
 
 '''Parsing of the environment configuration'''
-env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')
-if env_conf_folder == "":
-    env_conf_folder = os.path.join(default_dir, "data", "env_conf")
-print("Data used are located at: {}".format(base_dir))
+env_conf_folder = parser.get('DEFAULT', 'env_dir')
+print("Environment used is located at: {}".format(env_conf_folder))
 network_layout = []
 try:
     network_layout_file = 'coords.csv'
