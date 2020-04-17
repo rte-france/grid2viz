@@ -89,8 +89,7 @@ def summary_line(episode, ref_agent):
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
                     value="Load",
-                    id="scen_overview_ts_switch",
-                    style="solid"
+                    id="scen_overview_ts_switch"
                 ),
                 dcc.Dropdown(
                     id='input_assets_selector',

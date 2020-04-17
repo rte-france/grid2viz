@@ -79,8 +79,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                             {'label': 'Flow', 'value': 'flow'}
                         ],
                             value="voltage",
-                            id="voltage_flow_choice",
-                            style="solid"
+                            id="voltage_flow_choice"
                         ),
                         dcc.RadioItems(options=[
                             {'label': 'Active Flow (MW)', "value": "active_flow"},
@@ -125,8 +124,7 @@ def context_inspector_line(best_episode, study_episode):
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
                     value="Load",
-                    id="environment_choices_buttons",
-                    style="solid"
+                    id="environment_choices_buttons"
                 ),
                 dcc.Dropdown(
                     id='asset_selector',

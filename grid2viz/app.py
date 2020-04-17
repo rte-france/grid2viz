@@ -19,13 +19,13 @@ These imports are mandatory to build the dependance tree and actually add the ca
 Do not remove !
 The "as ..." are also mandatory, other nothing is done.
 '''
-from grid2viz.src.macro import macro_clbk as macro_clbk
-from grid2viz.src.macro import macro_lyt as macro
-from grid2viz.src.micro import micro_clbk as micro_clbk
-from grid2viz.src.micro import micro_lyt as micro
+from grid2viz.src.episodes import episodes_lyt
 from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.overview import overview_clbk as overview_clbk
-from grid2viz.src.episodes import episodes_lyt
+from grid2viz.src.macro import macro_lyt as macro
+from grid2viz.src.macro import macro_clbk as macro_clbk
+from grid2viz.src.micro import micro_lyt as micro
+from grid2viz.src.micro import micro_clbk as micro_clbk
 '''
 End Warning
 '''
