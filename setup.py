@@ -6,6 +6,7 @@ pkgs = {
         "cycler>=0.10.0",
         "dash>=1.11.0",
         "dash-bootstrap-components>=0.9.2",
+        "dash-antd-components",
         "decorator>=4.4.1",
         "Flask-Compress>=1.4.0",
         "future>=0.18.2",
