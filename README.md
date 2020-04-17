@@ -3,7 +3,7 @@
 Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
 
 *   [1 Installation](#installation)
-*   [2 Run the application](#run-the-application)
+*   [2 Run the application](#run-grid2viz)
 *   [3 Getting Started](#getting-started)
 *   [4 Caching](#caching)
 
@@ -25,7 +25,7 @@ cd Grid2Viz/
 pip install -U .
 ```
 
-## Run grid2viz
+## Run Grid2Viz
 ```
 usage: grid2viz [-h] [--agents_path AGENTS_PATH] [--env_path ENV_PATH]
                 [--port PORT] [--debug]
