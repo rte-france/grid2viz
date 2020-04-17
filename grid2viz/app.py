@@ -20,6 +20,7 @@ Do not remove !
 The "as ..." are also mandatory, other nothing is done.
 '''
 from grid2viz.src.episodes import episodes_lyt
+from grid2viz.src.episodes import episodes_clbk as episodes_clbk
 from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.overview import overview_clbk as overview_clbk
 from grid2viz.src.macro import macro_lyt as macro
@@ -124,7 +125,8 @@ app.layout = html.Div([
      State("page", "data"),
      State("user_timestamps_store", "data")]
 )
-def display_page(pathname, scenario, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
+def register_page_lyt(pathname,
+                      scenario, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
     if timestamps_store is None:
         timestamps_store = []
     timestamps = [dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store]
@@ -148,7 +150,6 @@ def display_page(pathname, scenario, ref_agent, study_agent, user_selected_times
         return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro"
     else:
         return 404, ""
-
 
 @app.callback(Output('scen_lbl', 'children'),
               [Input('scenario', 'data')])
