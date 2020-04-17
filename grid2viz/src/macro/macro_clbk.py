@@ -79,7 +79,7 @@ def maintenance_duration_hist(study_agent, figure, scenario):
      State("agent_study", "data")]
 )
 def add_timestamp(click_data, new_agent, data, agent_stored):
-    if new_agent != agent_stored:
+    if new_agent != agent_stored or click_data is None:
         return []
     if data is None:
         data = []
