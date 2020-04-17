@@ -73,8 +73,8 @@ For the update process of this folder chain, see the section `Caching` (in parti
 agents in root_dir with new versions with the same names)
 
 In the config.ini of this repo:
- - change the `base_dir` option to your root_dir of data.
- - change the `env_conf_folder` option to the directory that contains the following file :
+ - `agents_dir` is the path to your agents logs data directory.
+ - `env_dir` is the path to the environment configuration directory. It contains a single file :
     - coords.csv : The csv file that lists the coordinates of nodes in the network
 
 Changing this config.ini file will require a restart of the server to update.
