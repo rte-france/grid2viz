@@ -78,5 +78,6 @@ def init_table_inspection_data(episode):
     table = ts_hazards.merge(
         ts_maintenances, left_index=True, right_index=True)
     table = table.reset_index()
-    table["IsWorkingDay"] = False
+    if not table.empty:
+        table["IsWorkingDay"] = table["timestamp"].dt.weekday < 5
     return table

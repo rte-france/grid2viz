@@ -28,7 +28,8 @@ def load_scenario_cards(url):
         'yaxis': {'showticklabels': False},
         'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
     }
-    if cards_count < 15:
+    is_episode_page = (url == "/" or url == "" or url == "/episodes")
+    if cards_count < 15 and is_episode_page:
         for scenario in sorted(scenarios):
             best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)
             prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode)
@@ -128,5 +129,5 @@ def open_scenario(*input_state):
     input_id = ctx.triggered[0]['prop_id'].split('.')[0]
     input_key = ctx.states[input_id + '.key']
     scenario = input_key
-    print ("Click on", input_key)
+
     return scenario, '/overview'

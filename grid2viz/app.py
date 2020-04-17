@@ -108,6 +108,7 @@ app.layout = html.Div([
     dcc.Store(id="agent_study", storage_type='memory'),
     dcc.Store(id="user_timestamps_store"),
     dcc.Store(id="page"),
+    dcc.Store(id="relayoutStoreMicro"),
     navbar,
     body
 ])
@@ -123,7 +124,6 @@ app.layout = html.Div([
      State("page", "data"),
      State("user_timestamps_store", "data")]
 )
-
 def display_page(pathname, scenario, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
     if timestamps_store is None:
         timestamps_store = []
@@ -133,22 +133,18 @@ def display_page(pathname, scenario, ref_agent, study_agent, user_selected_times
         raise PreventUpdate
     
     if pathname == "/episodes" or pathname == "/" or not pathname:
-        print ("Root")
         return episodes_lyt, "episodes"
     elif pathname == "/overview":
-        print("Overview")
         # if ref_agent is None:
         #     raise PreventUpdate
         return overview.layout(scenario, ref_agent), "overview"
     elif pathname == "/macro":
         if ref_agent is None:
             raise PreventUpdate
-        print ("macro")
         return macro.layout(timestamps, scenario, study_agent), "macro"
     elif pathname == "/micro":
         if ref_agent is None or study_agent is None:
             raise PreventUpdate
-        print ("micro")
         return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro"
     else:
         return 404, ""

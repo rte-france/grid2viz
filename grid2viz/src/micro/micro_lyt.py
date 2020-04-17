@@ -242,7 +242,6 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
 
     return html.Div(id="micro_page", children=[
-        dcc.Store(id="relayoutStoreMicro"),
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(),
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
