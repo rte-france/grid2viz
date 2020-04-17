@@ -1,0 +1,12 @@
+{
+    "BaseAgent": {
+        "total": 0.06691122055053711
+    },
+    "Env": {
+        "apply_act": 6.822700500488281,
+        "observation_computation": 2.865784168243408,
+        "powerflow_computation": 28.274719715118408,
+        "total": 37.9632043838501
+    },
+    "total": 38.887648820877075
+}
