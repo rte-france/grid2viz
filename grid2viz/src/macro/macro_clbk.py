@@ -238,7 +238,6 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, 
 def update_more_info(study_agent, active_cell, scenario):
     if active_cell is None:
         raise PreventUpdate
-    row = active_cell["row"]
     new_episode = make_episode(study_agent, scenario)
-    act = new_episode.actions[row]
+    act = new_episode.actions[active_cell["row_id"]]
     return str(act)
