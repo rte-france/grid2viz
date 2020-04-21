@@ -156,13 +156,23 @@ agents = sorted([file for file in os.listdir(base_dir)
                  if os.path.isdir(os.path.join(base_dir, file)) and not file.startswith("_")])
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(base_dir, agents)
 scenarios = []
+scenarios_agent = {}
+agent_scenario = {}
+
 for agent in agents:
     scen_path = os.path.join(base_dir, agent)
     scens = [file for file in os.listdir(
         scen_path) if os.path.isdir(os.path.join(scen_path, file))]
+    scenarios_agent[agent] = scens
+    for scen in scens:
+        if scen not in agent_scenario:
+            agent_scenario[scen] = []
+        if agent not in agent_scenario[scen]:
+            agent_scenario[scen].append(agent)
     scenarios = scenarios + scens
 
 scenarios = set(scenarios)
+
 
 '''Parsing of the environment configuration'''
 env_conf_folder = parser.get('DEFAULT', 'env_conf_folder')

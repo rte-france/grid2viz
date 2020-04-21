@@ -9,7 +9,7 @@ import dash_html_components as html
 import dash_table as dt
 import plotly.graph_objects as go
 
-from ..manager import agents, make_episode, best_agents
+from ..manager import agent_scenario, make_episode, best_agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -77,7 +77,7 @@ indicators_line = html.Div(id="indicator_line", children=[
 ], className="lineBlock card")
 
 
-def summary_line(episode, ref_agent):
+def summary_line(episode, ref_agent, scenario):
     return html.Div(children=[
         html.H4("Summary"),
         html.Div(children=[
@@ -112,11 +112,10 @@ def summary_line(episode, ref_agent):
             ], className="col-xl-5"),
 
             html.Div(children=[
-
                 dcc.Dropdown(
                     id="input_agent_selector", placeholder="select a ref agent",
                     options=[{'label': agent, 'value': agent}
-                             for agent in agents],
+                             for agent in agent_scenario[scenario]],
                     value=ref_agent
                 ),
                 html.Div(children=[
@@ -197,10 +196,10 @@ def layout(scenario, ref_agent):
         print(ex)
         return
     if ref_agent is None:
-        ref_agent = agents[0]
+        ref_agent = agent_scenario[scenario][0]
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line,
-        summary_line(episode, ref_agent),
+        summary_line(episode, ref_agent, scenario),
         ref_agent_line
     ])
