@@ -233,7 +233,9 @@ def inspector_line(study_agent, scenario):
 
 def get_table(episode):
     table = actions_model.get_action_table_data(episode)
-    return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
+    table['id'] = table['timestep']
+    table.set_index('id', inplace=True, drop=False)
+    return [{"name": i, "id": i} for i in table.columns if i != "id"], table.to_dict("record")
 
 
 ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])
