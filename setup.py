@@ -1,3 +1,4 @@
+import setuptools
 from setuptools import setup
 
 pkgs = {
@@ -59,7 +60,7 @@ setup(name='Grid2Viz',
       author_email=' mario.jothy@artelys.com',
       url="https://github.com/mjothy/grid2viz",
       license='TODO',
-      packages=['grid2viz'],
+      packages=setuptools.find_packages(),
       include_package_data=True,
       install_requires=pkgs["required"],
       extras_require=pkgs["extras"],
