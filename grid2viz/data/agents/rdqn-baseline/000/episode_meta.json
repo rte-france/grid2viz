@@ -1,9 +1,0 @@
-{
-    "backend_type": "PandaPowerBackend",
-    "chronics_max_timestep": "8064",
-    "chronics_path": "/home/tezirg/data_grid2op/rte_case14_realistic/chronics/000",
-    "cumulative_reward": 888427.6121223646,
-    "env_type": "Environment",
-    "grid_path": "/home/tezirg/data_grid2op/rte_case14_realistic/grid.json",
-    "nb_timestep_played": 799
-}
