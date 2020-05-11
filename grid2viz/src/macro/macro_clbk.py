@@ -7,13 +7,13 @@ from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 
 from grid2viz.app import app
-from ..manager import make_episode
-from grid2kpi.episode import EpisodeTrace
-from grid2kpi.episode import actions_model
+from grid2viz.src.manager import make_episode
+from grid2viz.src.kpi import EpisodeTrace
+from grid2viz.src.kpi import actions_model
 from grid2viz.src.utils.graph_utils import get_axis_relayout, relayout_callback
-from grid2kpi.episode.maintenances import (hist_duration_maintenances)
+from grid2viz.src.kpi.maintenances import (hist_duration_maintenances)
 
-from ..utils.common_graph import make_action_ts, make_rewards_ts
+from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
 
 
 @app.callback(
@@ -79,7 +79,7 @@ def maintenance_duration_hist(study_agent, figure, scenario):
      State("agent_study", "data")]
 )
 def add_timestamp(click_data, new_agent, data, agent_stored):
-    if new_agent != agent_stored:
+    if new_agent != agent_stored or click_data is None:
         return []
     if data is None:
         data = []
@@ -175,9 +175,11 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
             return figure_overflow, figure_usage
     new_episode = make_episode(study_agent, scenario)
     figure_overflow["data"] = new_episode.total_overflow_trace
-    maintenance_trace = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])[0]
-    maintenance_trace.update({"name": "Nb of maintenances"})
-    figure_overflow["data"].append(maintenance_trace)
+    maintenance_traces = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])
+    if len(maintenance_traces) != 0:
+        maintenance_trace[0].update({"name": "Nb of maintenances"})
+        figure_overflow["data"].append(maintenance_trace[0])
+
     figure_usage["data"] = new_episode.usage_rate_trace
     return figure_overflow, figure_usage
 

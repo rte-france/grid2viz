@@ -93,6 +93,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venv_grid2viz/
 
 # Spyder project settings
 .spyderproject

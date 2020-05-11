@@ -4,10 +4,10 @@
 import pandas as pd
 import numpy as np
 from plotly import graph_objects as go
-from grid2kpi.episode import EpisodeTrace, observation_model
-from grid2kpi.episode.actions_model import get_actions_sum
+from grid2viz.src.kpi import EpisodeTrace, observation_model
+from grid2viz.src.kpi.actions_model import get_actions_sum
 
-from ..manager import make_episode
+from grid2viz.src.manager import make_episode
 
 
 def ts_graph_avail_assets(ts_kind, episode):

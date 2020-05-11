@@ -3,13 +3,13 @@ This file builds the layout for the scenario overview tab.
 This tab handles the generic information about the environment and the selection of a reference agent for future analysis.
 """
 
-import dash_antd_components as dac
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_antd_components as dac
 import dash_table as dt
 import plotly.graph_objects as go
 
-from ..manager import agent_scenario, make_episode, best_agents
+from grid2viz.src.manager import agent_scenario, make_episode, best_agents
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -87,8 +87,7 @@ def summary_line(episode, ref_agent, scenario):
                     {'label': 'Load (MW)', "value": "Load"},
                     {'label': 'Production (MW)', "value": "Production"},
                     {'label': 'Hazards', "value": "Hazards"},
-                    {'label': 'Maintenances', "value": "Maintenances"},
-                ],
+                    {'label': 'Maintenances', "value": "Maintenances"}],
                     value="Load",
                     id="scen_overview_ts_switch",
                     buttonStyle="solid"

@@ -6,8 +6,8 @@ import dash_table as dt
 import datetime
 from collections import namedtuple
 
-from ..manager import make_episode, make_network, best_agents
-from ..utils import common_graph
+from grid2viz.src.manager import make_episode, make_network, best_agents
+from grid2viz.src.utils import common_graph
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -84,9 +84,12 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                             buttonStyle="solid"
                         ),
                         dac.Radio(options=[
-                            {'label': 'Active Flow (MW)', "value": "active_flow"},
-                            {'label': 'Current Flow (A)', 'value': 'current_flow'},
-                            {'label': 'Flow Usage Rate', 'value': 'flow_usage_rate'}
+                            {'label': 'Active Flow (MW)',
+                             "value": "active_flow"},
+                            {'label': 'Current Flow (A)',
+                             'value': 'current_flow'},
+                            {'label': 'Flow Usage Rate',
+                             'value': 'flow_usage_rate'}
                         ],
                             value='active_flow',
                             id='flow_radio',
@@ -120,15 +123,14 @@ def context_inspector_line(best_episode, study_episode):
 
             html.Div(className="col-xl-5", children=[
                 html.H5("Best Agent's Environment Time Series"),
-                dac.Radio(options=[
+                dcc.RadioItems(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
                     {'label': 'Hazards', "value": "Hazards"},
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
                     value="Load",
-                    id="environment_choices_buttons",
-                    buttonStyle="solid"
+                    id="environment_choices_buttons"
                 ),
                 dac.Select(
                     id='asset_selector',
@@ -245,7 +247,6 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
 
     return html.Div(id="micro_page", children=[
-        dcc.Store(id="relayoutStoreMicro"),
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(),
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
