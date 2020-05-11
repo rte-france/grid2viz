@@ -2,7 +2,7 @@ import json
 import time
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
-from grid2op.EpisodeData import EpisodeData
+from grid2op.Episode import EpisodeData
 import os
 import configparser
 import csv

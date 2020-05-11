@@ -2,7 +2,7 @@ import datetime as dt
 import time
 
 from .env_actions import env_actions
-from grid2op.EpisodeData import EpisodeData
+from grid2op.Episode import EpisodeData
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
