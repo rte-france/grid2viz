@@ -213,7 +213,9 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, sc
 def update_agent_log_action_table(study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
     table = actions_model.get_action_table_data(new_episode)
-    return [{"name": i, "id": i} for i in table.columns], table.to_dict("record")
+    table['id'] = table['timestep']
+    table.set_index('id', inplace=True, drop=False)
+    return [{"name": i, "id": i} for i in table.columns if i != 'id'], table.to_dict("record")
 
 
 @app.callback(
@@ -233,13 +235,15 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, 
 
 @app.callback(
     Output("tooltip_table", "children"),
-    [Input('agent_study', 'data'),
-     Input("inspector_datable", "active_cell"),
-     Input("scenario", "data")]
+    [Input("inspector_datable", "active_cell")],
+    [State('agent_study', 'data'),
+     State("scenario", "data"),
+     State("inspector_datable", "data")]
 )
-def update_more_info(study_agent, active_cell, scenario):
+def update_more_info(active_cell, study_agent, scenario, data):
     if active_cell is None:
         raise PreventUpdate
     new_episode = make_episode(study_agent, scenario)
-    act = new_episode.actions[active_cell["row_id"]]
+    row_id = active_cell["row_id"]
+    act = new_episode.actions[row_id]
     return str(act)
