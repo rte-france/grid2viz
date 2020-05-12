@@ -6,7 +6,7 @@ from grid2op.Episode import EpisodeData
 import os
 import configparser
 import csv
-import pickle
+import dill
 
 from grid2op.Plot import PlotPlotly
 
@@ -47,7 +47,6 @@ def make_episode(agent, episode_name):
         return episode
     else:
         episode = compute_episode(episode_name, agent)
-        save_in_fs_cache(episode_name, agent, episode)
         save_in_ram_cache(episode_name, agent, episode)
         return episode
 
@@ -64,31 +63,42 @@ def get_fs_cached_file(episode_name, agent):
     episode_dir = os.path.join(cache_dir, episode_name)
     if not os.path.exists(episode_dir):
         os.makedirs(episode_dir)
-    return os.path.join(episode_dir, agent + ".pickle")
+    return os.path.join(episode_dir, agent + ".dill")
 
 
 def save_in_fs_cache(episode_name, agent, episode):
     path = get_fs_cached_file(episode_name, agent)
     with open(path, "wb") as f:
-        pickle.dump(episode, f, protocol=4)
+        dill.dump(episode, f, protocol=4)
 
 
 def get_from_fs_cache(episode_name, agent):
     beg = time.time()
     path = get_fs_cached_file(episode_name, agent)
+    episode_data = retrieve_episode_from_disk(episode_name, agent)
     with open(path, "rb") as f:
-        episode_loaded = pickle.load(f)
+        episode_analytics = dill.load(f)
+
+    episode_analytics.decorate(episode_data)
     end = time.time()
     print(f"end loading scenario file: {end - beg}")
-    return episode_loaded
+    return episode_analytics
 
 
 def compute_episode(episode_name, agent):
-    path = os.path.join(agents_dir, agent)
-    return EpisodeAnalytics(EpisodeData.from_disk(
-        path, episode_name
-    ), episode_name, agent)
+    episode_data = retrieve_episode_from_disk(episode_name, agent)
+    episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
+    save_in_fs_cache(episode_name, agent, episode_analytics)
+    episode_analytics.decorate(episode_data)
+    return episode_analytics
 
+
+def retrieve_episode_from_disk(episode_name, agent):
+    path = os.path.join(agents_dir, agent)
+    episode_data = EpisodeData.from_disk(
+        path, episode_name
+    )
+    return episode_data
 
 def is_in_ram_cache(episode_name, agent):
     return make_ram_cache_id(episode_name, agent) in store

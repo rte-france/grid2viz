@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 
 
-def get_total_overflow_trace(episode):
-    df = get_total_overflow_ts(episode)
+def get_total_overflow_trace(episode_analytics, episode_data):
+    df = get_total_overflow_ts(episode_analytics, episode_data)
     return [go.Scatter(
         x=df["time"],
         y=df["value"],
@@ -14,12 +14,12 @@ def get_total_overflow_trace(episode):
     )]
 
 
-def get_total_overflow_ts(episode):
+def get_total_overflow_ts(episode_analytics, episode_data):
     # TODO: This :-1 probably has to change
-    df = pd.DataFrame(index=range(len(episode.observations[:-1])),
+    df = pd.DataFrame(index=range(len(episode_data.observations[:-1])),
                       columns=["time", "value"])
-    for (time_step, obs) in enumerate(episode.observations[:-1]):
-        tstamp = episode.timestamps[time_step]
+    for (time_step, obs) in enumerate(episode_data.observations[:-1]):
+        tstamp = episode_analytics.timestamps[time_step]
         df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
     return df
 

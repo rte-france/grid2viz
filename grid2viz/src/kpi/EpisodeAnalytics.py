@@ -15,23 +15,20 @@ class EpisodeAnalytics:
         self.episode_name = episode_name
         self.agent = agent
 
-        # Add EpisodeData attributes to EpisodeAnalytics 
-        for attribute in [elem for elem in dir(episode_data) if
-                          not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
-            setattr(self, attribute, getattr(episode_data, attribute))
 
-        self.timesteps = list(range(len(self.actions)))
+
+        self.timesteps = list(range(len(episode_data.actions)))
         print("computing df")
         beg = time.time()
         print("Environment")
-        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line = self._make_df_from_data()
+        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line = self._make_df_from_data(episode_data)
         print("Hazards-Maintenances")
-        self.hazards, self.maintenances = self._env_actions_as_df()
+        self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
         print("Big TS")
-        self.total_overflow_trace = EpisodeTrace.get_total_overflow_trace(self)
+        self.total_overflow_trace = EpisodeTrace.get_total_overflow_trace(self, episode_data)
         self.usage_rate_trace = EpisodeTrace.get_usage_rate_trace(self)
         self.reward_trace = EpisodeTrace.get_df_rewards_trace(self)
-        self.total_overflow_ts = EpisodeTrace.get_total_overflow_ts(self)
+        self.total_overflow_ts = EpisodeTrace.get_total_overflow_ts(self, episode_data)
         self.profile_traces = consumption_profiles.profiles_traces(self)
         self.total_maintenance_duration = maintenances.total_duration_maintenance(self)
         self.nb_hazards = env_actions(self, which="hazards", kind="nb", aggr=True)
@@ -46,7 +43,7 @@ class EpisodeAnalytics:
                            obs.minute_of_hour[0])
 
     # @jit(forceobj=True)
-    def _make_df_from_data(self):
+    def _make_df_from_data(self, episode_data):
         """
         Convert all episode's data into comprehensible dataframes usable by
         the application.
@@ -64,11 +61,11 @@ class EpisodeAnalytics:
         res: :class:`tuple`
          generated dataframes
         """
-        size = len(self.actions)
+        size = len(episode_data.actions)
         timesteps = list(range(size))
-        load_size = size * len(self.observations[0].load_p)
-        prod_size = size * len(self.observations[0].prod_p)
-        n_rho = len(self.observations[0].rho)
+        load_size = size * len(episode_data.observations[0].load_p)
+        prod_size = size * len(episode_data.observations[0].prod_p)
+        n_rho = len(episode_data.observations[0].rho)
         rho_size = size * n_rho
 
         load_data = pd.DataFrame(index=range(load_size),
@@ -96,17 +93,17 @@ class EpisodeAnalytics:
         computed_rewards = pd.DataFrame(index=range(size),
                                         columns=['timestep', 'rewards', 'cum_rewards'])
         flow_voltage_cols = pd.MultiIndex.from_product(
-            [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], self.line_names])
+            [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], episode_data.line_names])
         flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
 
         topo_list = []
         bus_list = []
-        for (time_step, (obs, act)) in tqdm(enumerate(zip(self.observations[:-1], self.actions)),
+        for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
             line_impact, sub_impact = act.get_topological_impact()
             sub_action = act.name_sub[sub_impact]
-            line_action = self.line_names[line_impact]
+            line_action = episode_data.line_names[line_impact]
 
             if not len(sub_action):
                 sub_action = None
@@ -118,13 +115,13 @@ class EpisodeAnalytics:
                 line_action = " - ".join(line_action)
 
             # Building load DF
-            begin = time_step * self.n_loads
-            end = (time_step + 1) * self.n_loads - 1
+            begin = time_step * episode_data.n_loads
+            end = (time_step + 1) * episode_data.n_loads - 1
             load_data.loc[begin:end, "value"] = obs.load_p.astype(float)
             load_data.loc[begin:end, "timestamp"] = time_stamp
             # Building prod DF
-            begin = time_step * self.n_prods
-            end = (time_step + 1) * self.n_prods - 1
+            begin = time_step * episode_data.n_prods
+            end = (time_step + 1) * episode_data.n_prods - 1
             production.loc[begin:end, "value"] = obs.prod_p.astype(float)
             # Building RHO DF
             begin = time_step * n_rho
@@ -163,8 +160,8 @@ class EpisodeAnalytics:
 
             computed_rewards.loc[time_step, :] = [
                 time_stamp,
-                self.rewards[time_step],
-                self.rewards.cumsum(axis=0)[time_step]
+                episode_data.rewards[time_step],
+                episode_data.rewards.cumsum(axis=0)[time_step]
             ]
 
             flow_voltage_line_table.loc[time_step, :] = np.array([
@@ -178,17 +175,17 @@ class EpisodeAnalytics:
                 obs.v_or
             ]).flatten()
 
-        load_data["timestep"] = np.repeat(timesteps, self.n_loads)
-        load_data["equipment_name"] = np.tile(self.load_names, size).astype(str)
-        load_data["equipement_id"] = np.tile(range(self.n_loads), size)
+        load_data["timestep"] = np.repeat(timesteps, episode_data.n_loads)
+        load_data["equipment_name"] = np.tile(episode_data.load_names, size).astype(str)
+        load_data["equipement_id"] = np.tile(range(episode_data.n_loads), size)
 
         self.timestamps = sorted(load_data.timestamp.dropna().unique())
         self.timesteps = sorted(load_data.timestep.unique())
 
-        production["timestep"] = np.repeat(timesteps, self.n_prods)
-        production["timestamp"] = np.repeat(self.timestamps, self.n_prods)
-        production.loc[:, "equipment_name"] = np.tile(self.prod_names, size)
-        production.loc[:, "equipement_id"] = np.tile(range(self.n_prods), size)
+        production["timestep"] = np.repeat(timesteps, episode_data.n_prods)
+        production["timestamp"] = np.repeat(self.timestamps, episode_data.n_prods)
+        production.loc[:, "equipment_name"] = np.tile(episode_data.prod_names, size)
+        production.loc[:, "equipement_id"] = np.tile(range(episode_data.n_prods), size)
 
         rho["time"] = np.repeat(timesteps, n_rho)
         rho["timestamp"] = np.repeat(self.timestamps, n_rho)
@@ -196,7 +193,7 @@ class EpisodeAnalytics:
 
         action_data_table["timestep"] = self.timesteps
         action_data_table["timestamp"] = self.timestamps
-        action_data_table["timestep_reward"] = self.rewards[:size]
+        action_data_table["timestep_reward"] = episode_data.rewards[:size]
 
         load_data["value"] = load_data["value"].astype(float)
         production["value"] = production["value"].astype(float)
@@ -226,48 +223,34 @@ class EpisodeAnalytics:
         return len(obs.topo_vect) - np.count_nonzero(obs.topo_vect == 1)
 
     # @jit(forceobj=True)
-    def _env_actions_as_df(self):
-        hazards_size = (len(self.observations) - 1) * self.n_lines
+    def _env_actions_as_df(self, episode_data):
+        hazards_size = (len(episode_data.observations) - 1) * episode_data.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
         hazards = pd.DataFrame(index=range(hazards_size),
                                columns=["value"], dtype=int)
         maintenances = hazards.copy()
 
-        for (time_step, env_act) in tqdm(enumerate(self.env_actions), total=len(self.env_actions)):
+        for (time_step, env_act) in tqdm(enumerate(episode_data.env_actions), total=len(episode_data.env_actions)):
             if env_act is None:
                 continue
 
-            time_stamp = self.timestamp(self.observations[time_step])
+            time_stamp = self.timestamp(episode_data.observations[time_step])
 
-            begin = time_step * self.n_lines
-            end = (time_step + 1) * self.n_lines - 1
+            begin = time_step * episode_data.n_lines
+            end = (time_step + 1) * episode_data.n_lines - 1
             hazards.loc[begin:end, "value"] = env_act._hazards.astype(int)
 
-            begin = time_step * self.n_lines
-            end = (time_step + 1) * self.n_lines - 1
+            begin = time_step * episode_data.n_lines
+            end = (time_step + 1) * episode_data.n_lines - 1
             maintenances.loc[begin:end, "value"] = env_act._maintenance.astype(int)
 
-            # iter_haz_maint = zip(env_act._hazards, env_act._maintenance)
-            # for line_id, (haz, maint) in enumerate(iter_haz_maint):
-            #     pos = time_step * self.n_lines + line_id
-            #     hazards.loc[pos, :] = [
-            #         time_step, time_stamp, line_id, self.line_names[line_id],
-            #         int(haz)
-            #     ]
-            #     maintenances.loc[pos, :] = [
-            #         time_step, time_stamp, line_id, self.line_names[line_id],
-            #         int(maint)
-        #     #     ]
-        # hazards["value"] = hazards["value"].fillna(0).astype(int)
-        # maintenances["value"] = maintenances["value"].fillna(0).astype(int)
-
-        hazards["timestep"] = np.repeat(self.timesteps, self.n_lines)
+        hazards["timestep"] = np.repeat(self.timesteps, episode_data.n_lines)
         maintenances["timestep"] = hazards["timestep"]
-        hazards["timestamp"] = np.repeat(self.timestamps, self.n_lines)
+        hazards["timestamp"] = np.repeat(self.timestamps, episode_data.n_lines)
         maintenances["timestamp"] = hazards["timestamp"]
-        hazards["line_name"] = np.tile(self.line_names, len(self.timesteps))
+        hazards["line_name"] = np.tile(episode_data.line_names, len(self.timesteps))
         maintenances["line_name"] = hazards["line_name"]
-        hazards["line_id"] = np.tile(range(self.n_lines), len(self.timesteps))
+        hazards["line_id"] = np.tile(range(episode_data.n_lines), len(self.timesteps))
         maintenances["line_id"] = hazards["line_id"]
 
         return hazards, maintenances
@@ -280,6 +263,12 @@ class EpisodeAnalytics:
         for (idx, name) in enumerate(self.prod_names):
             ret[name] = types[idx]
         return ret
+
+    def decorate(self, episode_data):
+        # Add EpisodeData attributes to EpisodeAnalytics
+        for attribute in [elem for elem in dir(episode_data) if
+                          not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
+            setattr(self, attribute, getattr(episode_data, attribute))
 
 
 class Test():
