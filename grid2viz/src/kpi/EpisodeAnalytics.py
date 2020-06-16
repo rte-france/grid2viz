@@ -39,8 +39,8 @@ class EpisodeAnalytics:
 
     @staticmethod
     def timestamp(obs):
-        return dt.datetime(obs.year[0], obs.month[0], obs.day[0], obs.hour_of_day[0],
-                           obs.minute_of_hour[0])
+        return dt.datetime(obs.year, obs.month, obs.day, obs.hour_of_day,
+                           obs.minute_of_hour)
 
     # @jit(forceobj=True)
     def _make_df_from_data(self, episode_data):
