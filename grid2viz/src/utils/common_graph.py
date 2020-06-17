@@ -1,6 +1,8 @@
 """
     Utility functions for creation of graph and graph component used several times.
 """
+from copy import copy
+
 import pandas as pd
 import numpy as np
 from plotly import graph_objects as go
@@ -234,13 +236,16 @@ def make_rewards_ts(study_agent, ref_agent, scenario, layout):
     studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
 
     # Make sure the timeframe is the study agent one
-    ref_reward_trace.x = studied_agent_reward_trace.x
-    ref_reward_trace.y = ref_reward_trace.y[:len(studied_agent_reward_trace.y)]
-    ref_reward_cum_trace.x = ref_reward_cum_trace.x
-    ref_reward_cum_trace.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
+    # Copy is needed to avoid modifying the objects in place
+    ref_reward_trace_copy = copy(ref_reward_trace)
+    ref_reward_cum_trace_copy = copy(ref_reward_cum_trace)
+    ref_reward_trace_copy.x = studied_agent_reward_trace.x
+    ref_reward_trace_copy.y = ref_reward_trace.y[:len(studied_agent_reward_trace.y)]
+    ref_reward_cum_trace_copy.x = ref_reward_cum_trace.x
+    ref_reward_cum_trace_copy.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
 
     return {
-        'data': [ref_reward_trace, ref_reward_cum_trace,
+        'data': [ref_reward_trace_copy, ref_reward_cum_trace_copy,
                  studied_agent_reward_trace, studied_agent_reward_cum_trace,
                  action_trace],
         'layout': {**layout,
