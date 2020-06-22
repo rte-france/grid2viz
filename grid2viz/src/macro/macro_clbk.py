@@ -177,8 +177,8 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
     figure_overflow["data"] = new_episode.total_overflow_trace
     maintenance_traces = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])
     if len(maintenance_traces) != 0:
-        maintenance_trace[0].update({"name": "Nb of maintenances"})
-        figure_overflow["data"].append(maintenance_trace[0])
+        maintenance_traces[0].update({"name": "Nb of maintenances"})
+        figure_overflow["data"].append(maintenance_traces[0])
 
     figure_usage["data"] = new_episode.usage_rate_trace
     return figure_overflow, figure_usage
