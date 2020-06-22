@@ -5,7 +5,7 @@ pkgs = {
     "required": [
         "Click>=7.0",
         "cycler>=0.10.0",
-        "dash>=1.11.0",
+        "dash>=1.13.2",
         "dash-bootstrap-components>=0.9.2",
         "dash-antd-components",
         "decorator>=4.4.1",
@@ -22,7 +22,7 @@ pkgs = {
         "packaging>=20.1",
         "pandapower>=2.2.1",
         "pandas>=1.0.1",
-        "plotly>=4.5.1",
+        "plotly>=4.8.1",
         "pyparsing>=2.4.6",
         "python-dateutil>=2.8.1",
         "pytz>=2019.3",
