@@ -24,7 +24,7 @@ class EpisodeAnalytics:
         self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line = self._make_df_from_data(episode_data)
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
-        print("Big TS")
+        print("Computing computation intensive indicators...")
         self.total_overflow_trace = EpisodeTrace.get_total_overflow_trace(self, episode_data)
         self.usage_rate_trace = EpisodeTrace.get_usage_rate_trace(self)
         self.reward_trace = EpisodeTrace.get_df_rewards_trace(self)
