@@ -55,7 +55,7 @@ def load_scenario_cards(url):
                                 ]),
                                 dbc.Col(className="mb-4", children=[
                                     html.P(className="border-bottom h3 mb-0 text-right",
-                                           children=round(best_agents[scenario]['cum_reward'])),
+                                           children=f'{round(best_agents[scenario]["cum_reward"]):,}'),
                                     html.P(className="text-muted", children="Cumulative Reward")
                                 ]),
                                 dbc.Col(className="mb-4", children=[

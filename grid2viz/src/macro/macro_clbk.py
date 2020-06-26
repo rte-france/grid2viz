@@ -121,9 +121,9 @@ def relayout_store(*args):
 )
 def update_nbs(study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
-    score = get_score_agent(new_episode)
-    nb_overflow = get_nb_overflow_agent(new_episode)
-    nb_action = get_nb_action_agent(new_episode)
+    score = f'{get_score_agent(new_episode):,}'
+    nb_overflow = f'{get_nb_overflow_agent(new_episode):,}'
+    nb_action = f'{get_nb_action_agent(new_episode):,}'
 
     return score, nb_overflow, nb_action
 
@@ -138,8 +138,8 @@ def get_nb_overflow_agent(agent):
 
 
 def get_nb_action_agent(agent):
-    return agent.action_data_table[['action_line', 'action_subs']].sum(
-        axis=1).sum()
+    return int(agent.action_data_table[['action_line', 'action_subs']].sum(
+        axis=1).sum())
 
 
 @app.callback(
