@@ -88,7 +88,7 @@ def get_axis_relayout(figure, relayout_data):
         xaxis = layout["xaxis"]
     else:
         xaxis = template_layout["xaxis"]
-    if "range" not in xaxis:
+    if "range" not in xaxis and "x" in figure["data"][0]:
         xaxis.update(
             range=[
                 min(figure["data"][0]["x"]),

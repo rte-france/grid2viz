@@ -28,6 +28,7 @@ def indicator_line():
                     id="cum_instant_reward_ts",
                     figure=go.Figure(
                         layout=layout_def,
+                        data=[dict(type="scatter")]
                     )
                 )
             ]),
@@ -39,6 +40,7 @@ def indicator_line():
                     id="actions_ts",
                     figure=go.Figure(
                         layout=layout_def,
+                        data=[dict(type="scatter")]
                     )
                 )
             ])
@@ -144,7 +146,10 @@ def context_inspector_line(best_episode, study_episode):
                 dcc.Graph(
                     id='env_charts_ts',
                     style={'margin-top': '1em'},
-                    figure=go.Figure(layout=layout_def),
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="scatter")]
+                    ),
                     config=dict(displayModeBar=False)
                 ),
             ]),
