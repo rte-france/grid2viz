@@ -84,11 +84,10 @@ def get_maintenance_trace(episode, equipments=None):
             total=episode.maintenances.groupby(
                 'timestamp', as_index=True)['value'].sum()
         )
-    print (ts_maintenances_by_line)
+
     if equipments is not None:
         ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
-        
-    print (ts_maintenances_by_line)
+
     return [go.Scatter(x=ts_maintenances_by_line.index,
                        y=ts_maintenances_by_line[line],
                        name=line)
