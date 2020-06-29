@@ -3,8 +3,8 @@ import plotly.graph_objects as go
 
 def get_action_per_line(new_episode):
     data = get_action_table_data(new_episode)
-    count = data[(data["action_line"] > 0)]["line_action"].map(lambda x: " ".join(x)).value_counts()
-    return [go.Bar(x=new_episode.line_names, y=count.values)]
+    count = data[(data["action_line"] > 0)]["line_name"].map(lambda x: " ".join(x)).value_counts()
+    return [go.Bar(x=count.index, y=count.values)]
 
 
 def get_action_table_data(new_episode):
@@ -14,7 +14,7 @@ def get_action_table_data(new_episode):
 def get_action_per_sub(new_episode):
     data = get_action_table_data(new_episode)
     count = data[(data["action_subs"] > 0)]["sub_name"].map(lambda x: " ".join(x)).value_counts()
-    return [go.Bar(x=new_episode.name_sub, y=count.values)]
+    return [go.Bar(x=count.index, y=count.values)]
 
 
 def get_actions_sum(new_episode):

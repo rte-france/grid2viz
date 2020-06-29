@@ -204,6 +204,18 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, sc
     return make_action_ts(study_agent, agent_ref, scenario, figure['layout'])
 
 
+action_table_name_converter = dict(
+    timestep="Timestep",
+    timestamp="Timestamp",
+    timestep_reward="Reward",
+    action_line="Action on line",
+    action_subs="Action on sub",
+    line_name="Line name",
+    sub_name="Sub name",
+    action_id="Action id",
+    distance="Topological distance"
+)
+
 @app.callback(
     [Output("inspector_datable", "columns"),
      Output("inspector_datable", "data")],
@@ -215,7 +227,9 @@ def update_agent_log_action_table(study_agent, scenario):
     table = actions_model.get_action_table_data(new_episode)
     table['id'] = table['timestep']
     table.set_index('id', inplace=True, drop=False)
-    return [{"name": i, "id": i} for i in table.columns if i != 'id'], table.to_dict("record")
+    cols = [{"name": action_table_name_converter[col], "id": col} for col in
+            table.columns if col != "id"]
+    return cols, table.to_dict("record")
 
 
 @app.callback(

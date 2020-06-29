@@ -176,12 +176,7 @@ def inspector_line(study_agent, scenario):
     cols, data = get_table(new_episode)
     figures_distribution = action_distrubtion(new_episode)
 
-    return html.Div(className="lineBlock card ", children=[
-        html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
-        html.Div(className="container-fluid", id="action_table_div", children=[
-            html.Div(className="row", children=[
-                html.Div(className="col flex-center", children=[
-                    dt.DataTable(
+    data_table = dt.DataTable(
                         columns=cols,
                         data=data,
                         id="inspector_datable",
@@ -191,8 +186,13 @@ def inspector_line(study_agent, scenario):
                         page_action="native",
                         page_current=0,
                         page_size=7,
-                    ),
-                ]),
+                    )
+
+    return html.Div(className="lineBlock card ", children=[
+        html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
+        html.Div(className="container-fluid", id="action_table_div", children=[
+            html.Div(className="row", children=[
+                html.Div(className="col flex-center", children=[data_table]),
             ]),
             html.Div(className="row", children=[
                 html.Div(className="col flex-center", children=[
@@ -238,6 +238,8 @@ def inspector_line(study_agent, scenario):
 def get_table(episode):
     table = actions_model.get_action_table_data(episode)
     table['id'] = table['timestep']
+    table['timestep_reward'] = table['timestep_reward'].map(
+        lambda x: '{:,.2f}'.format(float("".join(str(x).split(",")))))
     table.set_index('id', inplace=True, drop=False)
     return [{"name": i, "id": i} for i in table.columns if i != "id"], table.to_dict("record")
 
