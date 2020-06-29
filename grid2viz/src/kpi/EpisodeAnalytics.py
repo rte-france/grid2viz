@@ -78,14 +78,14 @@ class EpisodeAnalytics:
         rho = pd.DataFrame(index=range(rho_size), columns=['value'])
 
         cols_loop_action_data_table = [
-            'action_line', 'action_subs', 'line_action', 'sub_name',
+            'action_line', 'action_subs', 'line_name', 'sub_name',
             'objects_changed', 'distance'
         ]
         action_data_table = pd.DataFrame(
             index=range(size),
             columns=[
                 'timestep', 'timestamp', 'timestep_reward', 'action_line',
-                'action_subs', 'line_action', 'sub_name', 'objects_changed',
+                'action_subs', 'line_name', 'sub_name', 'objects_changed',
                 'distance'
             ]
         )
@@ -103,16 +103,16 @@ class EpisodeAnalytics:
             time_stamp = self.timestamp(obs)
             line_impact, sub_impact = act.get_topological_impact()
             sub_action = act.name_sub[sub_impact]
-            line_action = episode_data.line_names[line_impact]
+            line_name = episode_data.line_names[line_impact]
 
             if not len(sub_action):
                 sub_action = None
             else: 
                 sub_action = " - ".join(sub_action)
-            if not len(line_action):
-                line_action = None
+            if not len(line_name):
+                line_name = None
             else: 
-                line_action = " - ".join(line_action)
+                line_name = " - ".join(line_name)
 
             # Building load DF
             begin = time_step * episode_data.n_loads
@@ -132,9 +132,9 @@ class EpisodeAnalytics:
             # TODO : change with benjamin's count of actions
             action_line = np.sum(act._switch_line_status) + np.sum(act._set_line_status)
             if action_line > 0:
-                line_action = "reconnect " + line_action
+                line_name = "reconnect " + line_name
             if action_line < 0:
-                line_action = "disconnect " + line_action
+                line_name = "disconnect " + line_name
                 action_line = - action_line
 
             # TODO: change with benjamin's count of actions
@@ -153,7 +153,7 @@ class EpisodeAnalytics:
             action_data_table.loc[pos, cols_loop_action_data_table] = [
                 action_line,
                 action_subs,
-                line_action,
+                line_name,
                 sub_action,
                 object_changed,
                 self.get_distance_from_obs(obs)]
