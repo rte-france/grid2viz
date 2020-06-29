@@ -180,7 +180,7 @@ def inspector_line(study_agent, scenario):
         html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
         html.Div(className="container-fluid", id="action_table_div", children=[
             html.Div(className="row", children=[
-                html.Div(className="col", style={"display": "flex", "justify-content": "center"}, children=[
+                html.Div(className="col flex-center", children=[
                     dt.DataTable(
                         columns=cols,
                         data=data,
@@ -195,7 +195,7 @@ def inspector_line(study_agent, scenario):
                 ]),
             ]),
             html.Div(className="row", children=[
-                html.Div(className="col", style={"display": "flex", "justify-content": "center"}, children=[
+                html.Div(className="col flex-center", children=[
                     html.Label(children=[
                         'The documentation for the filtering syntax can be found ',
                         html.A('here.',
