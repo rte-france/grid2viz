@@ -178,37 +178,40 @@ def inspector_line(study_agent, scenario):
 
     return html.Div(className="lineBlock card ", children=[
         html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
-        html.Div(className="card-body col row", children=[
-            html.Div(className="col", children=[
-                dt.DataTable(
-                    id="inspector_datable",
-                    columns=cols,
-                    data=data,
-                    filter_action="native",
-                    sort_action="native",
-                    sort_mode="multi",
-                    page_action="native",
-                    page_current=0,
-                    page_size=20,
-                    style_table={
-                        'overflow': 'auto',
-                        'width': '100%',
-                        'max-width': '100%',
-                        'height': '200px'
-                    }
-                ),
-                html.Label(children=[
-                    'The documentation for the filtering syntax can be found ',
-                    html.A('here.', href='https://dash.plot.ly/datatable/filtering', target="_blank")]),
+        html.Div(className="container-fluid", id="action_table_div", children=[
+            html.Div(className="row", children=[
+                html.Div(className="col", style={"display": "flex", "justify-content": "center"}, children=[
+                    dt.DataTable(
+                        columns=cols,
+                        data=data,
+                        id="inspector_datable",
+                        filter_action="native",
+                        sort_action="native",
+                        sort_mode="multi",
+                        page_action="native",
+                        page_current=0,
+                        page_size=7,
+                    ),
+                ]),
             ]),
-            html.Div(className="col-12 row", children=[
+            html.Div(className="row", children=[
+                html.Div(className="col", style={"display": "flex", "justify-content": "center"}, children=[
+                    html.Label(children=[
+                        'The documentation for the filtering syntax can be found ',
+                        html.A('here.',
+                               href='https://dash.plot.ly/datatable/filtering',
+                               target="_blank")]
+                    ),
+                ])
+            ]),
+            html.Div(className="row", children=[
                 html.Div(className="col", children=[
                     html.P(id="tooltip_table", className="more-info-table", children=[
                         "Click on a row to have more info on the action"
                     ])
                 ])
             ]),
-            html.Div(className="col-12 row", children=[
+            html.Div(className="row", children=[
                 html.Div(className="col", children=[
                     html.H6(className="text-center",
                             children="Distribution of Substation action"),
@@ -228,6 +231,7 @@ def inspector_line(study_agent, scenario):
             ]),
 
         ])
+
     ])
 
 

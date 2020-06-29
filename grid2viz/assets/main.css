@@ -27,6 +27,10 @@ body {
     display: inline-flex;
 }
 
+.lineBlock > #action_table_div {
+    display: inline-block;
+}
+
 .lineBlock > h4 {
     padding: 5px;
     writing-mode: vertical-lr;
