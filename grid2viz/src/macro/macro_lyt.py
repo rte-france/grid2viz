@@ -241,7 +241,8 @@ def get_table(episode):
     table['timestep_reward'] = table['timestep_reward'].map(
         lambda x: '{:,.2f}'.format(float("".join(str(x).split(",")))))
     table.set_index('id', inplace=True, drop=False)
-    return [{"name": i, "id": i} for i in table.columns if i != "id"], table.to_dict("record")
+    cols_to_exclude = ["id", "lines_modified", "subs_modified"]
+    return [{"name": i, "id": i} for i in table.columns if i not in cols_to_exclude], table.to_dict("record")
 
 
 ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])

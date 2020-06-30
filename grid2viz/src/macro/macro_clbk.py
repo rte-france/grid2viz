@@ -227,8 +227,9 @@ def update_agent_log_action_table(study_agent, scenario):
     table = actions_model.get_action_table_data(new_episode)
     table['id'] = table['timestep']
     table.set_index('id', inplace=True, drop=False)
+    cols_to_exclude = ["id", "lines_modified", "subs_modified"]
     cols = [{"name": action_table_name_converter[col], "id": col} for col in
-            table.columns if col != "id"]
+            table.columns if col not in cols_to_exclude]
     return cols, table.to_dict("record")
 
 

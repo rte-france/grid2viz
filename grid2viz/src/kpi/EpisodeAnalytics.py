@@ -10,6 +10,15 @@ from tqdm import tqdm
 from . import EpisodeTrace, maintenances, consumption_profiles
 
 
+class ActionImpacts:
+    def __init__(self, action_line, action_subs, line_name, sub_name,
+                 action_id):
+        self.action_line = action_line
+        self.action_subs = action_subs
+        self.line_name = line_name
+        self.sub_name = sub_name
+        self.action_id = action_id
+
 class EpisodeAnalytics:
     def __init__(self, episode_data, episode_name, agent):
         self.episode_name = episode_name
@@ -79,14 +88,14 @@ class EpisodeAnalytics:
 
         cols_loop_action_data_table = [
             'action_line', 'action_subs', 'line_name', 'sub_name',
-            'objects_changed', 'distance'
+            'action_id', 'distance', 'lines_modified', 'subs_modified'
         ]
         action_data_table = pd.DataFrame(
             index=range(size),
             columns=[
                 'timestep', 'timestamp', 'timestep_reward', 'action_line',
-                'action_subs', 'line_name', 'sub_name', 'objects_changed',
-                'distance'
+                'action_subs', 'line_name', 'sub_name', 'action_id',
+                'distance', 'lines_modified', 'subs_modified'
             ]
         )
 
@@ -96,30 +105,19 @@ class EpisodeAnalytics:
             [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], episode_data.line_names])
         flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
 
-        topo_list = []
-        bus_list = []
+        list_actions_as_dict = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
-            line_impact, sub_impact = act.get_topological_impact()
-            sub_action = act.name_sub[sub_impact]
-            line_name = episode_data.line_names[line_impact]
-
-            if not len(sub_action):
-                sub_action = None
-            else: 
-                sub_action = " - ".join(sub_action)
-            if not len(line_name):
-                line_name = None
-            else: 
-                line_name = " - ".join(line_name)
+            action_impacts, list_actions_as_dict, lines_modified, subs_modified = self.compute_action_impacts(
+                act, list_actions_as_dict)
 
             # Building load DF
             begin = time_step * episode_data.n_loads
             end = (time_step + 1) * episode_data.n_loads - 1
             load_data.loc[begin:end, "value"] = obs.load_p.astype(float)
             load_data.loc[begin:end, "timestamp"] = time_stamp
-            # Building prod DF
+            # Building prod DF&
             begin = time_step * episode_data.n_prods
             end = (time_step + 1) * episode_data.n_prods - 1
             production.loc[begin:end, "value"] = obs.prod_p.astype(float)
@@ -129,34 +127,17 @@ class EpisodeAnalytics:
             rho.loc[begin:end, "value"] = obs.rho.astype(float)
 
             pos = time_step
-            # TODO : change with benjamin's count of actions
-            action_line = np.sum(act._switch_line_status) + np.sum(act._set_line_status)
-            if action_line > 0:
-                line_name = "reconnect " + line_name
-            if action_line < 0:
-                line_name = "disconnect " + line_name
-                action_line = - action_line
-
-            # TODO: change with benjamin's count of actions
-            action_subs = int(np.any(act._change_bus_vect)) + int(np.any(act._set_topo_vect))
-            if action_line:
-                action_subs = 0
-
-            object_changed_set = self.get_object_changed(
-                act._set_topo_vect, topo_list)
-            if object_changed_set is not None:
-                object_changed = object_changed_set
-            else:
-                object_changed = self.get_object_changed(
-                    act._change_bus_vect, bus_list)
 
             action_data_table.loc[pos, cols_loop_action_data_table] = [
-                action_line,
-                action_subs,
-                line_name,
-                sub_action,
-                object_changed,
-                self.get_distance_from_obs(obs)]
+                action_impacts.action_line,
+                action_impacts.action_subs,
+                action_impacts.line_name,
+                action_impacts.sub_name,
+                action_impacts.action_id,
+                self.get_distance_from_obs(obs),
+                lines_modified,
+                subs_modified
+            ]
 
             computed_rewards.loc[time_step, :] = [
                 time_stamp,
@@ -200,17 +181,17 @@ class EpisodeAnalytics:
         rho["value"] = rho["value"].astype(float)
         return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table
 
-    def get_object_changed(self, vect, list_topo):
-        if np.count_nonzero(vect) is 0:
-            return None
-        for idx, topo_array in enumerate(list_topo):
-            if not np.array_equal(topo_array, vect):
-                return idx
+    def get_action_id(self, action_dict, list_actions):
+        if not action_dict:
+            return None, list_actions
+        for idx, act_dict in enumerate(list_actions):
+            if action_dict == act_dict:
+                return idx, list_actions
         # if we havnt found the vect...
-        list_topo.append(vect)
-        return len(list_topo) - 1
+        list_actions.append(action_dict)
+        return len(list_actions) - 1, list_actions
 
-    def get_sub_action(self, act, obs):
+    def get_sub_name(self, act, obs):
         for sub in range(len(obs.sub_info)):
             effect = act.effect_on(substation_id=sub)
             if np.any(effect["change_bus"] is True):
@@ -269,6 +250,112 @@ class EpisodeAnalytics:
         for attribute in [elem for elem in dir(episode_data) if
                           not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
             setattr(self, attribute, getattr(episode_data, attribute))
+
+    def compute_action_impacts(self, action, list_actions_as_dict):
+
+        n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(
+            action)
+        n_subs_modified, str_subs_modified, subs_modified = self.get_subs_modifications(
+            action
+        )
+
+        action_id, list_actions_as_dict = self.get_action_id(
+            action.as_dict(), list_actions_as_dict)
+
+        return (
+            ActionImpacts(
+                action_line=n_lines_modified,
+                action_subs=n_subs_modified,
+                line_name=str_lines_modified,
+                sub_name=str_subs_modified,
+                action_id=action_id),
+            list_actions_as_dict, lines_modified, subs_modified)
+
+    def get_lines_modifications(self, action):
+        action_dict = action.as_dict()
+        n_lines_modified = 0
+        lines_reconnected = []
+        lines_disconnected = []
+        lines_switched = []
+        str_lines_modified = ""
+        if "set_line_status" in action_dict:
+            n_lines_modified += (
+                action_dict["set_line_status"]["nb_connected"] +
+                action_dict["set_line_status"]["nb_disconnected"]
+            )
+            lines_reconnected = [
+                *lines_reconnected,
+                *[action.name_line[int(line_id)] for line_id in
+                  action_dict["set_line_status"]["connected_id"]]
+            ]
+            if lines_reconnected:
+                str_lines_modified += "Reconnect: " + ", ".join(lines_reconnected)
+            lines_disconnected = [
+                *lines_disconnected,
+                *[action.name_line[int(line_id)] for line_id in
+                  action_dict["set_line_status"]["disconnected_id"]]
+            ]
+            if lines_disconnected:
+                if str_lines_modified:
+                    str_lines_modified += " - "
+                str_lines_modified += "Disconnect: " + ", ".join(lines_disconnected)
+        if "change_line_status" in action_dict:
+            n_lines_modified += action_dict["change_line_status"]["nb_changed"]
+            lines_switched = [
+                *lines_switched,
+                *[action.name_line[int(line_id)] for line_id in
+                  action_dict["change_line_status"]["changed_id"]]
+            ]
+            if lines_switched:
+                if str_lines_modified:
+                    str_lines_modified += " - "
+                str_lines_modified += "Change: " + ", ".join(
+                    lines_switched)
+
+        lines_modified = [*lines_reconnected, *lines_disconnected, *lines_switched]
+
+        return n_lines_modified, str_lines_modified, lines_modified
+
+    def get_subs_modifications(self, action):
+        action_dict = action.as_dict()
+        n_subs_modified = 0
+        subs_modified = []
+
+        if "set_bus_vect" in action_dict:
+            n_subs_modified += action_dict["set_bus_vect"]["nb_modif_subs"]
+            subs_modified = [
+                *subs_modified,
+                *[action.name_sub[int(sub_id)] for sub_id in
+                 action_dict["set_bus_vect"]["modif_subs_id"]]
+            ]
+        if "change_bus_vect" in action_dict:
+            n_subs_modified += action_dict["change_bus_vect"]["nb_modif_subs"]
+            subs_modified = [
+                *subs_modified,
+                *[action.name_sub[int(sub_id)] for sub_id in
+                 action_dict["change_bus_vect"]["modif_subs_id"]]
+            ]
+
+        subs_modified_set = set(subs_modified)
+        str_subs_modified = " - ".join(subs_modified_set)
+        return n_subs_modified, str_subs_modified, subs_modified
+
+    def get_subs_and_lines_impacted(self, action):
+        line_impact, sub_impact = action.get_topological_impact()
+        sub_names = action.name_sub[sub_impact]
+        line_names = action.name_line[line_impact]
+        return sub_names, line_names
+
+    def format_subs_and_lines_impacted(self, sub_names, line_names):
+        return self.format_elements_impacted(sub_names), self.format_elements_impacted(line_names)
+
+    def format_elements_impacted(self, elements):
+        if not len(elements):
+            elements_formatted = None
+        else:
+            elements_formatted = " - ".join(elements)
+        return elements_formatted
+
 
 
 class Test():
