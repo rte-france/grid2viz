@@ -8,7 +8,7 @@ def get_action_per_line(new_episode):
     try:
         s = data[(data["action_line"] > 0)]["lines_modified"].apply(pd.Series).stack()
         count = s.value_counts()
-    except IndexError:
+    except (IndexError, AttributeError):
         count = pd.Series()
     return [go.Bar(x=count.index, y=count.values)]
 
@@ -23,7 +23,7 @@ def get_action_per_sub(new_episode):
     try:
         s = data[(data["action_subs"] > 0)]["subs_modified"].apply(pd.Series).stack()
         count = s.value_counts()
-    except IndexError:
+    except (IndexError, AttributeError):
         count = pd.Series()
     return [go.Bar(x=count.index, y=count.values)]
 
