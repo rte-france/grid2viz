@@ -2,6 +2,8 @@
     This files handles the generic information about the agent of reference of the selected scenario
     and let choose and compute study agent information.
 """
+import datetime as dt
+
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
@@ -80,10 +82,16 @@ def maintenance_duration_hist(study_agent, figure, scenario):
 )
 def add_timestamp(click_data, new_agent, data, agent_stored):
     if new_agent != agent_stored or click_data is None:
-        return []
-    if data is None:
-        data = []
-    new_data = {"Timestamps": click_data["points"][0]["x"]}
+        if data is not None:
+            return data
+        else:
+            return []
+    time_stamp_str = click_data["points"][0]["x"]
+    try:
+        dt.datetime.strptime(time_stamp_str, '%Y-%m-%d %H:%M')
+    except ValueError:
+        time_stamp_str = time_stamp_str + " 00:00"
+    new_data = {"Timestamps": time_stamp_str}
     if new_data not in data:
         data.append(new_data)
     return data
