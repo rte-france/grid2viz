@@ -70,7 +70,10 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                             step=None,
                             marks=slider_params.marks,
                             value=slider_params.value
-                        )
+                        ),
+                        html.P(id="tooltip_table_micro", className="more-info-table", children=[
+                            "Click on a row to have more info on the action"
+                        ])
                     ])
                 ]),
                 html.Div(className="row", children=[
