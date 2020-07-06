@@ -104,3 +104,36 @@ def get_axis_relayout(figure, relayout_data):
         res.update(xaxis=dict(autorange=relayout_data["xaxis.autorange"]))
     if res:
         return res
+
+
+layout_def = {
+    'legend': {'orientation': 'h'},
+    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
+    'xaxis': {'visible': True},
+    'yaxis': {'visible': True},
+    'annotations': []
+}
+
+
+def layout_no_data(msg):
+    return {
+        "xaxis": {
+            "visible": False
+        },
+        "yaxis": {
+            "visible": False
+        },
+        "plot_bgcolor": "rgba(0, 0, 0, 0)",
+        "annotations": [
+            {
+                "text": msg,
+                "xref": "paper",
+                "yref": "paper",
+                "showarrow": False,
+                "font": {
+                    "size": 28
+                }
+            }
+        ]
+    }
+

@@ -15,12 +15,15 @@ def get_total_overflow_trace(episode_analytics, episode_data):
 
 
 def get_total_overflow_ts(episode_analytics, episode_data):
-    # TODO: This :-1 probably has to change
-    df = pd.DataFrame(index=range(len(episode_data.observations[:-1])),
+    df = pd.DataFrame(index=episode_analytics.timesteps,
                       columns=["time", "value"])
-    for (time_step, obs) in enumerate(episode_data.observations[:-1]):
-        tstamp = episode_analytics.timestamps[time_step]
-        df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
+    for (time_step, obs) in enumerate(episode_data.observations):
+        # TODO: observations length and timsteps length should match
+        try:
+            tstamp = episode_analytics.timestamps[time_step]
+            df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
+        except:
+            pass
     return df
 
 

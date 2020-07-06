@@ -12,13 +12,12 @@ pkgs = {
         "dill>=0.3.2",
         "Flask-Compress>=1.4.0",
         "future>=0.18.2",
-        "grid2op[optional]>=1.0.0",
+        "grid2op>=1.1.0",
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
         "kiwisolver>=1.1.0",
         "MarkupSafe>=1.1.1",
         "networkx>=2.4",
-        "numpy>=1.18.1",
         "packaging>=20.1",
         "pandapower>=2.2.1",
         "pandas>=1.0.1",
@@ -30,7 +29,6 @@ pkgs = {
         "scipy>=1.4.1",
         "seaborn>=0.10.0",
         "six>=1.14.0",
-        "tqdm>=4.43.0",
         "Werkzeug>=1.0.0"
     ],
     "extras": {

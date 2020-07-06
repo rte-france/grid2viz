@@ -205,7 +205,8 @@ class EpisodeAnalytics:
 
     # @jit(forceobj=True)
     def _env_actions_as_df(self, episode_data):
-        hazards_size = (len(episode_data.observations) - 1) * episode_data.n_lines
+        agent_length = int(episode_data.meta['nb_timestep_played'])
+        hazards_size = agent_length * episode_data.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
         hazards = pd.DataFrame(index=range(hazards_size),
                                columns=["value"], dtype=int)
@@ -225,13 +226,14 @@ class EpisodeAnalytics:
             end = (time_step + 1) * episode_data.n_lines - 1
             maintenances.loc[begin:end, "value"] = env_act._maintenance.astype(int)
 
-        hazards["timestep"] = np.repeat(self.timesteps, episode_data.n_lines)
+
+        hazards["timestep"] = np.repeat(range(agent_length), episode_data.n_lines)
         maintenances["timestep"] = hazards["timestep"]
         hazards["timestamp"] = np.repeat(self.timestamps, episode_data.n_lines)
         maintenances["timestamp"] = hazards["timestamp"]
-        hazards["line_name"] = np.tile(episode_data.line_names, len(self.timesteps))
+        hazards["line_name"] = np.tile(episode_data.line_names, agent_length)
         maintenances["line_name"] = hazards["line_name"]
-        hazards["line_id"] = np.tile(range(episode_data.n_lines), len(self.timesteps))
+        hazards["line_id"] = np.tile(range(episode_data.n_lines), agent_length)
         maintenances["line_id"] = hazards["line_id"]
 
         return hazards, maintenances
