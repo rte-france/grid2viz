@@ -1,6 +1,8 @@
 import pandas as pd
 import plotly.graph_objects as go
 
+from grid2viz.src.utils.graph_utils import layout_no_data, layout_def
+
 
 def get_action_per_line(new_episode):
     data = get_action_table_data(new_episode)
@@ -26,6 +28,15 @@ def get_action_per_sub(new_episode):
     except (IndexError, AttributeError):
         count = pd.Series()
     return [go.Bar(x=count.index, y=count.values)]
+
+
+def update_layout(predicate, msg):
+    if predicate:
+        figure_layout = layout_no_data(msg)
+    else:
+        figure_layout = layout_def
+
+    return figure_layout
 
 
 def get_actions_sum(new_episode):

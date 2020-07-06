@@ -8,31 +8,35 @@ from collections import namedtuple
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.kpi.maintenances import hist_duration_maintenances
 from grid2viz.src.manager import make_episode, agents
-
-layout_def = {
-    'legend': {'orientation': 'h'},
-    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
-}
+from grid2viz.src.utils.graph_utils import layout_def, layout_no_data
 
 
 def indicator_line(scenario, study_agent):
     episode = make_episode(study_agent, scenario)
 
     nb_actions = episode.action_data_table[['action_line', 'action_subs']].sum()
-    pie_figure = go.Figure(
-        layout=layout_def,
-        data=[go.Pie(
-            labels=["Actions on Lines", "Actions on Substations"],
-            values=[nb_actions["action_line"], nb_actions["action_subs"]]
-        )]
-    )
 
-    maintenance_figure = go.Figure(
-        layout=layout_def,
-        data=[go.Histogram(
-            x=hist_duration_maintenances(episode)
-        )]
-    )
+    if nb_actions["action_line"] == 0 and nb_actions["action_subs"] == 0:
+        pie_figure = go.Figure(layout=layout_no_data("No Actions for this Agent"))
+    else:
+        pie_figure = go.Figure(
+            layout=layout_def,
+            data=[go.Pie(
+                labels=["Actions on Lines", "Actions on Substations"],
+                values=[nb_actions["action_line"], nb_actions["action_subs"]]
+            )]
+        )
+
+    maintenances_data = hist_duration_maintenances(episode)
+    if not maintenances_data:
+        maintenance_figure = go.Figure(layout=layout_no_data("No Maintenances for this scenario"))
+    else:
+        maintenance_figure = go.Figure(
+            layout=layout_def,
+            data=[go.Histogram(
+                x=maintenances_data
+            )]
+        )
 
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
@@ -107,7 +111,7 @@ def overview_line(timestamps=None):
                     sort_action="native",
                     style_table={
                         'overflow-y': 'scroll',
-                        'width': 'auto',
+                        #'width': 'auto',
                         'height': '100%'
                     },
                 ),
@@ -249,14 +253,26 @@ ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])
 
 
 def action_distrubtion(episode):
-    figure_subs = go.Figure(
-        layout=layout_def,
-        data=actions_model.get_action_per_sub(episode)
-    )
-    figure_lines = go.Figure(
-        layout=layout_def,
-        data=actions_model.get_action_per_line(episode)
-    )
+
+    actions_per_sub = actions_model.get_action_per_sub(episode)
+
+    if len(actions_per_sub[0]["y"]) == 0:
+        figure_subs = go.Figure(layout=layout_no_data("No Actions on subs for this Agent"))
+    else:
+        figure_subs = go.Figure(
+            layout=layout_def,
+            data=actions_per_sub
+        )
+
+    actions_per_lines = actions_model.get_action_per_line(episode)
+
+    if len(actions_per_lines[0]["y"]) == 0:
+        figure_lines = go.Figure(layout=layout_no_data("No Actions on lines for this Agent"))
+    else:
+        figure_lines = go.Figure(
+            layout=layout_def,
+            data=actions_per_lines
+        )
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines)
 
 

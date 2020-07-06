@@ -12,7 +12,8 @@ from grid2viz.app import app
 from grid2viz.src.manager import make_episode
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.utils.graph_utils import get_axis_relayout, relayout_callback
+from grid2viz.src.utils.graph_utils import (
+    get_axis_relayout, relayout_callback, layout_def, layout_no_data)
 from grid2viz.src.kpi.maintenances import (hist_duration_maintenances)
 
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
@@ -48,6 +49,10 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 def update_action_repartition_pie(study_agent, figure, scenario):
     new_episode = make_episode(study_agent, scenario)
     figure['data'] = action_repartition_pie(new_episode)
+    figure['layout'].update(
+        actions_model.update_layout(
+            figure["data"][0].values == (0, 0),
+            "No Actions for this Agent"))
     return figure
 
 
@@ -70,6 +75,11 @@ def maintenance_duration_hist(study_agent, figure, scenario):
     figure['data'] = [go.Histogram(
         x=hist_duration_maintenances(new_episode)
     )]
+    figure["layout"].update(
+        actions_model.update_layout(
+            len(figure["data"][0]["x"]) == 0,
+            "No Maintenances for this scenario"))
+
     return figure
 
 
@@ -253,6 +263,16 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, 
     new_episode = make_episode(study_agent, scenario)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     figure_switch_line["data"] = actions_model.get_action_per_line(new_episode)
+
+    figure_sub["layout"].update(
+        actions_model.update_layout(
+            len(figure_sub["data"][0]["x"]) == 0,
+            "No Actions on subs for this Agent"))
+    figure_switch_line["layout"].update(
+        actions_model.update_layout(
+            len(figure_switch_line["data"][0]["x"]) == 0,
+            "No Actions on lines for this Agent"))
+
     return figure_sub, figure_switch_line
 
 
