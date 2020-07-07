@@ -111,9 +111,9 @@ layout_def = {
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
     'xaxis': {'visible': True},
     'yaxis': {'visible': True},
-    'annotations': []
+    'annotations': [],
+    "plot_bgcolor": '#E5ECF6'
 }
-
 
 def layout_no_data(msg):
     return {
