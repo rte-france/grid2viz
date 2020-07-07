@@ -36,10 +36,14 @@ app.title = "Grid2Viz"
 app.server.secret_key = "Grid2Viz"
 
 nav_items = [
-    dbc.NavItem(dbc.NavLink("Scenario Selection", href="/episodes")),
-    dbc.NavItem(dbc.NavLink("Scenario Overview", href="/overview")),
-    dbc.NavItem(dbc.NavLink("Agent Overview", href="/macro")),
-    dbc.NavItem(dbc.NavLink("Agent Study", href="/micro"))
+    dbc.NavItem(dbc.NavLink("Scenario Selection",
+                            active=True, href="/episodes", id="nav_scen_select")),
+    dbc.NavItem(dbc.NavLink("Scenario Overview",
+                            href="/overview", id="nav_scen_over")),
+    dbc.NavItem(dbc.NavLink("Agent Overview",
+                            href="/macro", id="nav_agent_over")),
+    dbc.NavItem(dbc.NavLink("Agent Study",
+                            href="/micro", id="nav_agent_study"))
 ]
 
 navbar = dbc.Navbar(
@@ -116,7 +120,9 @@ app.layout = html.Div([
 
 
 @app.callback(
-    [Output('page-content', 'children'), Output('page', 'data')],
+    [Output('page-content', 'children'), Output('page', 'data'),
+     Output("nav_scen_select", "active"), Output("nav_scen_over", "active"),
+     Output("nav_agent_over", "active"), Output("nav_agent_study", "active")],
     [Input('url', 'pathname')],
     [State("scenario", "data"),
      State("agent_ref", "data"),
@@ -135,19 +141,19 @@ def register_page_lyt(pathname,
         raise PreventUpdate
     
     if pathname == "/episodes" or pathname == "/" or not pathname:
-        return episodes_lyt, "episodes"
+        return episodes_lyt, "episodes", True, False, False, False
     elif pathname == "/overview":
         # if ref_agent is None:
         #     raise PreventUpdate
-        return overview.layout(scenario, ref_agent), "overview"
+        return overview.layout(scenario, ref_agent), "overview", False, True, False, False
     elif pathname == "/macro":
         if ref_agent is None:
             raise PreventUpdate
-        return macro.layout(timestamps, scenario, study_agent), "macro"
+        return macro.layout(timestamps, scenario, study_agent), "macro", False, False, True, False
     elif pathname == "/micro":
         if ref_agent is None or study_agent is None:
             raise PreventUpdate
-        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro"
+        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True
     else:
         return 404, ""
 

@@ -62,6 +62,10 @@ body {
     border-radius: 5px;
 }
 
+.navbar-dark .navbar-nav .nav-link.active {
+    font-weight: bolder;
+}
+
 /*
 .flex-center {
     display: flex;
