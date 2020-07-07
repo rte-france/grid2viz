@@ -81,10 +81,10 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                         html.H6(className="text-center",
                                 children="Voltage and Flow"),
                         dac.Radio(options=[
-                            {'label': 'Voltage (V)', 'value': 'voltage'},
-                            {'label': 'Flow', 'value': 'flow'}
+                            {'label': 'Flow', 'value': 'flow'},
+                            {'label': 'Voltage (V)', 'value': 'voltage'}
                         ],
-                            value="voltage",
+                            value="flow",
                             id="voltage_flow_choice",
                             buttonStyle="solid"
                         ),
