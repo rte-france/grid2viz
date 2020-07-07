@@ -79,6 +79,7 @@ def maintenance_duration_hist(study_agent, figure, scenario):
         actions_model.update_layout(
             len(figure["data"][0]["x"]) == 0,
             "No Maintenances for this scenario"))
+    figure["layout"]["xaxis"]["rangemode"] = "tozero"
 
     return figure
 

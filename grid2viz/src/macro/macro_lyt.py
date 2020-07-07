@@ -37,6 +37,7 @@ def indicator_line(scenario, study_agent):
                 x=maintenances_data
             )]
         )
+    maintenance_figure["layout"]["xaxis"]["rangemode"] = "tozero"
 
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
