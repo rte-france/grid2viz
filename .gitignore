@@ -116,3 +116,6 @@ venv_grid2viz/
 data/agents/_cache/
 **_cache
 **config.ini
+
+#docs
+docs/_build
