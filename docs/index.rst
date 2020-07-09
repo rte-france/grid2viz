@@ -16,6 +16,7 @@ Grid2Viz is a web application that offers several interactive views into the res
    installation.rst
    running-the-app.rst
    starting-kit.rst
+   caching.rst
 
 .. toctree::
    :maxdepth: 2
