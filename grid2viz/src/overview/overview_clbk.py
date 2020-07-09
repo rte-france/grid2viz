@@ -145,7 +145,8 @@ def update_table(loads, prods, agent_ref, start_date, end_date, data, scenario):
     df = df.drop(cols_to_drop, axis=1)
     if cols_to_add:
         df = df.merge(
-            observation_model.get_prod_and_conso(episode)[cols_to_add], left_on="timestamp", right_index=True)
+            observation_model.get_prod_and_conso(episode)[cols_to_add],
+            left_on="timestamp", right_index=True, how='right')
     if start_date is not None:
         df = df[df["timestamp"] >= start_date]
     if end_date is not None:

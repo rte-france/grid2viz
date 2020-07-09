@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def env_actions(episode, which="hazards", kind="ts", aggr=True):
     if kind not in ("ts", "nb", "dur"):
         raise ValueError("kind argument can only be either ts, nb or dur.\n"
@@ -8,6 +9,7 @@ def env_actions(episode, which="hazards", kind="ts", aggr=True):
         raise ValueError("which argument can only be either hazards or "
                          f"maintenances. {which} passed")
     env_acts = getattr(episode, which)
+    env_acts = env_acts.fillna(0)
     env_acts = pd.pivot_table(
         env_acts, index="timestamp", columns=["line_name"], values="value"
     )

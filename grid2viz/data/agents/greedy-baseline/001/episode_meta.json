@@ -1,9 +1,11 @@
 {
-    "backend_type": "PandaPowerBackend_rte_case14_realistic_rte_case14_realistic_rte_case14_realistic",
-    "chronics_max_timestep": "8064",
-    "chronics_path": "/home/tezirg/data_grid2op/rte_case14_realistic/chronics/001",
-    "cumulative_reward": 5057126.5,
+    "agent_seed": null,
+    "backend_type": "PandaPowerBackend_rte_case14_realistic",
+    "chronics_max_timestep": "2000",
+    "chronics_path": "C:\\Users\\vrenault\\data_grid2op\\rte_case14_realistic\\chronics\\001",
+    "cumulative_reward": 529840.0625,
+    "env_seed": null,
     "env_type": "Environment_rte_case14_realistic",
-    "grid_path": "/home/tezirg/data_grid2op/rte_case14_realistic/grid.json",
-    "nb_timestep_played": 4708
+    "grid_path": "C:\\Users\\vrenault\\data_grid2op\\rte_case14_realistic\\grid.json",
+    "nb_timestep_played": 461
 }

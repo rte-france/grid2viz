@@ -8,31 +8,36 @@ from collections import namedtuple
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.kpi.maintenances import hist_duration_maintenances
 from grid2viz.src.manager import make_episode, agents
-
-layout_def = {
-    'legend': {'orientation': 'h'},
-    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
-}
+from grid2viz.src.utils.graph_utils import layout_def, layout_no_data
 
 
 def indicator_line(scenario, study_agent):
     episode = make_episode(study_agent, scenario)
 
     nb_actions = episode.action_data_table[['action_line', 'action_subs']].sum()
-    pie_figure = go.Figure(
-        layout=layout_def,
-        data=[go.Pie(
-            labels=["Actions on Lines", "Actions on Substations"],
-            values=[nb_actions["action_line"], nb_actions["action_subs"]]
-        )]
-    )
 
-    maintenance_figure = go.Figure(
-        layout=layout_def,
-        data=[go.Histogram(
-            x=hist_duration_maintenances(episode)
-        )]
-    )
+    if nb_actions["action_line"] == 0 and nb_actions["action_subs"] == 0:
+        pie_figure = go.Figure(layout=layout_no_data("No Actions for this Agent"))
+    else:
+        pie_figure = go.Figure(
+            layout=layout_def,
+            data=[go.Pie(
+                labels=["Actions on Lines", "Actions on Substations"],
+                values=[nb_actions["action_line"], nb_actions["action_subs"]]
+            )]
+        )
+
+    maintenances_data = hist_duration_maintenances(episode)
+    if not maintenances_data:
+        maintenance_figure = go.Figure(layout=layout_no_data("No Maintenances for this scenario"))
+    else:
+        maintenance_figure = go.Figure(
+            layout=layout_def,
+            data=[go.Histogram(
+                x=maintenances_data
+            )]
+        )
+    maintenance_figure["layout"]["xaxis"]["rangemode"] = "tozero"
 
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
@@ -107,7 +112,7 @@ def overview_line(timestamps=None):
                     sort_action="native",
                     style_table={
                         'overflow-y': 'scroll',
-                        'width': 'auto',
+                        #'width': 'auto',
                         'height': '100%'
                     },
                 ),
@@ -176,39 +181,42 @@ def inspector_line(study_agent, scenario):
     cols, data = get_table(new_episode)
     figures_distribution = action_distrubtion(new_episode)
 
+    data_table = dt.DataTable(
+                        columns=cols,
+                        data=data,
+                        id="inspector_datable",
+                        filter_action="native",
+                        sort_action="native",
+                        sort_mode="multi",
+                        page_action="native",
+                        page_current=0,
+                        page_size=7,
+                    )
+
     return html.Div(className="lineBlock card ", children=[
         html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
-        html.Div(className="card-body col row", children=[
-            html.Div(className="col", children=[
-                dt.DataTable(
-                    id="inspector_datable",
-                    columns=cols,
-                    data=data,
-                    filter_action="native",
-                    sort_action="native",
-                    sort_mode="multi",
-                    page_action="native",
-                    page_current=0,
-                    page_size=20,
-                    style_table={
-                        'overflow': 'auto',
-                        'width': '100%',
-                        'max-width': '100%',
-                        'height': '200px'
-                    }
-                ),
-                html.Label(children=[
-                    'The documentation for the filtering syntax can be found ',
-                    html.A('here.', href='https://dash.plot.ly/datatable/filtering', target="_blank")]),
+        html.Div(className="container-fluid", id="action_table_div", children=[
+            html.Div(className="row", children=[
+                html.Div(className="col flex-center", children=[data_table]),
             ]),
-            html.Div(className="col-12 row", children=[
+            html.Div(className="row", children=[
+                html.Div(className="col flex-center", children=[
+                    html.Label(children=[
+                        'The documentation for the filtering syntax can be found ',
+                        html.A('here.',
+                               href='https://dash.plot.ly/datatable/filtering',
+                               target="_blank")]
+                    ),
+                ])
+            ]),
+            html.Div(className="row", children=[
                 html.Div(className="col", children=[
                     html.P(id="tooltip_table", className="more-info-table", children=[
                         "Click on a row to have more info on the action"
                     ])
                 ])
             ]),
-            html.Div(className="col-12 row", children=[
+            html.Div(className="row", children=[
                 html.Div(className="col", children=[
                     html.H6(className="text-center",
                             children="Distribution of Substation action"),
@@ -228,28 +236,44 @@ def inspector_line(study_agent, scenario):
             ]),
 
         ])
+
     ])
 
 
 def get_table(episode):
     table = actions_model.get_action_table_data(episode)
     table['id'] = table['timestep']
+    table['timestep_reward'] = table['timestep_reward'].map(
+        lambda x: '{:,.2f}'.format(float("".join(str(x).split(",")))))
     table.set_index('id', inplace=True, drop=False)
-    return [{"name": i, "id": i} for i in table.columns if i != "id"], table.to_dict("record")
+    cols_to_exclude = ["id", "lines_modified", "subs_modified"]
+    return [{"name": i, "id": i} for i in table.columns if i not in cols_to_exclude], table.to_dict("record")
 
 
 ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])
 
 
 def action_distrubtion(episode):
-    figure_subs = go.Figure(
-        layout=layout_def,
-        data=actions_model.get_action_per_sub(episode)
-    )
-    figure_lines = go.Figure(
-        layout=layout_def,
-        data=actions_model.get_action_per_line(episode)
-    )
+
+    actions_per_sub = actions_model.get_action_per_sub(episode)
+
+    if len(actions_per_sub[0]["y"]) == 0:
+        figure_subs = go.Figure(layout=layout_no_data("No Actions on subs for this Agent"))
+    else:
+        figure_subs = go.Figure(
+            layout=layout_def,
+            data=actions_per_sub
+        )
+
+    actions_per_lines = actions_model.get_action_per_line(episode)
+
+    if len(actions_per_lines[0]["y"]) == 0:
+        figure_lines = go.Figure(layout=layout_no_data("No Actions on lines for this Agent"))
+    else:
+        figure_lines = go.Figure(
+            layout=layout_def,
+            data=actions_per_lines
+        )
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines)
 
 

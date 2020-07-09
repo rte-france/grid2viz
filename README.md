@@ -79,10 +79,10 @@ In the config.ini of this repo:
 
 Changing this config.ini file will require a restart of the server to update.
 
-Grid2Viz provide 2 agents with a scenario for one day and for one month available in data/agent folder:
+Grid2Viz provide 2 agents with a scenario for one day and for one month available in `/grid2viz/data/agents` folder:
 
-- nodisc_powerlinegreedy
-- withdisc_deter
+- do-nothing-baseline
+- greedy-baseline
 
 By default the config.ini is targeting these agents as well as the environment configuration folders.
 

@@ -28,6 +28,7 @@ def indicator_line():
                     id="cum_instant_reward_ts",
                     figure=go.Figure(
                         layout=layout_def,
+                        data=[dict(type="scatter")]
                     )
                 )
             ]),
@@ -39,6 +40,7 @@ def indicator_line():
                     id="actions_ts",
                     figure=go.Figure(
                         layout=layout_def,
+                        data=[dict(type="scatter")]
                     )
                 )
             ])
@@ -68,7 +70,10 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                             step=None,
                             marks=slider_params.marks,
                             value=slider_params.value
-                        )
+                        ),
+                        html.P(id="tooltip_table_micro", className="more-info-table", children=[
+                            "Click on a row to have more info on the action"
+                        ])
                     ])
                 ]),
                 html.Div(className="row", children=[
@@ -76,10 +81,10 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                         html.H6(className="text-center",
                                 children="Voltage and Flow"),
                         dac.Radio(options=[
-                            {'label': 'Voltage (V)', 'value': 'voltage'},
-                            {'label': 'Flow', 'value': 'flow'}
+                            {'label': 'Flow', 'value': 'flow'},
+                            {'label': 'Voltage (V)', 'value': 'voltage'}
                         ],
-                            value="voltage",
+                            value="flow",
                             id="voltage_flow_choice",
                             buttonStyle="solid"
                         ),
@@ -144,7 +149,10 @@ def context_inspector_line(best_episode, study_episode):
                 dcc.Graph(
                     id='env_charts_ts',
                     style={'margin-top': '1em'},
-                    figure=go.Figure(layout=layout_def),
+                    figure=go.Figure(
+                        layout=layout_def,
+                        data=[dict(type="scatter")]
+                    ),
                     config=dict(displayModeBar=False)
                 ),
             ]),
@@ -244,7 +252,7 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     best_episode = make_episode(best_agents[scenario]["agent"], scenario)
     new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)
-    network_graph = make_network(new_episode).get_plot_observation(new_episode.observations[center_indx])
+    network_graph = make_network(new_episode).plot_obs(new_episode.observations[center_indx])
 
     return html.Div(id="micro_page", children=[
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),

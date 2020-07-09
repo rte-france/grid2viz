@@ -8,7 +8,7 @@ import configparser
 import csv
 import dill
 
-from grid2op.Plot import PlotPlotly
+from grid2op.PlotGrid import PlotPlotly
 
 graph = None
 
@@ -23,7 +23,7 @@ def make_network(episode):
     global graph
     if graph is None:
         graph = PlotPlotly(
-            substation_layout=network_layout, observation_space=episode.observation_space)
+            grid_layout=episode.observation_space.grid_layout, observation_space=episode.observation_space)
     return graph
 
 
@@ -171,26 +171,3 @@ for agent in agents:
     scenarios = scenarios + scens
 
 scenarios = set(scenarios)
-
-
-'''Parsing of the environment configuration'''
-env_conf_folder = parser.get('DEFAULT', 'env_dir')
-print("Environment used is located at: {}".format(env_conf_folder))
-network_layout = []
-try:
-    network_layout_file = 'coords.csv'
-    with open(os.path.join(env_conf_folder, network_layout_file)) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=';')
-        line = 0  # skip the header part
-        for coords in csv_reader:
-            if line == 0:
-                line = line + 1
-                continue
-            network_layout.append(
-                (int(coords[0]),
-                 int(coords[1]))
-            )
-except configparser.NoOptionError as ex:
-    pass  # ignoring this error
-except FileNotFoundError as e:
-    pass  # ignoring that too

@@ -2,6 +2,8 @@
     This files handles the generic information about the agent of reference of the selected scenario
     and let choose and compute study agent information.
 """
+import datetime as dt
+
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
@@ -10,7 +12,8 @@ from grid2viz.app import app
 from grid2viz.src.manager import make_episode
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.utils.graph_utils import get_axis_relayout, relayout_callback
+from grid2viz.src.utils.graph_utils import (
+    get_axis_relayout, relayout_callback, layout_def, layout_no_data)
 from grid2viz.src.kpi.maintenances import (hist_duration_maintenances)
 
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
@@ -46,6 +49,10 @@ def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent
 def update_action_repartition_pie(study_agent, figure, scenario):
     new_episode = make_episode(study_agent, scenario)
     figure['data'] = action_repartition_pie(new_episode)
+    figure['layout'].update(
+        actions_model.update_layout(
+            figure["data"][0].values == (0, 0),
+            "No Actions for this Agent"))
     return figure
 
 
@@ -68,6 +75,12 @@ def maintenance_duration_hist(study_agent, figure, scenario):
     figure['data'] = [go.Histogram(
         x=hist_duration_maintenances(new_episode)
     )]
+    figure["layout"].update(
+        actions_model.update_layout(
+            len(figure["data"][0]["x"]) == 0,
+            "No Maintenances for this scenario"))
+    figure["layout"]["xaxis"]["rangemode"] = "tozero"
+
     return figure
 
 
@@ -80,10 +93,16 @@ def maintenance_duration_hist(study_agent, figure, scenario):
 )
 def add_timestamp(click_data, new_agent, data, agent_stored):
     if new_agent != agent_stored or click_data is None:
-        return []
-    if data is None:
-        data = []
-    new_data = {"Timestamps": click_data["points"][0]["x"]}
+        if data is not None:
+            return data
+        else:
+            return []
+    time_stamp_str = click_data["points"][0]["x"]
+    try:
+        dt.datetime.strptime(time_stamp_str, '%Y-%m-%d %H:%M')
+    except ValueError:
+        time_stamp_str = time_stamp_str + " 00:00"
+    new_data = {"Timestamps": time_stamp_str}
     if new_data not in data:
         data.append(new_data)
     return data
@@ -121,9 +140,9 @@ def relayout_store(*args):
 )
 def update_nbs(study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
-    score = get_score_agent(new_episode)
-    nb_overflow = get_nb_overflow_agent(new_episode)
-    nb_action = get_nb_action_agent(new_episode)
+    score = f'{get_score_agent(new_episode):,}'
+    nb_overflow = f'{get_nb_overflow_agent(new_episode):,}'
+    nb_action = f'{get_nb_action_agent(new_episode):,}'
 
     return score, nb_overflow, nb_action
 
@@ -138,8 +157,8 @@ def get_nb_overflow_agent(agent):
 
 
 def get_nb_action_agent(agent):
-    return agent.action_data_table[['action_line', 'action_subs']].sum(
-        axis=1).sum()
+    return int(agent.action_data_table[['action_line', 'action_subs']].sum(
+        axis=1).sum())
 
 
 @app.callback(
@@ -177,8 +196,8 @@ def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, fi
     figure_overflow["data"] = new_episode.total_overflow_trace
     maintenance_traces = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])
     if len(maintenance_traces) != 0:
-        maintenance_trace[0].update({"name": "Nb of maintenances"})
-        figure_overflow["data"].append(maintenance_trace[0])
+        maintenance_traces[0].update({"name": "Nb of maintenances"})
+        figure_overflow["data"].append(maintenance_traces[0])
 
     figure_usage["data"] = new_episode.usage_rate_trace
     return figure_overflow, figure_usage
@@ -204,6 +223,18 @@ def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, sc
     return make_action_ts(study_agent, agent_ref, scenario, figure['layout'])
 
 
+action_table_name_converter = dict(
+    timestep="Timestep",
+    timestamp="Timestamp",
+    timestep_reward="Reward",
+    action_line="Action on line",
+    action_subs="Action on sub",
+    line_name="Line name",
+    sub_name="Sub name",
+    action_id="Action id",
+    distance="Topological distance"
+)
+
 @app.callback(
     [Output("inspector_datable", "columns"),
      Output("inspector_datable", "data")],
@@ -215,7 +246,10 @@ def update_agent_log_action_table(study_agent, scenario):
     table = actions_model.get_action_table_data(new_episode)
     table['id'] = table['timestep']
     table.set_index('id', inplace=True, drop=False)
-    return [{"name": i, "id": i} for i in table.columns if i != 'id'], table.to_dict("record")
+    cols_to_exclude = ["id", "lines_modified", "subs_modified"]
+    cols = [{"name": action_table_name_converter[col], "id": col} for col in
+            table.columns if col not in cols_to_exclude]
+    return cols, table.to_dict("record")
 
 
 @app.callback(
@@ -230,6 +264,16 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, 
     new_episode = make_episode(study_agent, scenario)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     figure_switch_line["data"] = actions_model.get_action_per_line(new_episode)
+
+    figure_sub["layout"].update(
+        actions_model.update_layout(
+            len(figure_sub["data"][0]["x"]) == 0,
+            "No Actions on subs for this Agent"))
+    figure_switch_line["layout"].update(
+        actions_model.update_layout(
+            len(figure_switch_line["data"][0]["x"]) == 0,
+            "No Actions on lines for this Agent"))
+
     return figure_sub, figure_switch_line
 
 

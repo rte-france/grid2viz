@@ -381,11 +381,16 @@ def sync_timeseries_table(data):
 
 
 @app.callback(
-    Output("interactive_graph", "figure"),
+    [Output("interactive_graph", "figure"), Output("tooltip_table_micro", "children")],
     [Input("slider", "value")],
     [State("agent_study", "data"),
      State("scenario", "data")]
 )
 def update_interactive_graph(slider_value, study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
-    return make_network(new_episode).get_plot_observation(new_episode.observations[slider_value])
+    act = new_episode.actions[slider_value]
+    if any(act.get_types()):
+        act_as_str = str(act)
+    else:
+        act_as_str = "NO ACTION"
+    return make_network(new_episode).plot_obs(new_episode.observations[slider_value]), act_as_str
