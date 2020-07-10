@@ -20,7 +20,7 @@ This sections displays :
 Summary
 -------
 This section displays : 
- - A *Line chart* presenting the actual **environnement time series**, namely loads, productions, hazards and maintenances, seen by the best agent.
+ - A *Line chart* presenting the actual **environnement time series**, namely loads, productions, hazards and maintenances, seen by the best agent. You are able to search by name the individual elements you want to display. You can look at aggregated variable such as total load, wind, solar, hydro, nuclear and thermal productions.
  - A *Dropdown* to select a reference agent that can serve as a baseline to compare with a studied agent. Any agent that ran on the scenario can be selected here.
  - A *Line chart* representing some **quantiles of the usage rate** accross lines for the reference agent.
  - A *Line chart* enumerating the **overflows** seen by the reference agent.
@@ -28,6 +28,10 @@ This section displays :
 Inspector
 ---------
 
-This section displays a detailed interactive table comprising the values of the environnement time series.
+This section displays a detailed interactive data table comprising the values of the environnement time series:
+ - You can filter the date range your interested in through a calendar. 
+ - You can filter each column according to some values following the syntax here: https://dash.plotly.com/datatable/filtering
+ - You can add columns of the specific productions and loads you want to inspect through the search field.
+ 
 
 .. image:: ../_static/scenario_overview.png
