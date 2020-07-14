@@ -25,6 +25,8 @@ This section allows to interactively explore a series of 4 synchronised graphs :
 
 The time frame for these graphes is the one of the studied agent.
 
+Time step Selection for Study
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Additionnaly, clicking on any of the lines of the **Instant and Cumulated Reward** graph will select the corresponding time step and add it in the table on the left. These selected time steps will then be available in the :doc:`Agent Study<agent_study>` to allow specific focuses around those time steps.
 
 
@@ -32,6 +34,9 @@ Inspector for studied agent
 ---------------------------
 
 This section offers a detailed table referencing the impacts of the actions taken by the studied agent. Clicking on any cell will display, below the table, the string representation of the action, if any, taken at the corresponding time step.
+
+Summary of action used
+^^^^^^^^^^^^^^^^^^^^^^
 The section is completed by two graphs representing histograms of substations and lines targeted by the action of the studied agent over the whole scenario.
 
 
