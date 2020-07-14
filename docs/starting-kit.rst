@@ -10,6 +10,7 @@ Grid2Viz provides 2 agents with a scenario for one day and for one month availab
 By default the config.ini is targeting these agents as well as the environment configuration folders.
 
 To launch this demo, just Run gri2viz with no arguments:
+
 .. code-block:: RST
 
-   grid2viz 
+    grid2viz
