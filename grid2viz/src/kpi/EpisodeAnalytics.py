@@ -105,6 +105,26 @@ class EpisodeAnalytics:
             [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], episode_data.line_names])
         flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
 
+        topo_vect = episode_data.observations[0].topo_vect
+        if topo_vect.sum() != len(topo_vect):
+            raise ValueError("Not all things are on bus 1")
+
+        obs_0 = episode_data.observations[0]
+
+        # True == connected, False == disconnect
+        # So that len(line_statuses) - line_statuses.sum() is the distance for lines
+        line_statuses = episode_data.observations[0].line_status
+
+        # True == sub has something on bus 2, False == everything on bus 1
+        # So that subs_on_bus2.sum() is the distance for subs
+        subs_on_bus_2 = np.repeat(False, episode_data.observations[0].n_sub)
+
+        # objs_on_bus_2 will store the id of objects connected to bus 2
+        objs_on_bus_2 = {id: [] for id in range(episode_data.observations[0].n_sub)}
+
+        # Distance from original topology is then :
+        # len(line_statuses) - line_statuses.sum() + subs_on_bus_2.sum()
+
         list_actions_as_dict = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
@@ -128,13 +148,17 @@ class EpisodeAnalytics:
 
             pos = time_step
 
+            distance, line_statuses, subs_on_bus_2, objs_on_bus_2 = self.get_distance_from_obs(
+                act, line_statuses, subs_on_bus_2, objs_on_bus_2, obs_0
+            )
+
             action_data_table.loc[pos, cols_loop_action_data_table] = [
                 action_impacts.action_line,
                 action_impacts.action_subs,
                 action_impacts.line_name,
                 action_impacts.sub_name,
                 action_impacts.action_id,
-                self.get_distance_from_obs(obs),
+                distance,
                 lines_modified,
                 subs_modified
             ]
@@ -200,8 +224,111 @@ class EpisodeAnalytics:
                 return self.name_sub[sub]
         return None
 
-    def get_distance_from_obs(self, obs):
-        return len(obs.topo_vect) - np.count_nonzero(obs.topo_vect == 1)
+    def get_distance_from_obs(self, act, line_statuses, subs_on_bus_2,
+                              objs_on_bus_2, obs):
+
+        impact_on_objs = act.impact_on_objects()
+
+        # lines reconnetions/disconnections
+        line_statuses[impact_on_objs['force_line']['disconnections']['powerlines']] = False
+        line_statuses[impact_on_objs['force_line']['reconnections']['powerlines']] = True
+        line_statuses[impact_on_objs['switch_line']['powerlines']] = np.invert(
+            line_statuses[impact_on_objs['switch_line']['powerlines']]
+        )
+
+        # Bus manipulation
+        if impact_on_objs['topology']['changed']:
+            for elem in impact_on_objs['topology']['bus_switch']:
+                if elem['object_type'] == 'load' and elem['bus']:
+                    if obs.load_pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']]:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if x != obs.load_pos_topo_vect[elem['object_id']]
+                        ]
+                    else:
+                        objs_on_bus_2[elem['substation']].append(obs.load_pos_topo_vect[elem['object_id']])
+                if elem['object_type'] == 'generator' and elem['bus']:
+                    if obs.gen_pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']]:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if x != obs.gen_pos_topo_vect[elem['object_id']]
+                        ]
+                    else:
+                        objs_on_bus_2[elem['substation']].append(obs.gen_pos_topo_vect[elem['object_id']])
+                if elem['object_type'] == 'line (extremity)' and elem['bus']:
+                    if obs.line_ex_pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']]:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if x != obs.line_ex_pos_topo_vect[elem['object_id']]
+                        ]
+                    else:
+                        objs_on_bus_2[elem['substation']].append(
+                            obs.line_ex_pos_topo_vect[elem['object_id']])
+                if elem['object_type'] == 'line (origin)' and elem['bus']:
+                    if obs.line_or_pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']]:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if x != obs.line_or_pos_topo_vect[elem['object_id']]
+                        ]
+                    else:
+                        objs_on_bus_2[elem['substation']].append(obs.line_or_pos_topo_vect[elem['object_id']])
+            for elem in impact_on_objs['topology']['assigned_bus']:
+                if elem['object_type'] == 'load':
+                    if obs.load_pos_topo_vect[elem['object_id']] in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 1:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if
+                            x != obs.load_pos_topo_vect[elem['object_id']]
+                        ]
+                    elif obs.load_pos_topo_vect[elem['object_id']] not in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 2:
+                        objs_on_bus_2[elem['substation']].append(
+                            obs.load_pos_topo_vect[elem['object_id']])
+                if elem['object_type'] == 'generator':
+                    if obs.gen_pos_topo_vect[elem['object_id']] in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 1:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if
+                            x != obs.gen_pos_topo_vect[elem['object_id']]
+                        ]
+                    elif obs.gen_pos_topo_vect[elem['object_id']] not in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 2:
+                        objs_on_bus_2[elem['substation']].append(
+                            obs.gen_pos_topo_vect[elem['object_id']])
+                if elem['object_type'] == 'line (extremity)':
+                    if obs.line_ex_pos_topo_vect[elem['object_id']] in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 1:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if
+                            x != obs.line_ex_pos_topo_vect[elem['object_id']]
+                        ]
+                    elif obs.line_ex_pos_topo_vect[elem['object_id']] not in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 2:
+                        objs_on_bus_2[elem['substation']].append(
+                            obs.line_ex_pos_topo_vect[elem['object_id']])
+                if elem['object_type'] == 'line (origin)':
+                    if obs.line_or_pos_topo_vect[elem['object_id']] in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 1:
+                        # elem was on bus 2, remove it from objs_on_bus_2
+                        objs_on_bus_2[elem['substation']] = [
+                            x for x in objs_on_bus_2[elem['substation']] if
+                            x != obs.line_or_pos_topo_vect[elem['object_id']]
+                        ]
+                    elif obs.line_or_pos_topo_vect[elem['object_id']] not in objs_on_bus_2[
+                        elem['substation']] and elem['bus'] == 2:
+                        objs_on_bus_2[elem['substation']].append(
+                            obs.line_or_pos_topo_vect[elem['object_id']])
+            for elem in impact_on_objs['topology']['disconnect_bus']:
+                # Disconnected bus counts as one for the distance
+                subs_on_bus_2[elem['substation']] = True
+
+        subs_on_bus_2 = [True if objs_on_2 else False for _, objs_on_2 in objs_on_bus_2.items()]
+
+        distance = len(line_statuses) - line_statuses.sum() + sum(subs_on_bus_2)
+        return distance, line_statuses, subs_on_bus_2, objs_on_bus_2
 
     # @jit(forceobj=True)
     def _env_actions_as_df(self, episode_data):
