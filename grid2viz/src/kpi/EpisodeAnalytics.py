@@ -137,7 +137,7 @@ class EpisodeAnalytics:
             end = (time_step + 1) * episode_data.n_loads - 1
             load_data.loc[begin:end, "value"] = obs.load_p.astype(float)
             load_data.loc[begin:end, "timestamp"] = time_stamp
-            # Building prod DF&
+            # Building prod DF
             begin = time_step * episode_data.n_prods
             end = (time_step + 1) * episode_data.n_prods - 1
             production.loc[begin:end, "value"] = obs.prod_p.astype(float)
@@ -208,9 +208,19 @@ class EpisodeAnalytics:
     def get_action_id(self, action_dict, list_actions):
         if not action_dict:
             return None, list_actions
-        for idx, act_dict in enumerate(list_actions):
-            if action_dict == act_dict:
-                return idx, list_actions
+        if 'redispatch' in action_dict:
+            for idx, act_dict in enumerate(list_actions):
+                if 'redispatch' in act_dict and np.array_equal(action_dict['redispatch'], act_dict['redispatch']):
+                    action_dict_without_redisp = {
+                        k: v for k, v in action_dict.items() if k != 'redispatch'}
+                    act_dict_without_redisp = {
+                        k: v for k, v in act_dict.items() if k != 'redispatch'}
+                    if action_dict_without_redisp == act_dict_without_redisp:
+                        return idx, list_actions
+        else:
+            for idx, act_dict in enumerate(list_actions):
+                if action_dict == act_dict:
+                    return idx, list_actions
         # if we havnt found the vect...
         list_actions.append(action_dict)
         return len(list_actions) - 1, list_actions
