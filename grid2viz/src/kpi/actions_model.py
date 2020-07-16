@@ -15,6 +15,16 @@ def get_action_per_line(new_episode):
     return [go.Bar(x=count.index, y=count.values)]
 
 
+def get_action_redispatch(new_epsiode):
+    data = get_action_table_data(new_epsiode)
+    try:
+        s = data[(data["action_redisp"] > 0)]["gens_modified"].apply(pd.Series).stack()
+        count = s.value_counts()
+    except (IndexError, AttributeError):
+        count = pd.Series()
+    return [go.Bar(x=count.index, y=count.values)]
+
+
 def get_action_table_data(new_episode):
     return new_episode.action_data_table
 
@@ -41,5 +51,5 @@ def update_layout(predicate, msg):
 
 def get_actions_sum(new_episode):
     return new_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs'
+        'action_line', 'action_subs', 'action_redisp'
     ]].sum(axis=1).to_frame(name="Nb Actions")

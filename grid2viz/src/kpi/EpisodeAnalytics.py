@@ -34,7 +34,7 @@ class EpisodeAnalytics:
         print("computing df")
         beg = time.time()
         print("Environment")
-        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line = self._make_df_from_data(episode_data)
+        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch = self._make_df_from_data(episode_data)
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
         print("Computing computation intensive indicators...")
@@ -68,6 +68,7 @@ class EpisodeAnalytics:
             - action data table
             - instant and cumulated rewards
             - flow and voltage by line
+            - target and actual redispatch
 
         Returns
         -------
@@ -93,7 +94,8 @@ class EpisodeAnalytics:
         cols_loop_action_data_table = [
             'action_line', 'action_subs', 'action_redisp', 'redisp_impact',
             'line_name', 'sub_name',
-            'gen_name', 'action_id', 'distance', 'lines_modified', 'subs_modified'
+            'gen_name', 'action_id', 'distance', 'lines_modified', 'subs_modified',
+            'gens_modified'
         ]
         action_data_table = pd.DataFrame(
             index=range(size),
@@ -102,7 +104,8 @@ class EpisodeAnalytics:
                 'action_subs', 'action_redisp', 'redisp_impact',
                 'line_name', 'sub_name',
                 'gen_name', 'action_id',
-                'distance', 'lines_modified', 'subs_modified'
+                'distance', 'lines_modified', 'subs_modified',
+                'gens_modified'
             ]
         )
 
@@ -111,6 +114,9 @@ class EpisodeAnalytics:
         flow_voltage_cols = pd.MultiIndex.from_product(
             [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], episode_data.line_names])
         flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
+
+        target_redispatch = pd.DataFrame(index=range(size), columns=episode_data.prod_names)
+        actual_redispatch = pd.DataFrame(index=range(size), columns=episode_data.prod_names)
 
         topo_vect = episode_data.observations[0].topo_vect
         if topo_vect.sum() != len(topo_vect):
@@ -138,7 +144,7 @@ class EpisodeAnalytics:
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
-            action_impacts, list_actions_as_dict, lines_modified, subs_modified, gens_modified_ids = self.compute_action_impacts(
+            action_impacts, list_actions_as_dict, lines_modified, subs_modified, gens_modified_names, gens_modified_ids = self.compute_action_impacts(
                 act, list_actions_as_dict, obs, gens_modified_ids)
 
             # Building load DF
@@ -172,7 +178,8 @@ class EpisodeAnalytics:
                 action_impacts.action_id,
                 distance,
                 lines_modified,
-                subs_modified
+                subs_modified,
+                gens_modified_names
             ]
 
             computed_rewards.loc[time_step, :] = [
@@ -191,6 +198,9 @@ class EpisodeAnalytics:
                 obs.a_or,
                 obs.v_or
             ]).flatten()
+
+            target_redispatch.loc[time_step, :] = obs.target_dispatch
+            actual_redispatch.loc[time_step, :] = obs.actual_dispatch
 
         load_data["timestep"] = np.repeat(timesteps, episode_data.n_loads)
         load_data["equipment_name"] = np.tile(episode_data.load_names, size).astype(str)
@@ -215,7 +225,7 @@ class EpisodeAnalytics:
         load_data["value"] = load_data["value"].astype(float)
         production["value"] = production["value"].astype(float)
         rho["value"] = rho["value"].astype(float)
-        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table
+        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch
 
     def get_action_id(self, action_dict, list_actions):
         if not action_dict:
@@ -378,7 +388,7 @@ class EpisodeAnalytics:
             action
         )
 
-        n_gens_modified, str_gens_modified, gens_modified_ids, redisp_volume = self.get_gens_modifications(
+        n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, redisp_volume = self.get_gens_modifications(
             action, observation, gens_modified_ids
         )
 
@@ -395,7 +405,7 @@ class EpisodeAnalytics:
                 sub_name=str_subs_modified,
                 gen_name=str_gens_modified,
                 action_id=action_id),
-            list_actions_as_dict, lines_modified, subs_modified, gens_modified_ids)
+            list_actions_as_dict, lines_modified, subs_modified, gens_modified_names, gens_modified_ids)
 
     def get_lines_modifications(self, action):
         action_dict = action.as_dict()
@@ -482,7 +492,7 @@ class EpisodeAnalytics:
             gens_modified_previous_time_step
         ]).sum(), 2)
 
-        return n_gens_modified, str_gens_modified, gens_modified_ids, volume_redispatched
+        return n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, volume_redispatched
 
     def get_subs_and_lines_impacted(self, action):
         line_impact, sub_impact = action.get_topological_impact()

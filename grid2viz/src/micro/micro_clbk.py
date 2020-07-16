@@ -147,8 +147,8 @@ def load_voltage_flow_line_choice(category, flow_choice, study_agent, scenario):
     option = []
     new_episode = make_episode(study_agent, scenario)
 
-    for name in new_episode.line_names:
-        if category == 'voltage':
+    if category == 'voltage':
+        for name in new_episode.line_names:
             option.append({
                 'label': 'ex_' + name,
                 'value': 'ex_' + name
@@ -157,7 +157,8 @@ def load_voltage_flow_line_choice(category, flow_choice, study_agent, scenario):
                 'label': 'or_' + name,
                 'value': 'or_' + name
             })
-        if category == 'flow':
+    if category == 'flow':
+        for name in new_episode.line_names:
             if flow_choice == 'active_flow':
                 option.append({
                     'label': 'ex_active_' + name,
@@ -182,6 +183,8 @@ def load_voltage_flow_line_choice(category, flow_choice, study_agent, scenario):
                     'label': 'usage_rate_' + name,
                     'value': 'usage_rate_' + name
                 })
+    if category == 'redispatch':
+        option = [{'label': gen_name, 'value': gen_name} for gen_name in new_episode.prod_names]
 
     return option, [option[0]['value']]
 
@@ -196,7 +199,7 @@ def load_voltage_flow_line_choice(category, flow_choice, study_agent, scenario):
      State('agent_study', 'data'),
      State("scenario", "data")]
 )
-def load_flow_voltage_graph(selected_lines, choice, relayout_data_store, window, figure, study_agent, scenario):
+def load_flow_voltage_graph(selected_objects, choice, relayout_data_store, window, figure, study_agent, scenario):
     if relayout_data_store is not None and relayout_data_store["relayout_data"]:
         relayout_data = relayout_data_store["relayout_data"]
         layout = figure["layout"]
@@ -205,11 +208,13 @@ def load_flow_voltage_graph(selected_lines, choice, relayout_data_store, window,
             layout.update(new_axis_layout)
             return figure
     new_episode = make_episode(study_agent, scenario)
-    if selected_lines is not None:
+    if selected_objects is not None:
         if choice == 'voltage':
-            figure['data'] = load_voltage_for_lines(selected_lines, new_episode)
+            figure['data'] = load_voltage_for_lines(selected_objects, new_episode)
         if 'flow' in choice:
-            figure['data'] = load_flows_for_lines(selected_lines, new_episode)
+            figure['data'] = load_flows_for_lines(selected_objects, new_episode)
+        if 'redispatch' in choice:
+            figure['data'] = load_redispatch(selected_objects, new_episode)
 
     if window is not None:
         figure["layout"].update(
@@ -254,15 +259,38 @@ def load_voltage_for_lines(lines, new_episode):
     return traces
 
 
+def load_redispatch(generators, new_episode):
+    actual_dispatch = new_episode.actual_redispatch
+    target_dispatch = new_episode.target_redispatch
+    traces = []
+
+    x = new_episode.timestamps
+
+    for gen in generators:
+        traces.append(go.Scatter(
+            x=x,
+            y=actual_dispatch[gen],
+            name=f"{gen} actual dispatch")
+        )
+        traces.append(go.Scatter(
+            x=x,
+            y=target_dispatch[gen],
+            name=f"{gen} target dispatch")
+        )
+
+    return traces
+
+
 def load_flows_for_lines(lines, new_episode):
     flow = new_episode.flow_and_voltage_line
     traces = []
+
+    x = new_episode.timestamps
 
     for value in lines:
         line_side = str(value)[:2]  # the first 2 characters are the side of line ('ex' or 'or')
         flow_type = str(value)[3:].split('_', 1)[0]  # the type is the 1st part of the string: 'type_name'
         line_name = str(value)[3:].split('_', 1)[1]  # the name is the 2nd part of the string: 'type_name'
-        x = new_episode.timestamps
         if line_side == 'ex':
             traces.append(go.Scatter(
                 x=x,

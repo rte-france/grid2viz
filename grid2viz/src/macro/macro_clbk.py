@@ -51,16 +51,17 @@ def update_action_repartition_pie(study_agent, figure, scenario):
     figure['data'] = action_repartition_pie(new_episode)
     figure['layout'].update(
         actions_model.update_layout(
-            figure["data"][0].values == (0, 0),
+            figure["data"][0].values == (0, 0, 0),
             "No Actions for this Agent"))
     return figure
 
 
 def action_repartition_pie(agent):
-    nb_actions = agent.action_data_table[['action_line', 'action_subs']].sum()
+    nb_actions = agent.action_data_table[
+        ['action_line', 'action_subs', 'action_redisp']].sum()
     return [go.Pie(
-        labels=["Actions on Lines", "Actions on Substations"],
-        values=[nb_actions["action_line"], nb_actions["action_subs"]]
+        labels=["Actions on Lines", "Actions on Substations", "Redispatching Actions"],
+        values=[nb_actions["action_line"], nb_actions["action_subs"], nb_actions["action_redisp"]]
     )]
 
 
@@ -249,7 +250,7 @@ def update_agent_log_action_table(study_agent, scenario):
     table = actions_model.get_action_table_data(new_episode)
     table['id'] = table['timestep']
     table.set_index('id', inplace=True, drop=False)
-    cols_to_exclude = ["id", "lines_modified", "subs_modified"]
+    cols_to_exclude = ["id", "lines_modified", "subs_modified", "gens_modified"]
     cols = [{"name": action_table_name_converter[col], "id": col} for col in
             table.columns if col not in cols_to_exclude]
     return cols, table.to_dict("record")
@@ -257,16 +258,20 @@ def update_agent_log_action_table(study_agent, scenario):
 
 @app.callback(
     [Output("distribution_substation_action_chart", "figure"),
-     Output("distribution_line_action_chart", "figure")],
+     Output("distribution_line_action_chart", "figure"),
+     Output("distribution_redisp_action_chart", "figure")],
     [Input('agent_study', 'data')],
     [State("distribution_substation_action_chart", "figure"),
      State("distribution_line_action_chart", "figure"),
+     State("distribution_redisp_action_chart", "figure"),
      State("scenario", "data")]
 )
-def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, scenario):
+def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line,
+                                   figure_redisp, scenario):
     new_episode = make_episode(study_agent, scenario)
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
     figure_switch_line["data"] = actions_model.get_action_per_line(new_episode)
+    figure_redisp["data"] = actions_model.get_action_redispatch(new_episode)
 
     figure_sub["layout"].update(
         actions_model.update_layout(
@@ -276,8 +281,12 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line, 
         actions_model.update_layout(
             len(figure_switch_line["data"][0]["x"]) == 0,
             "No Actions on lines for this Agent"))
+    figure_redisp["layout"].update(
+        actions_model.update_layout(
+            len(figure_redisp["data"][0]["x"]) == 0,
+            "No redispatching actions for this Agent"))
 
-    return figure_sub, figure_switch_line
+    return figure_sub, figure_switch_line, figure_redisp
 
 
 @app.callback(
