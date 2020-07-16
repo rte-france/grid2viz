@@ -11,12 +11,16 @@ from . import EpisodeTrace, maintenances, consumption_profiles
 
 
 class ActionImpacts:
-    def __init__(self, action_line, action_subs, line_name, sub_name,
+    def __init__(self, action_line, action_subs, action_redisp, redisp_impact,
+                 line_name, sub_name, gen_name,
                  action_id):
         self.action_line = action_line
         self.action_subs = action_subs
+        self.action_redisp = action_redisp
+        self.redisp_impact = redisp_impact
         self.line_name = line_name
         self.sub_name = sub_name
+        self.gen_name = gen_name
         self.action_id = action_id
 
 class EpisodeAnalytics:
@@ -87,14 +91,17 @@ class EpisodeAnalytics:
         rho = pd.DataFrame(index=range(rho_size), columns=['value'])
 
         cols_loop_action_data_table = [
-            'action_line', 'action_subs', 'line_name', 'sub_name',
-            'action_id', 'distance', 'lines_modified', 'subs_modified'
+            'action_line', 'action_subs', 'action_redisp', 'redisp_impact',
+            'line_name', 'sub_name',
+            'gen_name', 'action_id', 'distance', 'lines_modified', 'subs_modified'
         ]
         action_data_table = pd.DataFrame(
             index=range(size),
             columns=[
                 'timestep', 'timestamp', 'timestep_reward', 'action_line',
-                'action_subs', 'line_name', 'sub_name', 'action_id',
+                'action_subs', 'action_redisp', 'redisp_impact',
+                'line_name', 'sub_name',
+                'gen_name', 'action_id',
                 'distance', 'lines_modified', 'subs_modified'
             ]
         )
@@ -125,12 +132,14 @@ class EpisodeAnalytics:
         # Distance from original topology is then :
         # len(line_statuses) - line_statuses.sum() + subs_on_bus_2.sum()
 
+        gens_modified_ids = []
+
         list_actions_as_dict = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
-            action_impacts, list_actions_as_dict, lines_modified, subs_modified = self.compute_action_impacts(
-                act, list_actions_as_dict)
+            action_impacts, list_actions_as_dict, lines_modified, subs_modified, gens_modified_ids = self.compute_action_impacts(
+                act, list_actions_as_dict, obs, gens_modified_ids)
 
             # Building load DF
             begin = time_step * episode_data.n_loads
@@ -155,8 +164,11 @@ class EpisodeAnalytics:
             action_data_table.loc[pos, cols_loop_action_data_table] = [
                 action_impacts.action_line,
                 action_impacts.action_subs,
+                action_impacts.action_redisp,
+                action_impacts.redisp_impact,
                 action_impacts.line_name,
                 action_impacts.sub_name,
+                action_impacts.gen_name,
                 action_impacts.action_id,
                 distance,
                 lines_modified,
@@ -358,12 +370,16 @@ class EpisodeAnalytics:
                           not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
             setattr(self, attribute, getattr(episode_data, attribute))
 
-    def compute_action_impacts(self, action, list_actions_as_dict):
+    def compute_action_impacts(self, action, list_actions_as_dict, observation, gens_modified_ids):
 
         n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(
             action)
         n_subs_modified, str_subs_modified, subs_modified = self.get_subs_modifications(
             action
+        )
+
+        n_gens_modified, str_gens_modified, gens_modified_ids, redisp_volume = self.get_gens_modifications(
+            action, observation, gens_modified_ids
         )
 
         action_id, list_actions_as_dict = self.get_action_id(
@@ -373,10 +389,13 @@ class EpisodeAnalytics:
             ActionImpacts(
                 action_line=n_lines_modified,
                 action_subs=n_subs_modified,
+                action_redisp=n_gens_modified,
+                redisp_impact=redisp_volume,
                 line_name=str_lines_modified,
                 sub_name=str_subs_modified,
+                gen_name=str_gens_modified,
                 action_id=action_id),
-            list_actions_as_dict, lines_modified, subs_modified)
+            list_actions_as_dict, lines_modified, subs_modified, gens_modified_ids)
 
     def get_lines_modifications(self, action):
         action_dict = action.as_dict()
@@ -446,6 +465,24 @@ class EpisodeAnalytics:
         subs_modified_set = set(subs_modified)
         str_subs_modified = " - ".join(subs_modified_set)
         return n_subs_modified, str_subs_modified, subs_modified
+
+    def get_gens_modifications(self, action, observation, gens_modified_previous_time_step):
+        action_dict = action.as_dict()
+        n_gens_modified = 0
+        gens_modified_ids = []
+        gens_modified_names = []
+        if 'redispatch' in action_dict:
+            n_gens_modified = (action_dict['redispatch'] != 0).sum()
+            gens_modified_ids = np.where(action_dict['redispatch'] != 0)[0]
+            gens_modified_names = action.name_gen[gens_modified_ids]
+
+        str_gens_modified = " - ".join(gens_modified_names)
+
+        volume_redispatched = round(np.absolute(observation.actual_dispatch[
+            gens_modified_previous_time_step
+        ]).sum(), 2)
+
+        return n_gens_modified, str_gens_modified, gens_modified_ids, volume_redispatched
 
     def get_subs_and_lines_impacted(self, action):
         line_impact, sub_impact = action.get_topological_impact()

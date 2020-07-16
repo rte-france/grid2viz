@@ -229,8 +229,11 @@ action_table_name_converter = dict(
     timestep_reward="Reward",
     action_line="Action on line",
     action_subs="Action on sub",
+    action_redisp="Action of redispatch",
+    redisp_impact="Redispatch impact",
     line_name="Line name",
     sub_name="Sub name",
+    gen_name="Gen name",
     action_id="Action id",
     distance="Topological distance"
 )
