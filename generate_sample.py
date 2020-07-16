@@ -21,7 +21,7 @@ param = Parameters()
 #param.init_from_dict({"NO_OVERFLOW_DISCONNECTION": True})
 
 with make(dataset,param=param,backend=backend) as env:
-  agent = TopologyGreedy(env.action_space)
+  agent = RandomRedispatchAgent(env.action_space, env)
   runner = Runner(**env.get_params_for_runner(),
                   agentClass=None,
                   agentInstance=agent)
@@ -48,7 +48,7 @@ with make(dataset,param=param,backend=backend) as env:
              pbar=True)
   env.close()
 
-    
+
 print('greedy')
 with make(dataset,param=param,backend=backend) as env:
   agent = TopologyGreedy(env.action_space)
@@ -61,5 +61,5 @@ with make(dataset,param=param,backend=backend) as env:
              max_iter=2000,
              pbar=True)
   env.close()
-  
+
 

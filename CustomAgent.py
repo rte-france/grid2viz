@@ -6,7 +6,7 @@ from grid2op.Agent import BaseAgent
 class RandomRedispatchAgent(BaseAgent):
     
     
-    def __init__(self, action_space,n_gens_to_Redispatch=2,redispatching_increment=1):
+    def __init__(self, action_space, env, n_gens_to_Redispatch=2,redispatching_increment=1):
         """
         Initialize agent
         :param action_space: the Grid2Op action space
