@@ -2,6 +2,8 @@ import os
 import pathlib
 import unittest
 
+os.environ['GRID2VIZ_ROOT'] = ''
+
 from grid2op.Episode.EpisodeData import EpisodeData
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 from grid2viz.src.kpi.actions_model import get_action_per_line, get_action_per_sub
@@ -55,7 +57,7 @@ class TestEpisodeAnalytics(unittest.TestCase):
         )
         self.assertListEqual(
             action_per_sub[0].x.tolist(),
-            ['sub_9', 'sub_8', 'sub_4', 'sub_12', 'sub_1', 'sub_3']
+            ['sub_9', 'sub_8', 'sub_4', 'sub_12', 'sub_3', 'sub_1']
         )
         self.assertListEqual(
             action_per_sub[0].y.tolist(),
