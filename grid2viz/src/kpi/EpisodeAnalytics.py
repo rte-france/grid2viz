@@ -139,13 +139,16 @@ class EpisodeAnalytics:
         # len(line_statuses) - line_statuses.sum() + subs_on_bus_2.sum()
 
         gens_modified_ids = []
+        actual_redispatch_previous_ts = obs_0.actual_dispatch
 
         list_actions_as_dict = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
             action_impacts, list_actions_as_dict, lines_modified, subs_modified, gens_modified_names, gens_modified_ids = self.compute_action_impacts(
-                act, list_actions_as_dict, obs, gens_modified_ids)
+                act, list_actions_as_dict, obs, gens_modified_ids, actual_redispatch_previous_ts)
+
+            actual_redispatch_previous_ts = obs.actual_dispatch
 
             # Building load DF
             begin = time_step * episode_data.n_loads
@@ -332,7 +335,7 @@ class EpisodeAnalytics:
 
     # @jit(forceobj=True)
     def _env_actions_as_df(self, episode_data):
-        agent_length = int(episode_data.meta['nb_timestep_played'])
+        agent_length = len(episode_data.actions) # int(episode_data.meta['nb_timestep_played'])
         hazards_size = agent_length * episode_data.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
         hazards = pd.DataFrame(index=range(hazards_size),
@@ -380,7 +383,8 @@ class EpisodeAnalytics:
                           not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
             setattr(self, attribute, getattr(episode_data, attribute))
 
-    def compute_action_impacts(self, action, list_actions_as_dict, observation, gens_modified_ids):
+    def compute_action_impacts(self, action, list_actions_as_dict, observation,
+                               gens_modified_ids, actual_dispatch_previous_ts):
 
         n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(
             action)
@@ -389,7 +393,7 @@ class EpisodeAnalytics:
         )
 
         n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, redisp_volume = self.get_gens_modifications(
-            action, observation, gens_modified_ids
+            action, observation, gens_modified_ids, actual_dispatch_previous_ts
         )
 
         action_id, list_actions_as_dict = self.get_action_id(
@@ -405,7 +409,12 @@ class EpisodeAnalytics:
                 sub_name=str_subs_modified,
                 gen_name=str_gens_modified,
                 action_id=action_id),
-            list_actions_as_dict, lines_modified, subs_modified, gens_modified_names, gens_modified_ids)
+            list_actions_as_dict,
+            lines_modified,
+            subs_modified,
+            gens_modified_names,
+            gens_modified_ids
+        )
 
     def get_lines_modifications(self, action):
         action_dict = action.as_dict()
@@ -476,7 +485,9 @@ class EpisodeAnalytics:
         str_subs_modified = " - ".join(subs_modified_set)
         return n_subs_modified, str_subs_modified, subs_modified
 
-    def get_gens_modifications(self, action, observation, gens_modified_previous_time_step):
+    def get_gens_modifications(self, action, observation,
+                               gens_modified_previous_time_step,
+                               actual_dispatch_previous_ts):
         action_dict = action.as_dict()
         n_gens_modified = 0
         gens_modified_ids = []
@@ -488,9 +499,10 @@ class EpisodeAnalytics:
 
         str_gens_modified = " - ".join(gens_modified_names)
 
-        volume_redispatched = round(np.absolute(observation.actual_dispatch[
-            gens_modified_previous_time_step
-        ]).sum(), 2)
+        volume_redispatched = round(np.absolute(
+            observation.actual_dispatch[gens_modified_previous_time_step] -
+            actual_dispatch_previous_ts[gens_modified_previous_time_step]
+        ).sum(), 2)
 
         return n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, volume_redispatched
 
