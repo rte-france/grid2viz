@@ -141,12 +141,12 @@ class EpisodeAnalytics:
         gens_modified_ids = []
         actual_redispatch_previous_ts = obs_0.actual_dispatch
 
-        list_actions_as_dict = []
+        list_actions = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
-            action_impacts, list_actions_as_dict, lines_modified, subs_modified, gens_modified_names, gens_modified_ids = self.compute_action_impacts(
-                act, list_actions_as_dict, obs, gens_modified_ids, actual_redispatch_previous_ts)
+            action_impacts, list_actions, lines_modified, subs_modified, gens_modified_names, gens_modified_ids = self.compute_action_impacts(
+                act, list_actions, obs, gens_modified_ids, actual_redispatch_previous_ts)
 
             actual_redispatch_previous_ts = obs.actual_dispatch
 
@@ -230,24 +230,15 @@ class EpisodeAnalytics:
         rho["value"] = rho["value"].astype(float)
         return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch
 
-    def get_action_id(self, action_dict, list_actions):
-        if not action_dict:
+    @staticmethod
+    def get_action_id(action, list_actions):
+        if not action:
             return None, list_actions
-        if 'redispatch' in action_dict:
-            for idx, act_dict in enumerate(list_actions):
-                if 'redispatch' in act_dict and np.array_equal(action_dict['redispatch'], act_dict['redispatch']):
-                    action_dict_without_redisp = {
-                        k: v for k, v in action_dict.items() if k != 'redispatch'}
-                    act_dict_without_redisp = {
-                        k: v for k, v in act_dict.items() if k != 'redispatch'}
-                    if action_dict_without_redisp == act_dict_without_redisp:
-                        return idx, list_actions
-        else:
-            for idx, act_dict in enumerate(list_actions):
-                if action_dict == act_dict:
-                    return idx, list_actions
+        for idx, act_dict in enumerate(list_actions):
+            if action == act_dict:
+                return idx, list_actions
         # if we havnt found the vect...
-        list_actions.append(action_dict)
+        list_actions.append(action)
         return len(list_actions) - 1, list_actions
 
     def get_sub_name(self, act, obs):
@@ -383,7 +374,7 @@ class EpisodeAnalytics:
                           not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
             setattr(self, attribute, getattr(episode_data, attribute))
 
-    def compute_action_impacts(self, action, list_actions_as_dict, observation,
+    def compute_action_impacts(self, action, list_actions, observation,
                                gens_modified_ids, actual_dispatch_previous_ts):
 
         n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(
@@ -396,8 +387,8 @@ class EpisodeAnalytics:
             action, observation, gens_modified_ids, actual_dispatch_previous_ts
         )
 
-        action_id, list_actions_as_dict = self.get_action_id(
-            action.as_dict(), list_actions_as_dict)
+        action_id, list_actions = self.get_action_id(
+            action, list_actions)
 
         return (
             ActionImpacts(
@@ -409,7 +400,7 @@ class EpisodeAnalytics:
                 sub_name=str_subs_modified,
                 gen_name=str_gens_modified,
                 action_id=action_id),
-            list_actions_as_dict,
+            list_actions,
             lines_modified,
             subs_modified,
             gens_modified_names,
