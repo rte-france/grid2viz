@@ -445,7 +445,7 @@ class EpisodeAnalytics:
             if lines_switched:
                 if str_lines_modified:
                     str_lines_modified += " - "
-                str_lines_modified += "Change: " + ", ".join(
+                str_lines_modified += "Switch: " + ", ".join(
                     lines_switched)
 
         lines_modified = [*lines_reconnected, *lines_disconnected, *lines_switched]
