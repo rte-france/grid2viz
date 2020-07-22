@@ -144,6 +144,6 @@ The following steps might help you to overcome the issue:
 3. Open the file `/etc/hosts` and make sure you include: <br>
  `127.0.0.1 PASTE RESULTS FROM echo $HOST`
 4. Save it and close it
-5. Lauch grid2viz
+5. Launch grid2viz
 
 
