@@ -131,7 +131,7 @@ You will also see a summary of the previous page's kpi.
 To run the tests, execute the following command:
 
 ```commandline
-python3 -m unittest discover --start-directory tests
+python3 -m unittest discover --start-directory tests --buffer
 ```
 
 ## Limitations
