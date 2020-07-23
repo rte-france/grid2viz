@@ -2,7 +2,18 @@ import os
 import pathlib
 import unittest
 
-os.environ['GRID2VIZ_ROOT'] = ''
+# We need to make this below so that the manager.py finds the config.ini
+os.environ['GRID2VIZ_ROOT'] = os.path.join(
+            pathlib.Path(__file__).parent.absolute(), 'data')
+
+agents_path = os.path.join(
+            pathlib.Path(__file__).parent.absolute(), 'data', 'agents')
+
+config_str = f'[DEFAULT]\nagents_dir={agents_path}'
+config_file_path = os.path.join(os.environ['GRID2VIZ_ROOT'], 'config.ini')
+
+with open(config_file_path, 'w') as f:
+    f.write(config_str)
 
 from grid2op.Episode.EpisodeData import EpisodeData
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
@@ -11,8 +22,7 @@ from grid2viz.src.kpi.actions_model import get_action_per_line, get_action_per_s
 
 class TestEpisodeAnalytics(unittest.TestCase):
     def setUp(self):
-        self.agents_path = os.path.join(
-            pathlib.Path(__file__).parent.absolute(), 'data', 'agents')
+        self.agents_path = agents_path
         self.agent_name = 'greedy-baseline'
         self.scenario_name = '000'
         self.episode_data = EpisodeData.from_disk(
