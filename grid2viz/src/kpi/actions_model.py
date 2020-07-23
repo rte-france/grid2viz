@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 
 from grid2viz.src.utils.graph_utils import layout_no_data, layout_def
@@ -11,7 +12,7 @@ def get_action_per_line(new_episode):
         s = data[(data["action_line"] > 0)]["lines_modified"].apply(pd.Series).stack()
         count = s.value_counts()
     except (IndexError, AttributeError):
-        count = pd.Series()
+        count = pd.Series(dtype=np.float64)
     return [go.Bar(x=count.index, y=count.values)]
 
 
@@ -21,7 +22,7 @@ def get_action_redispatch(new_epsiode):
         s = data[(data["action_redisp"] > 0)]["gens_modified"].apply(pd.Series).stack()
         count = s.value_counts()
     except (IndexError, AttributeError):
-        count = pd.Series()
+        count = pd.Series(dtype=np.float64)
     return [go.Bar(x=count.index, y=count.values)]
 
 
@@ -36,7 +37,7 @@ def get_action_per_sub(new_episode):
         s = data[(data["action_subs"] > 0)]["subs_modified"].apply(pd.Series).stack()
         count = s.value_counts()
     except (IndexError, AttributeError):
-        count = pd.Series()
+        count = pd.Series(dtype=np.float64)
     return [go.Bar(x=count.index, y=count.values)]
 
 
