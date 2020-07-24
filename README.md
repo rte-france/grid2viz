@@ -101,7 +101,7 @@ knows to compute everything again with the updated data. To do so, you just need
 #### Scenario Selection
 This page display up to 15 scenarios with for each one a brief summary using the best agent's performances.
 
-![scenario selection](grid2viz/assets/screenshots/scenario_selection.png "Scenario Selection") 
+![scenario selection](grid2viz/assets/screenshots/scenario_selection.png "Scenario Selection")
 
 
 #### Scenario Overview
@@ -114,7 +114,7 @@ be used as reference agent in the other pages to compare to the studied agents.
 Here's displayed your reference agent's performances. You can select an agent to study to compare it with your reference via the
 dropdown on the page. The study agent selected will be used as study agent on the last page.
 
-In the *"instant and cumulated reward"* graph you can point timestep that will be use in the next page to study 
+In the *"instant and cumulated reward"* graph you can point timestep that will be use in the next page to study
 action in a specific timestep area.
 
 ![agent overview](grid2viz/assets/screenshots/agent_overview.png "Agent Overview")
@@ -138,3 +138,20 @@ python3 -m unittest discover --start-directory tests --buffer
 The app is still missing a couple features, namely a graph for visualising the flow through time, and the last line of the last screen, which will show all informations regarding the actions and observations at the selected timestep.
 
 The Actions KPIs and the distances as well as the topological action cluster "object changed" is in alpha feature. We will need some new features from the core API to finish these features.
+
+## Troubleshooting
+### MacOS
+Some mac users have been experimenting issues when lauching the app, raising the following message:
+
+`socket.gaierror: [Errno 8] nodename nor servname provided, or not known`
+
+The following steps might help you to overcome the issue:
+
+1. Open your terminal
+2. Type `echo $HOST` and copy the results
+3. Open the file `/etc/hosts` and make sure you include: <br>
+ `127.0.0.1 PASTE RESULTS FROM echo $HOST`
+4. Save it and close it
+5. Launch grid2viz
+
+
