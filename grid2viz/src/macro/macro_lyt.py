@@ -14,16 +14,17 @@ from grid2viz.src.utils.graph_utils import layout_def, layout_no_data
 def indicator_line(scenario, study_agent):
     episode = make_episode(study_agent, scenario)
 
-    nb_actions = episode.action_data_table[['action_line', 'action_subs']].sum()
+    nb_actions = episode.action_data_table[
+        ['action_line', 'action_subs', 'action_redisp']].sum()
 
-    if nb_actions["action_line"] == 0 and nb_actions["action_subs"] == 0:
+    if nb_actions.sum() == 0:
         pie_figure = go.Figure(layout=layout_no_data("No Actions for this Agent"))
     else:
         pie_figure = go.Figure(
             layout=layout_def,
             data=[go.Pie(
-                labels=["Actions on Lines", "Actions on Substations"],
-                values=[nb_actions["action_line"], nb_actions["action_subs"]]
+                labels=["Actions on Lines", "Actions on Substations", "Redispatching Actions"],
+                values=[nb_actions["action_line"], nb_actions["action_subs"], nb_actions["action_redisp"]]
             )]
         )
 
@@ -219,7 +220,7 @@ def inspector_line(study_agent, scenario):
             html.Div(className="row", children=[
                 html.Div(className="col", children=[
                     html.H6(className="text-center",
-                            children="Distribution of Substation action"),
+                            children="Distribution of Substation actions"),
                     dcc.Graph(
                         id="distribution_substation_action_chart",
                         figure=figures_distribution.on_subs
@@ -227,10 +228,18 @@ def inspector_line(study_agent, scenario):
                 ]),
                 html.Div(className="col", children=[
                     html.H6(className="text-center",
-                            children="Distribution of line action"),
+                            children="Distribution of line actions"),
                     dcc.Graph(
                         id="distribution_line_action_chart",
                         figure=figures_distribution.on_lines
+                    )
+                ]),
+                html.Div(className="col", children=[
+                    html.H6(className="text-center",
+                            children="Distribution of redispatching actions"),
+                    dcc.Graph(
+                        id="distribution_redisp_action_chart",
+                        figure=figures_distribution.redisp
                     )
                 ]),
             ]),
@@ -250,7 +259,7 @@ def get_table(episode):
     return [{"name": i, "id": i} for i in table.columns if i not in cols_to_exclude], table.to_dict("record")
 
 
-ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines"])
+ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines", "redisp"])
 
 
 def action_distrubtion(episode):
@@ -274,7 +283,18 @@ def action_distrubtion(episode):
             layout=layout_def,
             data=actions_per_lines
         )
-    return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines)
+
+    actions_redisp = actions_model.get_action_redispatch(episode)
+
+    if len(actions_redisp[0]["y"]) == 0:
+        figure_redisp = go.Figure(layout=layout_no_data("No redispatching actions for this Agent"))
+    else:
+        figure_redisp = go.Figure(
+            layout=layout_def,
+            data=actions_redisp
+        )
+
+    return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp)
 
 
 def layout(timestamps, scenario, study_agent):

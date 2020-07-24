@@ -79,10 +79,11 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                 html.Div(className="row", children=[
                     html.Div(className="col", children=[
                         html.H6(className="text-center",
-                                children="Voltage and Flow"),
+                                children="Voltage, Flow and Redispatch"),
                         dac.Radio(options=[
                             {'label': 'Flow', 'value': 'flow'},
-                            {'label': 'Voltage (V)', 'value': 'voltage'}
+                            {'label': 'Voltage (V)', 'value': 'voltage'},
+                            {'label': 'Redispatch (MW)', 'value': 'redispatch'}
                         ],
                             value="flow",
                             id="voltage_flow_choice",
@@ -128,14 +129,15 @@ def context_inspector_line(best_episode, study_episode):
 
             html.Div(className="col-xl-5", children=[
                 html.H5("Best Agent's Environment Time Series"),
-                dcc.RadioItems(options=[
+                dac.Radio(options=[
                     {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
                     {'label': 'Hazards', "value": "Hazards"},
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
                     value="Load",
-                    id="environment_choices_buttons"
+                    id="environment_choices_buttons",
+                    buttonStyle="solid"
                 ),
                 dac.Select(
                     id='asset_selector',

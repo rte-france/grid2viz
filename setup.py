@@ -12,7 +12,7 @@ pkgs = {
         "dill>=0.3.2",
         "Flask-Compress>=1.4.0",
         "future>=0.18.2",
-        "grid2op>=1.1.0",
+        "grid2op==1.1.0",
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
         "kiwisolver>=1.1.0",
@@ -42,7 +42,7 @@ pkgs = {
 }
 
 setup(name='Grid2Viz',
-      version='0.0.1',
+      version='0.1.0rc',
       description='Grid2Op Visualization companion app',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -58,7 +58,7 @@ setup(name='Grid2Viz',
       author='Mario Jothy',
       author_email=' mario.jothy@artelys.com',
       url="https://github.com/mjothy/grid2viz",
-      license='TODO',
+      license='MPL',
       packages=setuptools.find_packages(),
       include_package_data=True,
       install_requires=pkgs["required"],
