@@ -165,7 +165,7 @@ def overview_line(timestamps=None):
 
                     html.Div(className="col-6", children=[
                         html.H6(className="text-center",
-                                children="Overflow and Maintenances"),
+                                children="Overflow, Maintenances and Hazards"),
                         dcc.Graph(
                             id="overflow_graph_study",
                             figure=go.Figure(
