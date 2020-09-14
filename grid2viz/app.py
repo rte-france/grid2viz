@@ -3,6 +3,8 @@ This file handles the html entry point of the application through dash component
 It will generate the layout of a given page and handle the routing
 """
 
+import datetime as dt
+
 from dash import Dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -27,6 +29,9 @@ from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.macro import macro_clbk as macro_clbk
 from grid2viz.src.micro import micro_lyt as micro
 from grid2viz.src.micro import micro_clbk as micro_clbk
+
+from grid2viz.src import manager
+
 '''
 End Warning
 '''
@@ -191,17 +196,28 @@ def show_user_timestamps(pathname):
 
 
 @app.callback(Output("user_timestamps", "options"),
-              [Input("user_timestamps_store", "data")])
-def update_user_timestamps_options(data):
-    return data
+              [Input("user_timestamps_store", "data"),
+               Input("agent_study", "data")],
+              [State("scenario", "data")])
+def update_user_timestamps_options(data, agent, scenario):
+    episode = manager.make_episode(agent, scenario)
+    nb_timesteps_played = episode.meta['nb_timestep_played']
+    return [ts for ts in data
+                if dt.datetime.strptime(ts['value'], '%Y-%m-%d %H:%M') in episode.timestamps[:nb_timesteps_played]]
 
 
 @app.callback(Output("user_timestamps", "value"),
-              [Input("user_timestamps_store", "data")])
-def update_user_timestamps_value(data):
+              [Input("user_timestamps_store", "data"), Input("agent_study", "data")],
+              [State("scenario", "data")])
+def update_user_timestamps_value(data, agent, scenario):
     if not data:
         raise PreventUpdate
-    return data[0]["value"]
+    episode = manager.make_episode(agent, scenario)
+    nb_timesteps_played = episode.meta['nb_timestep_played']
+    filtered_data = [ts for ts in data
+                if dt.datetime.strptime(ts['value'], '%Y-%m-%d %H:%M') in episode.timestamps[:nb_timesteps_played]]
+    if filtered_data:
+        return filtered_data[0]["value"]
 
 
 @app.callback(Output("enlarge_left", "n_clicks"),
@@ -215,8 +231,10 @@ def reset_n_cliks_left(value):
 def reset_n_cliks_right(value):
     return 0
 
+
 def app_run(port=8050, debug=False):
     app.run_server(port=port, debug=debug)
-    
+
+
 if __name__ == "__main__":
     app_run()
