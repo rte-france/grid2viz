@@ -54,51 +54,51 @@ with make(dataset,param=params,backend=backend) as env:
              pbar=True)
   env.close()
     
-
-print('redispatching')
-param = Parameters()
-param.init_from_dict({"NO_OVERFLOW_DISCONNECTION": True})
-
-with make(dataset,param=param,backend=backend) as env:
-  agent = RandomRedispatchAgent(env.action_space, env)
-  runner = Runner(**env.get_params_for_runner(),
-                  agentClass=None,
-                  agentInstance=agent)
-  #need to be seeded for reproducibility as this takes random redispatching actions
-  runner.run(nb_episode=1,
-             path_save="grid2viz/data/agents/redispatching-baseline",
-             nb_process=1,
-             max_iter=100,
-             env_seeds=[0],
-             agent_seeds=[0],
-             pbar=True)
-  env.close()
-
-print('do-nothing')
-with make(dataset,param=param,backend=backend) as env:
-  agent = DoNothingAgent(env.action_space)
-  runner = Runner(**env.get_params_for_runner(),
-                  agentClass=None,
-                  agentInstance=agent)
-  runner.run(nb_episode=2,
-             path_save="grid2viz/data/agents/do-nothing-baseline",
-             nb_process=2,
-             max_iter=2000,
-             pbar=True)
-  env.close()
-
-
-print('greedy')
-with make(dataset,param=param,backend=backend) as env:
-  agent = TopologyGreedy(env.action_space)
-  runner = Runner(**env.get_params_for_runner(),
-                  agentClass=None,
-                  agentInstance=agent)
-  runner.run(nb_episode=2,
-             path_save="grid2viz/data/agents/greedy-baseline",
-             nb_process=2,
-             max_iter=2000,
-             pbar=True)
-  env.close()
+#
+# print('redispatching')
+# param = Parameters()
+# param.init_from_dict({"NO_OVERFLOW_DISCONNECTION": True})
+#
+# with make(dataset,param=param,backend=backend) as env:
+#   agent = RandomRedispatchAgent(env.action_space, env)
+#   runner = Runner(**env.get_params_for_runner(),
+#                   agentClass=None,
+#                   agentInstance=agent)
+#   #need to be seeded for reproducibility as this takes random redispatching actions
+#   runner.run(nb_episode=1,
+#              path_save="grid2viz/data/agents/redispatching-baseline",
+#              nb_process=1,
+#              max_iter=100,
+#              env_seeds=[0],
+#              agent_seeds=[0],
+#              pbar=True)
+#   env.close()
+#
+# print('do-nothing')
+# with make(dataset,param=param,backend=backend) as env:
+#   agent = DoNothingAgent(env.action_space)
+#   runner = Runner(**env.get_params_for_runner(),
+#                   agentClass=None,
+#                   agentInstance=agent)
+#   runner.run(nb_episode=2,
+#              path_save="grid2viz/data/agents/do-nothing-baseline",
+#              nb_process=2,
+#              max_iter=2000,
+#              pbar=True)
+#   env.close()
+#
+#
+# print('greedy')
+# with make(dataset,param=param,backend=backend) as env:
+#   agent = TopologyGreedy(env.action_space)
+#   runner = Runner(**env.get_params_for_runner(),
+#                   agentClass=None,
+#                   agentInstance=agent)
+#   runner.run(nb_episode=2,
+#              path_save="grid2viz/data/agents/greedy-baseline",
+#              nb_process=2,
+#              max_iter=2000,
+#              pbar=True)
+#   env.close()
 
 

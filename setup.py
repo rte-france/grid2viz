@@ -42,7 +42,7 @@ pkgs = {
 }
 
 setup(name='Grid2Viz',
-      version='0.1.0rc',
+      version='0.1.1rc',
       description='Grid2Op Visualization companion app',
       classifiers=[
           'Development Status :: 4 - Beta',

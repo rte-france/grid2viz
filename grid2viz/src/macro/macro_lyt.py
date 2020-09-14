@@ -13,6 +13,7 @@ from grid2viz.src.utils.graph_utils import layout_def, layout_no_data
 
 def indicator_line(scenario, study_agent):
     episode = make_episode(study_agent, scenario)
+    figures_distribution = action_distrubtion(episode)
 
     nb_actions = episode.action_data_table[
         ['action_line', 'action_subs', 'action_redisp']].sum()
@@ -90,7 +91,33 @@ def indicator_line(scenario, study_agent):
                     id="maintenance_duration",
                     figure=maintenance_figure
                 )
-            ])
+            ]),
+            html.Div(className="col-12", children=[html.H2(className="text-center",
+                     children="Actions Distributions")]),
+            html.Div(className="col-4", children=[
+                html.H6(className="text-center",
+                        children="On Substations"),
+                dcc.Graph(
+                    id="distribution_substation_action_chart",
+                    figure=figures_distribution.on_subs
+                )
+            ]),
+            html.Div(className="col-4", children=[
+                html.H6(className="text-center",
+                        children="On Lines"),
+                dcc.Graph(
+                    id="distribution_line_action_chart",
+                    figure=figures_distribution.on_lines
+                )
+            ]),
+            html.Div(className="col-4", children=[
+                html.H6(className="text-center",
+                        children="Redispatching"),
+                dcc.Graph(
+                    id="distribution_redisp_action_chart",
+                    figure=figures_distribution.redisp
+                )
+            ]),
         ]),
     ])
 
@@ -180,7 +207,7 @@ def overview_line(timestamps=None):
 def inspector_line(study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
     cols, data = get_table(new_episode)
-    figures_distribution = action_distrubtion(new_episode)
+
 
     data_table = dt.DataTable(
                         columns=cols,
@@ -195,7 +222,7 @@ def inspector_line(study_agent, scenario):
                     )
 
     return html.Div(className="lineBlock card ", children=[
-        html.H4("Inspector For Study Agent", style={'margin-left': '-50px'}),
+        html.H4("Inspector For Study Agent"),
         html.Div(className="container-fluid", id="action_table_div", children=[
             html.Div(className="row", children=[
                 html.Div(className="col flex-center", children=[data_table]),
@@ -217,35 +244,7 @@ def inspector_line(study_agent, scenario):
                     ])
                 ])
             ]),
-            html.Div(className="row", children=[
-                html.Div(className="col", children=[
-                    html.H6(className="text-center",
-                            children="Distribution of Substation actions"),
-                    dcc.Graph(
-                        id="distribution_substation_action_chart",
-                        figure=figures_distribution.on_subs
-                    )
-                ]),
-                html.Div(className="col", children=[
-                    html.H6(className="text-center",
-                            children="Distribution of line actions"),
-                    dcc.Graph(
-                        id="distribution_line_action_chart",
-                        figure=figures_distribution.on_lines
-                    )
-                ]),
-                html.Div(className="col", children=[
-                    html.H6(className="text-center",
-                            children="Distribution of redispatching actions"),
-                    dcc.Graph(
-                        id="distribution_redisp_action_chart",
-                        figure=figures_distribution.redisp
-                    )
-                ]),
-            ]),
-
         ])
-
     ])
 
 
