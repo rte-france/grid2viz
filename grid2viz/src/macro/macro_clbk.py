@@ -13,7 +13,7 @@ from grid2viz.src.manager import make_episode
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.utils.graph_utils import (
-    get_axis_relayout, relayout_callback, layout_def, layout_no_data)
+    get_axis_relayout, relayout_callback, layout_def, layout_no_data, max_or_zero)
 from grid2viz.src.kpi.maintenances import (hist_duration_maintenances)
 
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
@@ -271,14 +271,32 @@ def update_agent_log_action_table(study_agent, scenario):
     [State("distribution_substation_action_chart", "figure"),
      State("distribution_line_action_chart", "figure"),
      State("distribution_redisp_action_chart", "figure"),
-     State("scenario", "data")]
+     State("scenario", "data"),
+     State("agent_ref", "data")]
 )
 def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line,
-                                   figure_redisp, scenario):
+                                   figure_redisp, scenario, ref_agent):
     new_episode = make_episode(study_agent, scenario)
+    ref_episode = make_episode(ref_agent, scenario)
+    y_max = None
     figure_sub["data"] = actions_model.get_action_per_sub(new_episode)
+    if len(figure_sub["data"][0]["x"]) != 0:
+        figure_sub["data"].append(actions_model.get_action_per_sub(ref_episode)[0])
+        y_max = max(map(max_or_zero, [trace.y for trace in figure_sub["data"]])) + 1
     figure_switch_line["data"] = actions_model.get_action_per_line(new_episode)
+    if len(figure_switch_line["data"][0]["x"]) != 0:
+        figure_switch_line["data"].append(actions_model.get_action_per_line(ref_episode)[0])
+        if y_max is None:
+            y_max = max(map(max_or_zero, [trace.y for trace in figure_switch_line["data"]])) + 1
+        if max(map(max_or_zero, [trace.y for trace in figure_switch_line["data"]])) > y_max:
+            y_max = max(map(max_or_zero, [trace.y for trace in figure_switch_line["data"]])) + 1
     figure_redisp["data"] = actions_model.get_action_redispatch(new_episode)
+    if len(figure_redisp["data"][0]["x"]) != 0:
+        figure_redisp["data"].append(actions_model.get_action_redispatch(ref_episode)[0])
+        if y_max is None:
+            y_max = max(map(max_or_zero, [trace.y for trace in figure_redisp["data"]])) + 1
+        if max(map(max_or_zero, [trace.y for trace in figure_redisp["data"]])) > y_max:
+            y_max = max(map(max_or_zero, [trace.y for trace in figure_redisp["data"]])) + 1
 
     figure_sub["layout"].update(
         actions_model.update_layout(
@@ -292,6 +310,11 @@ def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line,
         actions_model.update_layout(
             len(figure_redisp["data"][0]["x"]) == 0,
             "No redispatching actions for this Agent"))
+
+    if y_max:
+        figure_sub["layout"]["yaxis"].update(range=[0, y_max])
+        figure_switch_line["layout"]["yaxis"].update(range=[0, y_max])
+        figure_redisp["layout"]["yaxis"].update(range=[0, y_max])
 
     return figure_sub, figure_switch_line, figure_redisp
 

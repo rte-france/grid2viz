@@ -3,6 +3,13 @@
 from dash.exceptions import PreventUpdate
 
 
+def max_or_zero(x):
+    if len(x) == 0:
+        return 0
+    else:
+        return max(x)
+
+
 class RelayoutX(object):
     """
     Wrapping class for dash core component Graph relayoutData attribute

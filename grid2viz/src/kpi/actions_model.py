@@ -13,7 +13,7 @@ def get_action_per_line(new_episode):
         count = s.value_counts()
     except (IndexError, AttributeError):
         count = pd.Series(dtype=np.float64)
-    return [go.Bar(x=count.index, y=count.values)]
+    return [go.Bar(x=count.index, y=count.values, name=new_episode.agent)]
 
 
 def get_action_redispatch(new_epsiode):
@@ -23,7 +23,7 @@ def get_action_redispatch(new_epsiode):
         count = s.value_counts()
     except (IndexError, AttributeError):
         count = pd.Series(dtype=np.float64)
-    return [go.Bar(x=count.index, y=count.values)]
+    return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
 
 
 def get_action_table_data(new_episode):
@@ -38,7 +38,7 @@ def get_action_per_sub(new_episode):
         count = s.value_counts()
     except (IndexError, AttributeError):
         count = pd.Series(dtype=np.float64)
-    return [go.Bar(x=count.index, y=count.values)]
+    return [go.Bar(x=count.index, y=count.values, name=new_episode.agent)]
 
 
 def update_layout(predicate, msg):

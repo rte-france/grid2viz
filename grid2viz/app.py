@@ -154,7 +154,7 @@ def register_page_lyt(pathname,
     elif pathname == "/macro":
         if ref_agent is None:
             raise PreventUpdate
-        return macro.layout(timestamps, scenario, study_agent), "macro", False, False, True, False
+        return macro.layout(timestamps, scenario, study_agent, ref_agent), "macro", False, False, True, False
     elif pathname == "/micro":
         if ref_agent is None or study_agent is None:
             raise PreventUpdate
