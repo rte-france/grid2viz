@@ -8,13 +8,12 @@ from collections import namedtuple
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.kpi.maintenances import hist_duration_maintenances
 from grid2viz.src.manager import make_episode, agents
-from grid2viz.src.utils.graph_utils import layout_def, layout_no_data, max_or_zero
+from grid2viz.src.utils.graph_utils import layout_def, layout_no_data
 
 
-def indicator_line(scenario, study_agent, ref_agent):
+def indicator_line(scenario, study_agent):
     episode = make_episode(study_agent, scenario)
-    ref_episode = make_episode(ref_agent, scenario)
-    figures_distribution = action_distrubtion(episode, ref_episode)
+    figures_distribution = action_distrubtion(episode)
 
     nb_actions = episode.action_data_table[
         ['action_line', 'action_subs', 'action_redisp']].sum()
@@ -123,8 +122,8 @@ def indicator_line(scenario, study_agent, ref_agent):
     ])
 
 
-def overview_line(timestamps=None, from_scenario_selection=True):
-    if timestamps is None or from_scenario_selection:
+def overview_line(timestamps=None):
+    if timestamps is None:
         timestamps = []
     return html.Div(id="overview_line_id", className="lineBlock card", children=[
         html.H4("Overview"),
@@ -166,7 +165,7 @@ def overview_line(timestamps=None, from_scenario_selection=True):
 
                     html.Div(className="col-6", children=[
                         html.H6(className="text-center",
-                                children="Overflow, Maintenances and Hazards"),
+                                children="Overflow and Maintenances"),
                         dcc.Graph(
                             id="overflow_graph_study",
                             figure=go.Figure(
@@ -262,11 +261,9 @@ def get_table(episode):
 ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines", "redisp"])
 
 
-def action_distrubtion(episode, ref_episode):
+def action_distrubtion(episode):
 
     actions_per_sub = actions_model.get_action_per_sub(episode)
-    actions_per_sub.append(actions_model.get_action_per_sub(ref_episode)[0])
-    y_max = None
 
     if len(actions_per_sub[0]["y"]) == 0:
         figure_subs = go.Figure(layout=layout_no_data("No Actions on subs for this Agent"))
@@ -275,10 +272,8 @@ def action_distrubtion(episode, ref_episode):
             layout=layout_def,
             data=actions_per_sub
         )
-        y_max = max(map(max_or_zero, [trace.y for trace in actions_per_sub])) + 1
 
     actions_per_lines = actions_model.get_action_per_line(episode)
-    actions_per_lines.append(actions_model.get_action_per_line(ref_episode)[0])
 
     if len(actions_per_lines[0]["y"]) == 0:
         figure_lines = go.Figure(layout=layout_no_data("No Actions on lines for this Agent"))
@@ -287,13 +282,8 @@ def action_distrubtion(episode, ref_episode):
             layout=layout_def,
             data=actions_per_lines
         )
-        if y_max is None:
-            y_max = max(map(max_or_zero, [trace.y for trace in actions_per_lines])) + 1
-        if max(map(max_or_zero, [trace.y for trace in actions_per_lines])) > y_max:
-            y_max = max(map(max_or_zero, [trace.y for trace in actions_per_lines])) + 1
 
     actions_redisp = actions_model.get_action_redispatch(episode)
-    actions_redisp.append(actions_model.get_action_redispatch(ref_episode)[0])
 
     if len(actions_redisp[0]["y"]) == 0:
         figure_redisp = go.Figure(layout=layout_no_data("No redispatching actions for this Agent"))
@@ -302,27 +292,18 @@ def action_distrubtion(episode, ref_episode):
             layout=layout_def,
             data=actions_redisp
         )
-        if y_max is None:
-            y_max = max(map(max_or_zero, [trace.y for trace in actions_redisp])) + 1
-        if max(map(max_or_zero, [trace.y for trace in actions_redisp])) > y_max:
-            y_max = max(map(max_or_zero, [trace.y for trace in actions_redisp])) + 1
-
-    if y_max:
-        figure_subs.update_yaxes(range=[0, y_max])
-        figure_lines.update_yaxes(range=[0, y_max])
-        figure_redisp.update_yaxes(range=[0, y_max])
 
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp)
 
 
-def layout(timestamps, scenario, study_agent, ref_agent, from_scenario_selection):
+def layout(timestamps, scenario, study_agent):
     if study_agent is None:
         study_agent = agents[0]
     # if scenario is None:
     #     scenario = list(scenarios)[0]
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
-        indicator_line(scenario, study_agent, ref_agent),
-        overview_line(timestamps, from_scenario_selection),
+        indicator_line(scenario, study_agent),
+        overview_line(timestamps),
         inspector_line(study_agent, scenario)
     ])
