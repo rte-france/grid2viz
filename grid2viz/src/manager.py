@@ -51,6 +51,32 @@ def make_episode(agent, episode_name):
         return episode
 
 
+def make_episode_without_decorate(agent, episode_name):
+    """
+        Load episode from cache without decorating with the EpisodeData attributes
+        This is needed to use multiprocessing which pickles/unpickles the results.
+
+        :param agent: Agent Name
+        :param episode_name: Name of the studied episode
+        :return: Episode with computed data (without EpisodeData attributes), EpisodeData instance
+    """
+    if is_in_ram_cache(episode_name, agent):
+        return get_from_ram_cache(episode_name, agent)
+    elif is_in_fs_cache(episode_name, agent):
+        beg = time.time()
+        path = get_fs_cached_file(episode_name, agent)
+        with open(path, "rb") as f:
+            episode_analytics = dill.load(f)
+        end = time.time()
+        print(f"end loading scenario file: {(end - beg):.1f} s")
+        return episode_analytics
+    else:
+        episode_data = retrieve_episode_from_disk(episode_name, agent)
+        episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
+        save_in_fs_cache(episode_name, agent, episode_analytics)
+        return episode_analytics
+
+
 def clear_fs_cache():
     os.rmdir(cache_dir)
 
@@ -81,7 +107,7 @@ def get_from_fs_cache(episode_name, agent):
 
     episode_analytics.decorate(episode_data)
     end = time.time()
-    print(f"end loading scenario file: {end - beg}")
+    print(f"end loading scenario file: {(end - beg):.1f} s")
     return episode_analytics
 
 
@@ -99,6 +125,7 @@ def retrieve_episode_from_disk(episode_name, agent):
         path, episode_name
     )
     return episode_data
+
 
 def is_in_ram_cache(episode_name, agent):
     return make_ram_cache_id(episode_name, agent) in store
@@ -157,6 +184,8 @@ meta_json, best_agents = check_all_tree_and_get_meta_and_best(agents_dir, agents
 scenarios = []
 scenarios_agent = {}
 agent_scenario = {}
+
+n_cores = int(parser.get("DEFAULT", "n_cores"))
 
 for agent in agents:
     scen_path = os.path.join(agents_dir, agent)

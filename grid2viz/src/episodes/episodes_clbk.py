@@ -1,8 +1,15 @@
+import os
+from pathos.multiprocessing import ProcessPool
+import time
+
 from dash.dependencies import Input, Output, State
 from dash import callback_context
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.app import app
-from grid2viz.src.manager import scenarios, best_agents, meta_json, make_episode
+from grid2viz.src.manager import (scenarios, best_agents, meta_json,
+                                  make_episode_without_decorate, make_episode,
+                                  n_cores, retrieve_episode_from_disk,
+                                  save_in_ram_cache, cache_dir)
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -29,12 +36,31 @@ def load_scenario_cards(url):
         'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
     }
     is_episode_page = (url == "/" or url == "" or url == "/episodes")
+    start_time = time.time()
     if cards_count < 15 and is_episode_page:
-        for scenario in sorted(scenarios):
+        sorted_scenarios = list(sorted(scenarios))
+        if not os.path.exists(cache_dir):
+            print('Starting Multiprocessing for reading the best agent of each scenario')
+            pool = ProcessPool(n_cores)
+            best_agents_data = list(
+                pool.imap(make_episode_without_decorate,
+                          [best_agents[scenario]['agent'] for scenario in sorted_scenarios],
+                          sorted_scenarios))
+            pool.close()
+            print('Multiprocessing done')
+            for i, scenario in enumerate(sorted_scenarios):
+                best_agent_episode = best_agents_data[i]
+                episode_data = retrieve_episode_from_disk(
+                    best_agent_episode.episode_name, best_agent_episode.agent)
+                best_agent_episode.decorate(episode_data)
+                save_in_ram_cache(best_agent_episode.episode_name,
+                                  best_agent_episode.agent,
+                                  best_agent_episode)
+
+        for i, scenario in enumerate(sorted_scenarios):
             best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)
             prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode)
             consumption = best_agent_episode.profile_traces
-
             cards_list.append(
                 dbc.Col(lg=4, width=12, children=[
                     dbc.Card(className='mb-3', children=[
@@ -97,6 +123,7 @@ def load_scenario_cards(url):
                 ])
             )
             cards_count += 1
+    print('Initial loading time = {:.1f} seconds'.format(time.time() - start_time))
     return cards_list
 
 
