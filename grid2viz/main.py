@@ -11,7 +11,8 @@ CONFIG_FILE_CONTENT = """
 # You can remove it once done with the application.
 [DEFAULT]
 agents_dir={agents_dir}
-env_dir={env_dir} 
+env_dir={env_dir}
+n_cores={n_cores}
 # This file will be re generated to each call of "python -m grid2viz.main"
 """
 
@@ -23,6 +24,8 @@ ARG_PORT_DESC = 'The port to serve grid2viz on.'\
                 ' (default to 8050)'
 ARG_DEBUG_DESC = 'Enable debug mode for developers.' \
                  ' (default to False)'
+ARG_N_CORES_DESC = 'The number of cores to use for the first loading of the best agents of each scenario'
+
 
 def main():
     parser_main = argparse.ArgumentParser(description='Grid2Viz')
@@ -38,6 +41,9 @@ def main():
     parser_main.add_argument('--debug', action='store_true',
                              help=ARG_DEBUG_DESC)
 
+    parser_main.add_argument('--n_cores', default=2, type=int,
+                             help=ARG_N_CORES_DESC)
+
     args = parser_main.parse_args()
 
     pkg_root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -48,20 +54,25 @@ def main():
         agents_dir = os.path.abspath(args.agents_path)
     else:            
         agents_dir = os.path.join(pkg_root_dir, "data", "agents")
-        print ("Using default agents logs at {}".format(agents_dir))
+        print("Using default agents logs at {}".format(agents_dir))
 
     if args.env_path is not None:
         env_dir = os.path.abspath(args.env_path)
     else:
         env_dir = os.path.join(pkg_root_dir, "data", "env_conf")
-        print ("Using default environment at {}".format(env_dir))
+        print("Using default environment at {}".format(env_dir))
 
-    with open(config_path, "w") as f:    
-        f.write(CONFIG_FILE_CONTENT.format(agents_dir = agents_dir, env_dir = env_dir))
+    n_cores = args.n_cores
+
+    with open(config_path, "w") as f:
+        f.write(CONFIG_FILE_CONTENT.format(agents_dir=agents_dir,
+                                           env_dir=env_dir,
+                                           n_cores=n_cores))
 
     # Inline import to load app only now
     from grid2viz.app import app_run
     app_run(args.port, args.debug)
+
 
 if __name__ == "__main__":
     main()
