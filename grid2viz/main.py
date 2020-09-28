@@ -41,7 +41,7 @@ def main():
     parser_main.add_argument('--debug', action='store_true',
                              help=ARG_DEBUG_DESC)
 
-    parser_main.add_argument('--n_cores', defaut=2, type=int,
+    parser_main.add_argument('--n_cores', default=2, type=int,
                              help=ARG_N_CORES_DESC)
 
     args = parser_main.parse_args()
