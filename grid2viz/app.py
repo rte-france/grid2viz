@@ -119,6 +119,7 @@ app.layout = html.Div([
     dcc.Store(id="user_timestamps_store"),
     dcc.Store(id="page"),
     dcc.Store(id="relayoutStoreMicro"),
+    dcc.Store(id="reset_timeseries_table_macro", data=True),
     navbar,
     body
 ])
@@ -127,38 +128,44 @@ app.layout = html.Div([
 @app.callback(
     [Output('page-content', 'children'), Output('page', 'data'),
      Output("nav_scen_select", "active"), Output("nav_scen_over", "active"),
-     Output("nav_agent_over", "active"), Output("nav_agent_study", "active")],
+     Output("nav_agent_over", "active"), Output("nav_agent_study", "active"),
+     Output("reset_timeseries_table_macro", "data")],
     [Input('url', 'pathname')],
     [State("scenario", "data"),
      State("agent_ref", "data"),
      State("agent_study", "data"),
      State("user_timestamps", "value"),
      State("page", "data"),
-     State("user_timestamps_store", "data")]
+     State("user_timestamps_store", "data"),
+     State("reset_timeseries_table_macro", "data")]
 )
-def register_page_lyt(pathname,
-                      scenario, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
+def register_page_lyt(pathname, scenario, ref_agent, study_agent,
+                      user_selected_timestamp, prev_page, timestamps_store,
+                      reset_ts_table_macro):
     if timestamps_store is None:
         timestamps_store = []
     timestamps = [dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store]
     
     if pathname and pathname[1:] == prev_page:
         raise PreventUpdate
-    
+
+    if prev_page == "episodes":
+        reset_ts_table_macro = True
+
     if pathname == "/episodes" or pathname == "/" or not pathname:
-        return episodes_lyt, "episodes", True, False, False, False
+        return episodes_lyt, "episodes", True, False, False, False, reset_ts_table_macro
     elif pathname == "/overview":
         # if ref_agent is None:
         #     raise PreventUpdate
-        return overview.layout(scenario, ref_agent), "overview", False, True, False, False
+        return overview.layout(scenario, ref_agent), "overview", False, True, False, False, reset_ts_table_macro
     elif pathname == "/macro":
         if ref_agent is None:
             raise PreventUpdate
-        return macro.layout(timestamps, scenario, study_agent, ref_agent), "macro", False, False, True, False
+        return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False
     elif pathname == "/micro":
         if ref_agent is None or study_agent is None:
             raise PreventUpdate
-        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True
+        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, reset_ts_table_macro
     else:
         return 404, ""
 

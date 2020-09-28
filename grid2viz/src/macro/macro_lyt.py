@@ -123,8 +123,8 @@ def indicator_line(scenario, study_agent, ref_agent):
     ])
 
 
-def overview_line(timestamps=None):
-    if timestamps is None:
+def overview_line(timestamps=None, from_scenario_selection=True):
+    if timestamps is None or from_scenario_selection:
         timestamps = []
     return html.Div(id="overview_line_id", className="lineBlock card", children=[
         html.H4("Overview"),
@@ -315,7 +315,7 @@ def action_distrubtion(episode, ref_episode):
     return ActionsDistribution(on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp)
 
 
-def layout(timestamps, scenario, study_agent, ref_agent):
+def layout(timestamps, scenario, study_agent, ref_agent, from_scenario_selection):
     if study_agent is None:
         study_agent = agents[0]
     # if scenario is None:
@@ -323,6 +323,6 @@ def layout(timestamps, scenario, study_agent, ref_agent):
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
         indicator_line(scenario, study_agent, ref_agent),
-        overview_line(timestamps),
+        overview_line(timestamps, from_scenario_selection),
         inspector_line(study_agent, scenario)
     ])
