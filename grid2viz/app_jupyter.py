@@ -3,13 +3,14 @@ This file handles the html entry point of the application through dash component
 It will generate the layout of a given page and handle the routing
 """
 
-from dash import Dash
+#from dash import Dash
+from jupyter_dash import JupyterDash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
 # We need to create app before importing the rest of the project as it uses @app decorators
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = JupyterDash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])#,server_url="http://127.0.0.1:8050/")
 
 '''
 Get Imports to create layout and callbacks 
