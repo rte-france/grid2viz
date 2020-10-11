@@ -17,6 +17,7 @@ pkgs = {
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
         "jupyter_dash>=0.3.1",
+	"jupyter_server_proxy",
         "kiwisolver>=1.1.0",
         "MarkupSafe>=1.1.1",
         "networkx>=2.4",
