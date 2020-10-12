@@ -1,4 +1,4 @@
-[//]: #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly
+<!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash)
 
 # Grid2Viz
