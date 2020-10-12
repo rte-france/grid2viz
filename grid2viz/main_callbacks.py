@@ -35,22 +35,27 @@ def register_callbacks_main(app):
             timestamps_store = []
         timestamps = [dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store]
 
-        print("register_page_lyt")
-        if pathname and pathname[1:] == prev_page:
+        #when you have a proxy, like on Binder, the pathname can be long. So we split it and only keep the last piece
+        pathName_split=pathname.split("/")
+        pathName_split=pathName_split[len(pathName_split)-1]
+        
+        #print("register_page_lyt")
+        #print(pathname)
+        if pathName_split and pathName_split[1:] == prev_page:
             raise PreventUpdate
 
-        if pathname == "/episodes" or pathname == "/" or not pathname:
-            print("episodes_lyt")
+        
+        if pathName_split == "episodes" or pathName_split == "/" or not pathName_split:
             return episodes_lyt, "episodes", True, False, False, False
-        elif pathname == "/overview":
+        elif pathName_split == "overview":
             # if ref_agent is None:
             #     raise PreventUpdate
             return overview.layout(scenario, ref_agent), "overview", False, True, False, False
-        elif pathname == "/macro":
+        elif pathName_split == "macro":
             if ref_agent is None:
                 raise PreventUpdate
             return macro.layout(timestamps, scenario, study_agent), "macro", False, False, True, False
-        elif pathname == "/micro":
+        elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
                 raise PreventUpdate
             return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True
@@ -85,7 +90,6 @@ def register_callbacks_main(app):
                   [Input("url", "pathname")])
     def show_user_timestamps(pathname):
         class_name = "ml-4 row"
-        print("show_user_timestamps")
         if pathname != "/micro":
             class_name = " ".join([class_name, "hidden"])
         return class_name

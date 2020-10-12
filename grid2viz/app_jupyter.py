@@ -10,6 +10,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 # We need to create app before importing the rest of the project as it uses @app decorators
+JupyterDash.infer_jupyter_proxy_config()#for binder or jupyterHub for instance
 app = JupyterDash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])#,server_url="http://127.0.0.1:8050/")
 
 '''
