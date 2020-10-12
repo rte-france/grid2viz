@@ -31,7 +31,11 @@ def register_callbacks_episodes(app):
             'yaxis': {'showticklabels': False},
             'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
         }
-        is_episode_page = (url == "/" or url == "" or url == "/episodes")
+
+        url_split = url.split("/")
+        url_split = url_split[len(url_split) - 1]
+
+        is_episode_page = (url_split == "/" or url_split == "" or url_split == "episodes")
         if cards_count < 15 and is_episode_page:
             for scenario in sorted(scenarios):
                 best_agent_episode = make_episode(best_agents[scenario]['agent'], scenario)

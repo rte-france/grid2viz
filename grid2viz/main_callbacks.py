@@ -89,8 +89,11 @@ def register_callbacks_main(app):
     @app.callback(Output("user_timestamp_div", "className"),
                   [Input("url", "pathname")])
     def show_user_timestamps(pathname):
+        pathName_split=pathname.split("/")
+        pathName_split=pathName_split[len(pathName_split)-1]
+
         class_name = "ml-4 row"
-        if pathname != "/micro":
+        if pathName_split != "micro":
             class_name = " ".join([class_name, "hidden"])
         return class_name
 
@@ -98,6 +101,8 @@ def register_callbacks_main(app):
     @app.callback(Output("user_timestamps", "options"),
                   [Input("user_timestamps_store", "data")])
     def update_user_timestamps_options(data):
+        if not data:
+            raise PreventUpdate
         if data is not None:
             return data
         else:
