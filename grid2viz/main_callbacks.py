@@ -45,7 +45,7 @@ def register_callbacks_main(app):
             raise PreventUpdate
 
         
-        if pathName_split == "episodes" or pathName_split == "/" or not pathName_split:
+        if pathName_split == "episodes" or pathName_split == "" or not pathName_split:
             return episodes_lyt, "episodes", True, False, False, False
         elif pathName_split == "overview":
             # if ref_agent is None:
@@ -107,8 +107,8 @@ def register_callbacks_main(app):
     @app.callback(Output("user_timestamps", "value"),
                   [Input("user_timestamps_store", "data")])
     def update_user_timestamps_value(data):
-        #if not data:
-        #    raise PreventUpdate
+        if not data:
+            raise PreventUpdate
         if data is not None:
             return data[0]["value"]
         else:
