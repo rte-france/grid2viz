@@ -7,13 +7,16 @@ Welcome to Grid2Viz's documentation!
 ====================================
 Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the `Grid2Op <https://github.com/rte-france/Grid2Op>`_ platform.
 
+.. image:: _static/scenario.png
+
 .. toctree::
    :maxdepth: 2
-   :caption: Installing and starting-kit
+   :caption: Installation and starting-kit
 
    installation.rst
    running-the-app.rst
    starting-kit.rst
+   caching.rst
 
 .. toctree::
    :maxdepth: 2
