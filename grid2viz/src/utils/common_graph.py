@@ -110,9 +110,10 @@ def action_tooltip(episode_actions):
             force_line = action['force_line']
             switch_line = action['switch_line']
             topology = action['topology']
+            redispatch = action['redispatch']
 
             if injection['changed']:
-                [impact_append(" injection set {} to {} <br>"
+                [impact_append(" Injection set {} to {} <br>"
                                .format(detail['set'], detail['to']))
                  for detail in injection['impacted']]
 
@@ -121,15 +122,15 @@ def action_tooltip(episode_actions):
                 disconnections = force_line['disconnections']
 
                 if reconnections['count'] > 0:
-                    impact_append(" force reconnection of {} powerlines ({}) <br>"
+                    impact_append(" Force reconnection of {} powerlines ({}) <br>"
                                   .format(reconnections['count'], reconnections['powerlines']))
 
                 if disconnections['count'] > 0:
-                    impact_append(" force disconnection of {} powerlines ({}) <br>"
+                    impact_append(" Force disconnection of {} powerlines ({}) <br>"
                                   .format(disconnections['count'], disconnections['powerlines']))
 
             if switch_line['changed']:
-                impact_append(" switch status of {} powerlines ({}) <br>"
+                impact_append(" Switch status of {} powerlines ({}) <br>"
                               .format(switch_line['count'], switch_line['powerlines']))
 
             if topology['changed']:
@@ -138,22 +139,29 @@ def action_tooltip(episode_actions):
                 disconnected_bus = topology['disconnect_bus']
 
                 if len(bus_switch) > 0:
-                    [impact_append(" switch bus of {} {} on substation {} <br>"
+                    [impact_append(" Switch bus of {} {} on substation {} <br>"
                                    .format(switch['object_type'], switch['object_id'],
                                            switch['substation']))
                      for switch in bus_switch]
 
                 if len(assigned_bus) > 0:
-                    [impact_append(" assign bus {} to {} {} on substation {} <br>"
+                    [impact_append(" Assign bus {} to {} {} on substation {} <br>"
                                    .format(assignment['bus'], assignment['object_type'],
                                            assignment['object_id'], assignment['substation']))
                      for assignment in assigned_bus]
 
                 if len(disconnected_bus) > 0:
-                    [impact_append(" disconnect bus {} {} on substation {} <br>"
+                    [impact_append(" Disconnect bus {} {} on substation {} <br>"
                                    .format(disconnection['object_type'], disconnection['object_id'],
                                            disconnection['substation']))
                      for disconnection in disconnected_bus]
+
+            if redispatch['changed']:
+                generators = redispatch['generators']
+                for gen_dict in generators:
+                    gen_name = gen_dict["gen_name"]
+                    r_amount = gen_dict["amount"]
+                    impact_append("Redispatch {} of {} <br>".format(gen_name, r_amount))
 
             tooltip_append(''.join(impact_detail))
         else:
@@ -220,7 +228,7 @@ def make_rewards_ts(study_agent, ref_agent, scenario, layout):
     study_episode = make_episode(study_agent, scenario)
     ref_episode = make_episode(ref_agent, scenario)
     actions_ts = study_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs'
+        'action_line', 'action_subs', 'action_redisp'
     ]].sum(axis=1).to_frame(name="Nb Actions")
     df = observation_model.get_df_computed_reward(study_episode)
     action_events_df = pd.DataFrame(

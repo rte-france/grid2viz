@@ -126,6 +126,14 @@ You will also see a summary of the previous page's kpi.
 
 ![agent study](grid2viz/assets/screenshots/agent_study.png "Agent Study")
 
+## Run the tests
+
+To run the tests, execute the following command:
+
+```commandline
+python3 -m unittest discover --start-directory tests --buffer
+```
+
 ## Limitations
 The app is still missing a couple features, namely a graph for visualising the flow through time, and the last line of the last screen, which will show all informations regarding the actions and observations at the selected timestep.
 

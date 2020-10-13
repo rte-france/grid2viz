@@ -11,12 +11,16 @@ from . import EpisodeTrace, maintenances, consumption_profiles
 
 
 class ActionImpacts:
-    def __init__(self, action_line, action_subs, line_name, sub_name,
+    def __init__(self, action_line, action_subs, action_redisp, redisp_impact,
+                 line_name, sub_name, gen_name,
                  action_id):
         self.action_line = action_line
         self.action_subs = action_subs
+        self.action_redisp = action_redisp
+        self.redisp_impact = redisp_impact
         self.line_name = line_name
         self.sub_name = sub_name
+        self.gen_name = gen_name
         self.action_id = action_id
 
 class EpisodeAnalytics:
@@ -30,7 +34,7 @@ class EpisodeAnalytics:
         print("computing df")
         beg = time.time()
         print("Environment")
-        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line = self._make_df_from_data(episode_data)
+        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch = self._make_df_from_data(episode_data)
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
         print("Computing computation intensive indicators...")
@@ -64,6 +68,7 @@ class EpisodeAnalytics:
             - action data table
             - instant and cumulated rewards
             - flow and voltage by line
+            - target and actual redispatch
 
         Returns
         -------
@@ -87,15 +92,20 @@ class EpisodeAnalytics:
         rho = pd.DataFrame(index=range(rho_size), columns=['value'])
 
         cols_loop_action_data_table = [
-            'action_line', 'action_subs', 'line_name', 'sub_name',
-            'action_id', 'distance', 'lines_modified', 'subs_modified'
+            'action_line', 'action_subs', 'action_redisp', 'redisp_impact',
+            'line_name', 'sub_name',
+            'gen_name', 'action_id', 'distance', 'lines_modified', 'subs_modified',
+            'gens_modified'
         ]
         action_data_table = pd.DataFrame(
             index=range(size),
             columns=[
                 'timestep', 'timestamp', 'timestep_reward', 'action_line',
-                'action_subs', 'line_name', 'sub_name', 'action_id',
-                'distance', 'lines_modified', 'subs_modified'
+                'action_subs', 'action_redisp', 'redisp_impact',
+                'line_name', 'sub_name',
+                'gen_name', 'action_id',
+                'distance', 'lines_modified', 'subs_modified',
+                'gens_modified'
             ]
         )
 
@@ -105,19 +115,47 @@ class EpisodeAnalytics:
             [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], episode_data.line_names])
         flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
 
-        list_actions_as_dict = []
+        target_redispatch = pd.DataFrame(index=range(size), columns=episode_data.prod_names)
+        actual_redispatch = pd.DataFrame(index=range(size), columns=episode_data.prod_names)
+
+        topo_vect = episode_data.observations[0].topo_vect
+        if topo_vect.sum() != len(topo_vect):
+            raise ValueError("Not all things are on bus 1")
+
+        obs_0 = episode_data.observations[0]
+
+        # True == connected, False == disconnect
+        # So that len(line_statuses) - line_statuses.sum() is the distance for lines
+        line_statuses = episode_data.observations[0].line_status
+
+        # True == sub has something on bus 2, False == everything on bus 1
+        # So that subs_on_bus2.sum() is the distance for subs
+        subs_on_bus_2 = np.repeat(False, episode_data.observations[0].n_sub)
+
+        # objs_on_bus_2 will store the id of objects connected to bus 2
+        objs_on_bus_2 = {id: [] for id in range(episode_data.observations[0].n_sub)}
+
+        # Distance from original topology is then :
+        # len(line_statuses) - line_statuses.sum() + subs_on_bus_2.sum()
+
+        gens_modified_ids = []
+        actual_redispatch_previous_ts = obs_0.actual_dispatch
+
+        list_actions = []
         for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
                                             total=size):
             time_stamp = self.timestamp(obs)
-            action_impacts, list_actions_as_dict, lines_modified, subs_modified = self.compute_action_impacts(
-                act, list_actions_as_dict)
+            action_impacts, list_actions, lines_modified, subs_modified, gens_modified_names, gens_modified_ids = self.compute_action_impacts(
+                act, list_actions, obs, gens_modified_ids, actual_redispatch_previous_ts)
+
+            actual_redispatch_previous_ts = obs.actual_dispatch
 
             # Building load DF
             begin = time_step * episode_data.n_loads
             end = (time_step + 1) * episode_data.n_loads - 1
             load_data.loc[begin:end, "value"] = obs.load_p.astype(float)
             load_data.loc[begin:end, "timestamp"] = time_stamp
-            # Building prod DF&
+            # Building prod DF
             begin = time_step * episode_data.n_prods
             end = (time_step + 1) * episode_data.n_prods - 1
             production.loc[begin:end, "value"] = obs.prod_p.astype(float)
@@ -128,15 +166,23 @@ class EpisodeAnalytics:
 
             pos = time_step
 
+            distance, line_statuses, subs_on_bus_2, objs_on_bus_2 = self.get_distance_from_obs(
+                act, line_statuses, subs_on_bus_2, objs_on_bus_2, obs_0
+            )
+
             action_data_table.loc[pos, cols_loop_action_data_table] = [
                 action_impacts.action_line,
                 action_impacts.action_subs,
+                action_impacts.action_redisp,
+                action_impacts.redisp_impact,
                 action_impacts.line_name,
                 action_impacts.sub_name,
+                action_impacts.gen_name,
                 action_impacts.action_id,
-                self.get_distance_from_obs(obs),
+                distance,
                 lines_modified,
-                subs_modified
+                subs_modified,
+                gens_modified_names
             ]
 
             computed_rewards.loc[time_step, :] = [
@@ -155,6 +201,9 @@ class EpisodeAnalytics:
                 obs.a_or,
                 obs.v_or
             ]).flatten()
+
+            target_redispatch.loc[time_step, :] = obs.target_dispatch
+            actual_redispatch.loc[time_step, :] = obs.actual_dispatch
 
         load_data["timestep"] = np.repeat(timesteps, episode_data.n_loads)
         load_data["equipment_name"] = np.tile(episode_data.load_names, size).astype(str)
@@ -179,16 +228,17 @@ class EpisodeAnalytics:
         load_data["value"] = load_data["value"].astype(float)
         production["value"] = production["value"].astype(float)
         rho["value"] = rho["value"].astype(float)
-        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table
+        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch
 
-    def get_action_id(self, action_dict, list_actions):
-        if not action_dict:
+    @staticmethod
+    def get_action_id(action, list_actions):
+        if not action:
             return None, list_actions
         for idx, act_dict in enumerate(list_actions):
-            if action_dict == act_dict:
+            if action == act_dict:
                 return idx, list_actions
         # if we havnt found the vect...
-        list_actions.append(action_dict)
+        list_actions.append(action)
         return len(list_actions) - 1, list_actions
 
     def get_sub_name(self, act, obs):
@@ -200,12 +250,83 @@ class EpisodeAnalytics:
                 return self.name_sub[sub]
         return None
 
-    def get_distance_from_obs(self, obs):
-        return len(obs.topo_vect) - np.count_nonzero(obs.topo_vect == 1)
+    def get_distance_from_obs(self, act, line_statuses, subs_on_bus_2,
+                              objs_on_bus_2, obs):
+
+        impact_on_objs = act.impact_on_objects()
+
+        # lines reconnetions/disconnections
+        line_statuses[impact_on_objs['force_line']['disconnections']['powerlines']] = False
+        line_statuses[impact_on_objs['force_line']['reconnections']['powerlines']] = True
+        line_statuses[impact_on_objs['switch_line']['powerlines']] = np.invert(
+            line_statuses[impact_on_objs['switch_line']['powerlines']]
+        )
+
+        topo_vect_dict = {
+            'load': obs.load_pos_topo_vect,
+            'generator': obs.gen_pos_topo_vect,
+            'line (extremity)': obs.line_ex_pos_topo_vect,
+            'line (origin)': obs.line_or_pos_topo_vect
+        }
+
+        # Bus manipulation
+        if impact_on_objs['topology']['changed']:
+            for modif_type in ['bus_switch', 'assigned_bus']:
+
+                for elem in impact_on_objs['topology'][modif_type]:
+                    objs_on_bus_2 = self.update_objs_on_bus(
+                        objs_on_bus_2, elem, topo_vect_dict, kind=modif_type)
+
+            for elem in impact_on_objs['topology']['disconnect_bus']:
+                # Disconnected bus counts as one for the distance
+                subs_on_bus_2[elem['substation']] = True
+
+        subs_on_bus_2 = [True if objs_on_2 else False for _, objs_on_2 in objs_on_bus_2.items()]
+
+        distance = len(line_statuses) - line_statuses.sum() + sum(subs_on_bus_2)
+        return distance, line_statuses, subs_on_bus_2, objs_on_bus_2
+
+    def update_objs_on_bus(self, objs_on_bus_2, elem, topo_vect_dict, kind):
+        for object_type, pos_topo_vect in topo_vect_dict.items():
+            if elem['object_type'] == object_type and elem['bus']:
+                if kind == 'bus_switch':
+                    objs_on_bus_2 = self.update_objs_on_bus_switch(
+                        objs_on_bus_2, elem, pos_topo_vect)
+                else:
+                    objs_on_bus_2 = self.update_objs_on_bus_assign(
+                        objs_on_bus_2, elem, pos_topo_vect)
+                break
+        return objs_on_bus_2
+
+    @staticmethod
+    def update_objs_on_bus_switch(objs_on_bus_2, elem, pos_topo_vect):
+        if pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']]:
+            # elem was on bus 2, remove it from objs_on_bus_2
+            objs_on_bus_2[elem['substation']] = [
+                x for x in objs_on_bus_2[elem['substation']] if
+                x != pos_topo_vect[elem['object_id']]
+            ]
+        else:
+            objs_on_bus_2[elem['substation']].append(
+                pos_topo_vect[elem['object_id']])
+        return objs_on_bus_2
+
+    @staticmethod
+    def update_objs_on_bus_assign(objs_on_bus_2, elem, pos_topo_vect):
+        if pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']] and elem['bus'] == 1:
+            # elem was on bus 2, remove it from objs_on_bus_2
+            objs_on_bus_2[elem['substation']] = [
+                x for x in objs_on_bus_2[elem['substation']] if
+                x != pos_topo_vect[elem['object_id']]
+            ]
+        elif pos_topo_vect[elem['object_id']] not in objs_on_bus_2[elem['substation']] and elem['bus'] == 2:
+            objs_on_bus_2[elem['substation']].append(
+                pos_topo_vect[elem['object_id']])
+        return objs_on_bus_2
 
     # @jit(forceobj=True)
     def _env_actions_as_df(self, episode_data):
-        agent_length = int(episode_data.meta['nb_timestep_played'])
+        agent_length = len(episode_data.actions) # int(episode_data.meta['nb_timestep_played'])
         hazards_size = agent_length * episode_data.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
         hazards = pd.DataFrame(index=range(hazards_size),
@@ -253,7 +374,8 @@ class EpisodeAnalytics:
                           not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
             setattr(self, attribute, getattr(episode_data, attribute))
 
-    def compute_action_impacts(self, action, list_actions_as_dict):
+    def compute_action_impacts(self, action, list_actions, observation,
+                               gens_modified_ids, actual_dispatch_previous_ts):
 
         n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(
             action)
@@ -261,17 +383,29 @@ class EpisodeAnalytics:
             action
         )
 
-        action_id, list_actions_as_dict = self.get_action_id(
-            action.as_dict(), list_actions_as_dict)
+        n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, redisp_volume = self.get_gens_modifications(
+            action, observation, gens_modified_ids, actual_dispatch_previous_ts
+        )
+
+        action_id, list_actions = self.get_action_id(
+            action, list_actions)
 
         return (
             ActionImpacts(
                 action_line=n_lines_modified,
                 action_subs=n_subs_modified,
+                action_redisp=n_gens_modified,
+                redisp_impact=redisp_volume,
                 line_name=str_lines_modified,
                 sub_name=str_subs_modified,
+                gen_name=str_gens_modified,
                 action_id=action_id),
-            list_actions_as_dict, lines_modified, subs_modified)
+            list_actions,
+            lines_modified,
+            subs_modified,
+            gens_modified_names,
+            gens_modified_ids
+        )
 
     def get_lines_modifications(self, action):
         action_dict = action.as_dict()
@@ -311,7 +445,7 @@ class EpisodeAnalytics:
             if lines_switched:
                 if str_lines_modified:
                     str_lines_modified += " - "
-                str_lines_modified += "Change: " + ", ".join(
+                str_lines_modified += "Switch: " + ", ".join(
                     lines_switched)
 
         lines_modified = [*lines_reconnected, *lines_disconnected, *lines_switched]
@@ -341,6 +475,27 @@ class EpisodeAnalytics:
         subs_modified_set = set(subs_modified)
         str_subs_modified = " - ".join(subs_modified_set)
         return n_subs_modified, str_subs_modified, subs_modified
+
+    def get_gens_modifications(self, action, observation,
+                               gens_modified_previous_time_step,
+                               actual_dispatch_previous_ts):
+        action_dict = action.as_dict()
+        n_gens_modified = 0
+        gens_modified_ids = []
+        gens_modified_names = []
+        if 'redispatch' in action_dict:
+            n_gens_modified = (action_dict['redispatch'] != 0).sum()
+            gens_modified_ids = np.where(action_dict['redispatch'] != 0)[0]
+            gens_modified_names = action.name_gen[gens_modified_ids]
+
+        str_gens_modified = " - ".join(gens_modified_names)
+
+        volume_redispatched = round(np.absolute(
+            observation.actual_dispatch[gens_modified_previous_time_step] -
+            actual_dispatch_previous_ts[gens_modified_previous_time_step]
+        ).sum(), 2)
+
+        return n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, volume_redispatched
 
     def get_subs_and_lines_impacted(self, action):
         line_impact, sub_impact = action.get_topological_impact()
