@@ -9,7 +9,8 @@ import dash_antd_components as dac
 import dash_table as dt
 import plotly.graph_objects as go
 
-from grid2viz.src.manager import agent_scenario, make_episode, best_agents
+from grid2viz.src.manager import (agent_scenario, make_episode, best_agents,
+                                  make_network)
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -25,56 +26,63 @@ layout_pie = {
 
 }
 
-indicators_line = html.Div(id="indicator_line", children=[
-    html.H4("Indicators"),
-    html.Div(children=[
 
-        html.Div([
-            html.H5("Best Agent's Consumption Profiles (MW)"),
-            dcc.Graph(
-                id="indicator_line_charts",
-                style={'margin-top': '1em'},
-                figure=go.Figure(
-                    layout=layout_def
-                ),
-            )
-        ], className="col-xl-5"),
+def indicators_line(network_graph):
 
+    return html.Div(id="indicator_line", children=[
+        html.H4("Indicators"),
         html.Div(children=[
-            html.H5("Best Agent's Production Shares"),
-            dcc.Graph(
-                id="production_share_graph",
-                figure=go.Figure(
-                    layout=layout_pie
-                ),
-            )], className="col-xl-4"),
 
-        # number summary column
-        html.Div(children=[
-            html.Div(className="mb-4", children=[
-                html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted", children="Best Agent's Steps (step / nb actions)")
-            ]),
-            html.Div(className="mb-4", children=[
-                html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted", children="Best Agent's Hazards")
-            ]),
-            html.Div(className="mb-4", children=[
-                html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted", children="Best Agent's Maintenances")
-            ]),
-            html.Div(className="mb-4", children=[
-                html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted",
-                       children="Best Agent Maintenances Duration (min)")
-            ])
-        ], className="col-xl-3 align-self-center")
-    ], className="card-body row"),
-], className="lineBlock card")
+            html.Div([
+                html.H5("Best Agent's Consumption Profiles (MW)"),
+                dcc.Graph(
+                    id="indicator_line_charts",
+                    style={'margin-top': '1em'},
+                    figure=go.Figure(
+                        layout=layout_def
+                    ),
+                )
+            ], className="col-xl-5"),
+
+            html.Div(children=[
+                html.H5("Best Agent's Production Shares"),
+                dcc.Graph(
+                    id="production_share_graph",
+                    figure=go.Figure(
+                        layout=layout_pie
+                    ),
+                )], className="col-xl-4"),
+
+            # number summary column
+            html.Div(children=[
+                html.Div(className="mb-4", children=[
+                    html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted", children="Best Agent's Steps (step / nb actions)")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted", children="Best Agent's Hazards")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted", children="Best Agent's Maintenances")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted",
+                           children="Best Agent Maintenances Duration (min)")
+                ])
+            ], className="col-xl-3 align-self-center"),
+            html.Div([
+                html.H5("Network at first time step", style={"margin-top": "2%"}),
+                dcc.Graph(id="network_graph", figure=network_graph),
+            ], className="col-xl-12"),
+        ], className="card-body row"),
+    ], className="lineBlock card")
 
 
 def summary_line(episode, ref_agent, scenario):
@@ -196,9 +204,12 @@ def layout(scenario, ref_agent):
         return
     if ref_agent is None:
         ref_agent = agent_scenario[scenario][0]
+    network_graph = make_network(episode).plot_obs(
+        observation=episode.observations[0],
+    )
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
-        indicators_line,
+        indicators_line(network_graph),
         summary_line(episode, ref_agent, scenario),
         ref_agent_line
     ])

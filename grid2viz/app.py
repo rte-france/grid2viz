@@ -29,6 +29,8 @@ from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.macro import macro_clbk as macro_clbk
 from grid2viz.src.micro import micro_lyt as micro
 from grid2viz.src.micro import micro_clbk as micro_clbk
+from grid2viz.src.simulation import simulation_lyt as simulation
+from grid2viz.src.simulation import simulation_clbk as simulation_clbk
 
 from grid2viz.src import manager
 
@@ -48,7 +50,9 @@ nav_items = [
     dbc.NavItem(dbc.NavLink("Agent Overview",
                             href="/macro", id="nav_agent_over")),
     dbc.NavItem(dbc.NavLink("Agent Study",
-                            href="/micro", id="nav_agent_study"))
+                            href="/micro", id="nav_agent_study")),
+    dbc.NavItem(dbc.NavLink("Simulation",
+                            href="/simulation", id="nav_simulation")),
 ]
 
 navbar = dbc.Navbar(
@@ -129,6 +133,7 @@ app.layout = html.Div([
     [Output('page-content', 'children'), Output('page', 'data'),
      Output("nav_scen_select", "active"), Output("nav_scen_over", "active"),
      Output("nav_agent_over", "active"), Output("nav_agent_study", "active"),
+     Output("nav_simulation", "active"),
      Output("reset_timeseries_table_macro", "data")],
     [Input('url', 'pathname')],
     [State("scenario", "data"),
@@ -153,19 +158,23 @@ def register_page_lyt(pathname, scenario, ref_agent, study_agent,
         reset_ts_table_macro = True
 
     if pathname == "/episodes" or pathname == "/" or not pathname:
-        return episodes_lyt, "episodes", True, False, False, False, reset_ts_table_macro
+        return episodes_lyt, "episodes", True, False, False, False, False, reset_ts_table_macro
     elif pathname == "/overview":
         # if ref_agent is None:
         #     raise PreventUpdate
-        return overview.layout(scenario, ref_agent), "overview", False, True, False, False, reset_ts_table_macro
+        return overview.layout(scenario, ref_agent), "overview", False, True, False, False, False, reset_ts_table_macro
     elif pathname == "/macro":
         if ref_agent is None:
             raise PreventUpdate
-        return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False
+        return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False, False
     elif pathname == "/micro":
         if ref_agent is None or study_agent is None:
             raise PreventUpdate
-        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, reset_ts_table_macro
+        return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, False, reset_ts_table_macro
+    elif pathname == "/simulation":
+        if ref_agent is None or study_agent is None:
+            raise PreventUpdate
+        return simulation.layout(scenario, study_agent), "simulation", False, False, False, False, True, reset_ts_table_macro
     else:
         return 404, ""
 
