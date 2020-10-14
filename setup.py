@@ -20,6 +20,7 @@ pkgs = {
 	"jupyter_server_proxy",
         "kiwisolver>=1.1.0",
         "MarkupSafe>=1.1.1",
+	"nbgitpuller>=0.9.0",
         "networkx>=2.4",
         "packaging>=20.1",
         "pandapower>=2.2.1",
