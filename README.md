@@ -11,6 +11,9 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [3 Getting Started](#getting-started)
 *   [4 Caching](#caching)
 
+## Documentation
+go to: https://grid2viz.readthedocs.io/en/latest/
+
 ## Installation
 ### Requirements:
 *   Python >= 3.6
