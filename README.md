@@ -1,5 +1,5 @@
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
-[![Binder](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset)]
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset)
 
 
 # Grid2Viz
