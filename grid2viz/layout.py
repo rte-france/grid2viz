@@ -74,6 +74,7 @@ body = html.Div([
     ], id='loading_modal')
 ])
 
+
 def make_layout(app):
     app.layout = html.Div([
         dcc.Store(id="scenario", storage_type='memory'),
@@ -82,6 +83,7 @@ def make_layout(app):
         dcc.Store(id="user_timestamps_store"),
         dcc.Store(id="page"),
         dcc.Store(id="relayoutStoreMicro"),
+        dcc.Store(id="reset_timeseries_table_macro", data=True),
         navbar,
         body
     ])

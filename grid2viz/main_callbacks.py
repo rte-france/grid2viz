@@ -1,3 +1,5 @@
+import datetime as dt
+
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
@@ -14,51 +16,54 @@ from grid2viz.src.episodes import episodes_lyt
 '''
 End Warning
 '''
+from grid2viz.src import manager
+
 
 def register_callbacks_main(app):
     @app.callback(
         [Output('page-content', 'children'), Output('page', 'data'),
          Output("nav_scen_select", "active"), Output("nav_scen_over", "active"),
          Output("nav_agent_over", "active"), Output("nav_agent_study", "active"),
-        ],
+         Output("reset_timeseries_table_macro", "data")],
         [Input('url', 'pathname')],
         [State("scenario", "data"),
          State("agent_ref", "data"),
          State("agent_study", "data"),
          State("user_timestamps", "value"),
          State("page", "data"),
-         State("user_timestamps_store", "data")]
+         State("user_timestamps_store", "data"),
+         State("reset_timeseries_table_macro", "data")]
     )
-    def register_page_lyt(pathname,
-                          scenario, ref_agent, study_agent, user_selected_timestamp, prev_page, timestamps_store):
+    def register_page_lyt(pathname, scenario, ref_agent, study_agent,
+                          user_selected_timestamp, prev_page, timestamps_store,
+                          reset_ts_table_macro):
         if timestamps_store is None:
             timestamps_store = []
         timestamps = [dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store]
 
-        #when you have a proxy, like on Binder, the pathname can be long. So we split it and only keep the last piece
-        pathName_split=pathname.split("/")
-        pathName_split=pathName_split[len(pathName_split)-1]
-        
-        #print("register_page_lyt")
-        #print(pathname)
+        # When you have a proxy, like on Binder, the pathname can be long.
+        # So we split it and only keep the last piece
+        pathName_split = pathname.split("/")
+        pathName_split = pathName_split[len(pathName_split)-1]
+
         if pathName_split and pathName_split[1:] == prev_page:
             raise PreventUpdate
 
-        
+        if prev_page == "episodes":
+            reset_ts_table_macro = True
+
         if pathName_split == "episodes" or pathName_split == "" or not pathName_split:
-            return episodes_lyt, "episodes", True, False, False, False
+            return episodes_lyt, "episodes", True, False, False, False, reset_ts_table_macro
         elif pathName_split == "overview":
-            # if ref_agent is None:
-            #     raise PreventUpdate
-            return overview.layout(scenario, ref_agent), "overview", False, True, False, False
+            return overview.layout(scenario, ref_agent), "overview", False, True, False, False, reset_ts_table_macro
         elif pathName_split == "macro":
             if ref_agent is None:
                 raise PreventUpdate
-            return macro.layout(timestamps, scenario, study_agent), "macro", False, False, True, False
+            return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False
         elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
                 raise PreventUpdate
-            return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True
+            return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, reset_ts_table_macro
         else:
             return 404, ""
 
@@ -68,7 +73,6 @@ def register_callbacks_main(app):
         if scenario is None:
             scenario = ""
         return scenario
-
 
     @app.callback(Output("ref_ag_lbl", "children"),
                   [Input("agent_ref", "data")])
@@ -97,27 +101,29 @@ def register_callbacks_main(app):
             class_name = " ".join([class_name, "hidden"])
         return class_name
 
-
     @app.callback(Output("user_timestamps", "options"),
-                  [Input("user_timestamps_store", "data")])
-    def update_user_timestamps_options(data):
-        if not data:
-            raise PreventUpdate
-        if data is not None:
-            return data
-        else:
-            return []#{}
-
+                  [Input("user_timestamps_store", "data"),
+                   Input("agent_study", "data")],
+                  [State("scenario", "data")])
+    def update_user_timestamps_options(data, agent, scenario):
+        episode = manager.make_episode(agent, scenario)
+        nb_timesteps_played = episode.meta['nb_timestep_played']
+        return [ts for ts in data
+                if dt.datetime.strptime(ts['value'], '%Y-%m-%d %H:%M') in episode.timestamps[:nb_timesteps_played]]
 
     @app.callback(Output("user_timestamps", "value"),
-                  [Input("user_timestamps_store", "data")])
-    def update_user_timestamps_value(data):
+                  [Input("user_timestamps_store", "data"), Input("agent_study", "data")],
+                  [State("scenario", "data")])
+    def update_user_timestamps_value(data, agent, scenario):
         if not data:
             raise PreventUpdate
-        if data is not None:
-            return data[0]["value"]
-        else:
-            return '' #{}
+        episode = manager.make_episode(agent, scenario)
+        nb_timesteps_played = episode.meta['nb_timestep_played']
+        filtered_data = [ts for ts in data
+                         if dt.datetime.strptime(ts['value'], '%Y-%m-%d %H:%M') in episode.timestamps[
+                                                                                   :nb_timesteps_played]]
+        if filtered_data:
+            return filtered_data[0]["value"]
 
 
     @app.callback(Output("enlarge_left", "n_clicks"),
