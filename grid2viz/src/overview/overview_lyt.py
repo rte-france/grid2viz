@@ -2,6 +2,9 @@
 This file builds the layout for the scenario overview tab.
 This tab handles the generic information about the environment and the selection of a reference agent for future analysis.
 """
+import base64
+import io
+import matplotlib.pyplot as plt
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -9,7 +12,8 @@ import dash_antd_components as dac
 import dash_table as dt
 import plotly.graph_objects as go
 
-from grid2viz.src.manager import agent_scenario, make_episode, best_agents
+from grid2viz.src.manager import (agent_scenario, make_episode, best_agents,
+                                  make_network_matplotlib)
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -25,56 +29,63 @@ layout_pie = {
 
 }
 
-indicators_line = html.Div(id="indicator_line", children=[
-    html.H4("Indicators"),
-    html.Div(children=[
 
-        html.Div([
-            html.H5("Best Agent's Consumption Profiles (MW)"),
-            dcc.Graph(
-                id="indicator_line_charts",
-                style={'margin-top': '1em'},
-                figure=go.Figure(
-                    layout=layout_def
-                ),
-            )
-        ], className="col-xl-5"),
+def indicators_line(encoded_image):
 
+    return html.Div(id="indicator_line", children=[
+        html.H4("Indicators"),
         html.Div(children=[
-            html.H5("Best Agent's Production Shares"),
-            dcc.Graph(
-                id="production_share_graph",
-                figure=go.Figure(
-                    layout=layout_pie
-                ),
-            )], className="col-xl-4"),
 
-        # number summary column
-        html.Div(children=[
-            html.Div(className="mb-4", children=[
-                html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted", children="Best Agent's Steps (step / nb actions)")
-            ]),
-            html.Div(className="mb-4", children=[
-                html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted", children="Best Agent's Hazards")
-            ]),
-            html.Div(className="mb-4", children=[
-                html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted", children="Best Agent's Maintenances")
-            ]),
-            html.Div(className="mb-4", children=[
-                html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
-                       children=""),
-                html.P(className="text-muted",
-                       children="Best Agent Maintenances Duration (min)")
-            ])
-        ], className="col-xl-3 align-self-center")
-    ], className="card-body row"),
-], className="lineBlock card")
+            html.Div([
+                html.H5("Best Agent's Consumption Profiles (MW)"),
+                dcc.Graph(
+                    id="indicator_line_charts",
+                    style={'margin-top': '1em'},
+                    figure=go.Figure(
+                        layout=layout_def
+                    ),
+                )
+            ], className="col-xl-5"),
+
+            html.Div(children=[
+                html.H5("Best Agent's Production Shares"),
+                dcc.Graph(
+                    id="production_share_graph",
+                    figure=go.Figure(
+                        layout=layout_pie
+                    ),
+                )], className="col-xl-4"),
+
+            # number summary column
+            html.Div(children=[
+                html.Div(className="mb-4", children=[
+                    html.P(id="nb_steps_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted", children="Best Agent's Steps (step / nb actions)")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted", children="Best Agent's Hazards")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted", children="Best Agent's Maintenances")
+                ]),
+                html.Div(className="mb-4", children=[
+                    html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
+                           children=""),
+                    html.P(className="text-muted",
+                           children="Best Agent Maintenances Duration (min)")
+                ])
+            ], className="col-xl-3 align-self-center"),
+            html.Div([
+                html.H5("Network with max values for the best agent", style={"margin-top": "2%"}),
+                html.Img(src='data:image/png;base64,{}'.format(encoded_image))
+            ], className="col-xl-12"),
+        ], className="card-body row"),
+    ], className="lineBlock card")
 
 
 def summary_line(episode, ref_agent, scenario):
@@ -196,9 +207,30 @@ def layout(scenario, ref_agent):
         return
     if ref_agent is None:
         ref_agent = agent_scenario[scenario][0]
+    max_loads = episode.load[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
+    max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
+    network_graph = make_network_matplotlib(episode).plot_info(
+        observation=episode.observations[0],
+        load_values=max_loads.values.flatten(),
+        load_unit="MW",
+        gen_values=max_gens.values.flatten(),
+        gen_unit="MW",
+    )
+
+    # /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained
+    # It calls a deprecated function of matplotlib.
+    # Work around below : insert the image.
+    # https://stackoverflow.com/questions/63120058/plotly-mpl-to-plotly-error-spine-object-has-no-attribute-is-frame-like
+    buf = io.BytesIO()
+    plt.figure(network_graph.number)
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    encoded_image = base64.b64encode(buf.read())
+    buf.close()
+
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
-        indicators_line,
+        indicators_line(encoded_image.decode()),
         summary_line(episode, ref_agent, scenario),
         ref_agent_line
     ])

@@ -11,7 +11,15 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 # We need to create app before importing the rest of the project as it uses @app decorators
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+font_awesome = [
+{
+    'href': 'https://use.fontawesome.com/releases/v5.8.1/css/all.css',
+    'rel': 'stylesheet',
+    'integrity': 'sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf',
+    'crossorigin': 'anonymous'
+}
+]
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, *font_awesome])
 
 '''
 WARNING :
