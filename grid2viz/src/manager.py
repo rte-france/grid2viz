@@ -1,16 +1,16 @@
+import configparser
 import json
+import os
 import time
 
-from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
-from grid2op.Episode import EpisodeData
-import os
-import configparser
-import csv
 import dill
+from grid2op.Episode import EpisodeData
+from grid2op.PlotGrid import PlotPlotly, PlotMatplot
 
-from grid2op.PlotGrid import PlotPlotly
+from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 
 graph = None
+graph_matplotlib = None
 
 
 def make_network(episode):
@@ -23,8 +23,20 @@ def make_network(episode):
     global graph
     if graph is None:
         graph = PlotPlotly(
-            grid_layout=episode.observation_space.grid_layout, observation_space=episode.observation_space)
+            grid_layout=episode.observation_space.grid_layout,
+            observation_space=episode.observation_space,
+            responsive=True)
     return graph
+
+
+def make_network_matplotlib(episode):
+    global graph_matplotlib
+    if graph_matplotlib is None:
+        graph_matplotlib = PlotMatplot(
+            grid_layout=episode.observation_space.grid_layout,
+            observation_space=episode.observation_space,
+            line_name=True, gen_name=True, load_name=True)
+    return graph_matplotlib
 
 
 store = {}
