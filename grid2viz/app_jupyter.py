@@ -3,26 +3,20 @@ This file handles the html entry point of the application through dash component
 It will generate the layout of a given page and handle the routing
 """
 
-from dash import Dash
+#from dash import Dash
+from jupyter_dash import JupyterDash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
 # We need to create app before importing the rest of the project as it uses @app decorators
-font_awesome = [
-{
-    'href': 'https://use.fontawesome.com/releases/v5.8.1/css/all.css',
-    'rel': 'stylesheet',
-    'integrity': 'sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf',
-    'crossorigin': 'anonymous'
-}
-]
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, *font_awesome])
+JupyterDash.infer_jupyter_proxy_config()#for binder or jupyterHub for instance
+app = JupyterDash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])#,server_url="http://127.0.0.1:8050/")
 
 '''
 Get Imports to create layout and callbacks 
 '''
-from grid2viz.main_callbacks import register_callbacks_main
+from grid2viz.main_callbacks import register_callbacks_main 
 from grid2viz.layout import make_layout as layout
 
 
@@ -52,7 +46,6 @@ register_callbacks_micro(app)
 
 def app_run(port=8050, debug=False):
     app.run_server(port=port, debug=debug)
-
-
+    
 if __name__ == "__main__":
     app_run()
