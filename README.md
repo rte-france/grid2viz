@@ -1,5 +1,6 @@
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/release-0.1.1/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset)
+
 
 # Grid2Viz
 
@@ -9,6 +10,9 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [2 Run the application](#run-grid2viz)
 *   [3 Getting Started](#getting-started)
 *   [4 Caching](#caching)
+
+## Documentation
+go to: https://grid2viz.readthedocs.io/en/latest/
 
 ## Installation
 ### Requirements:
