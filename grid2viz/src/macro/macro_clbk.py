@@ -25,12 +25,23 @@ def register_callbacks_macro(app):
          Input('relayoutStoreMacro', 'data')],
         [State("cumulated_rewards_timeserie", "figure"),
          State("agent_ref", "data"),
-         State("scenario", "data")]
+         State("scenario", "data"),
+         State("agent_study", "modified_timestamp"),
+         State("relayoutStoreMacro", "modified_timestamp")]
     )
-    def load_reward_data_scatter(study_agent, relayout_data_store, figure, ref_agent, scenario):
+    def load_reward_data_scatter(study_agent, relayout_data_store, figure,
+                                 ref_agent, scenario,
+                                 agent_study_ts, relayoutStoreMacro_ts):
         """Compute and  create figure with instant and cumulated rewards of the study and ref agent"""
         layout = figure["layout"]
-        if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
+            condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"]
+                         and relayoutStoreMacro_ts > agent_study_ts)
+        else:
+            condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"])
+        if condition:
             relayout_data = relayout_data_store["relayout_data"]
             new_axis_layout = get_axis_relayout(figure, relayout_data)
             if new_axis_layout is not None:
@@ -182,10 +193,22 @@ def register_callbacks_macro(app):
          Input('relayoutStoreMacro', 'data')],
         [State("overflow_graph_study", "figure"),
          State("usage_rate_graph_study", "figure"),
-         State("scenario", "data")]
+         State("scenario", "data"),
+         State("agent_study", "modified_timestamp"),
+         State("relayoutStoreMacro", "modified_timestamp")]
     )
-    def update_agent_log_graph(study_agent, relayout_data_store, figure_overflow, figure_usage, scenario):
-        if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+    def update_agent_log_graph(study_agent, relayout_data_store,
+                               figure_overflow, figure_usage, scenario,
+                               agent_study_ts, relayoutStoreMacro_ts):
+
+        if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
+            condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"]
+                         and relayoutStoreMacro_ts > agent_study_ts)
+        else:
+            condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"])
+        if condition:
             relayout_data = relayout_data_store["relayout_data"]
             layout_usage = figure_usage["layout"]
             new_axis_layout = get_axis_relayout(figure_usage, relayout_data)
@@ -216,10 +239,21 @@ def register_callbacks_macro(app):
          Input('relayoutStoreMacro', 'data')],
         [State("action_timeserie", "figure"),
          State("agent_ref", "data"),
-         State("scenario", "data")]
+         State("scenario", "data"),
+         State("agent_study", "modified_timestamp"),
+         State("relayoutStoreMacro", "modified_timestamp")]
     )
-    def update_actions_graph(study_agent, relayout_data_store, figure, agent_ref, scenario):
-        if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+    def update_actions_graph(study_agent, relayout_data_store, figure,
+                             agent_ref, scenario,
+                             agent_study_ts, relayoutStoreMacro_ts):
+        if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
+            condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"]
+                         and relayoutStoreMacro_ts > agent_study_ts)
+        else:
+            condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"])
+        if condition:
             relayout_data = relayout_data_store["relayout_data"]
             layout = figure["layout"]
             new_axis_layout = get_axis_relayout(figure, relayout_data)
