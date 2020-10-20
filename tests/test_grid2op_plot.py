@@ -9,7 +9,7 @@ os.environ['GRID2VIZ_ROOT'] = os.path.join(
 agents_path = os.path.join(
             pathlib.Path(__file__).parent.absolute(), 'data', 'agents')
 
-config_str = f'[DEFAULT]\nagents_dir={agents_path}'
+config_str = f'[DEFAULT]\nagents_dir={agents_path}\nn_cores=2'
 config_file_path = os.path.join(os.environ['GRID2VIZ_ROOT'], 'config.ini')
 
 with open(config_file_path, 'w') as f:
