@@ -84,9 +84,12 @@ def make_episode_without_decorate(agent, episode_name):
         return episode_analytics
     else:
         episode_data = retrieve_episode_from_disk(episode_name, agent)
-        episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
-        save_in_fs_cache(episode_name, agent, episode_analytics)
-        return episode_analytics
+        if(episode_data is not None):
+            episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
+            save_in_fs_cache(episode_name, agent, episode_analytics)
+            return episode_analytics
+        else:
+            return None
 
 
 def clear_fs_cache():
@@ -133,10 +136,14 @@ def compute_episode(episode_name, agent):
 
 def retrieve_episode_from_disk(episode_name, agent):
     path = os.path.join(agents_dir, agent)
-    episode_data = EpisodeData.from_disk(
-        path, episode_name
-    )
-    return episode_data
+    episode_path = os.path.abspath(os.path.join(path, episode_name))
+    if os.path.isdir(episode_path):
+        episode_data = EpisodeData.from_disk(
+            path, episode_name
+        )
+        return episode_data
+    else:
+        return None
 
 
 def is_in_ram_cache(episode_name, agent):
