@@ -7,7 +7,7 @@ from collections import namedtuple
 
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.kpi.maintenances import hist_duration_maintenances
-from grid2viz.src.manager import make_episode, agents
+from grid2viz.src.manager import make_episode, agents, make_network
 from grid2viz.src.utils.graph_utils import layout_def, layout_no_data, max_or_zero
 
 
@@ -15,7 +15,9 @@ def indicator_line(scenario, study_agent, ref_agent):
     episode = make_episode(study_agent, scenario)
     ref_episode = make_episode(ref_agent, scenario)
     figures_distribution = action_distrubtion(episode, ref_episode)
-
+    network_graph = make_network(episode).plot_info(
+        observation=episode.observations[0],
+    )
     nb_actions = episode.action_data_table[
         ['action_line', 'action_subs', 'action_redisp']].sum()
 
@@ -29,18 +31,6 @@ def indicator_line(scenario, study_agent, ref_agent):
                 values=[nb_actions["action_line"], nb_actions["action_subs"], nb_actions["action_redisp"]]
             )]
         )
-
-    maintenances_data = hist_duration_maintenances(episode)
-    if not maintenances_data:
-        maintenance_figure = go.Figure(layout=layout_no_data("No Maintenances for this scenario"))
-    else:
-        maintenance_figure = go.Figure(
-            layout=layout_def,
-            data=[go.Histogram(
-                x=maintenances_data
-            )]
-        )
-    maintenance_figure["layout"]["xaxis"]["rangemode"] = "tozero"
 
     return html.Div(className="lineBlock card", children=[
         html.H4("Indicators"),
@@ -73,7 +63,14 @@ def indicator_line(scenario, study_agent, ref_agent):
                                axis=1).sum()),
                     html.P(className="text-muted ",
                            children="Number of Action")
-                ])
+                ]),
+                html.Div(className="m-2", children=[
+                    html.P(id="indicator_nb_maintenances",
+                           className="border-bottom h3 mb-0 text-right",
+                           children=episode.nb_maintenances),
+                    html.P(className="text-muted",
+                           children="Number of Maintenances")
+                ]),
             ]),
 
             html.Div(className="col-3", children=[
@@ -87,10 +84,10 @@ def indicator_line(scenario, study_agent, ref_agent):
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="Action Maintenance Duration (on the whole episode)"),
+                        children="Actions' impacts on network"),
                 dcc.Graph(
-                    id="maintenance_duration",
-                    figure=maintenance_figure
+                    id="network_actions",
+                    figure=network_graph
                 )
             ]),
             html.Div(className="col-12", children=[html.H2(className="text-center",
