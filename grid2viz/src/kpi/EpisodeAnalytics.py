@@ -186,12 +186,6 @@ class EpisodeAnalytics:
                 gens_modified_names
             ]
 
-            computed_rewards.loc[time_step, :] = [
-                time_stamp,
-                episode_data.rewards[time_step],
-                episode_data.rewards.cumsum(axis=0)[time_step]
-            ]
-
             flow_voltage_line_table.loc[time_step, :] = np.array([
                 obs.p_ex,
                 obs.q_ex,
@@ -229,6 +223,10 @@ class EpisodeAnalytics:
         load_data["value"] = load_data["value"].astype(float)
         production["value"] = production["value"].astype(float)
         rho["value"] = rho["value"].astype(float)
+
+        computed_rewards['timestep'] = self.timestamps
+        computed_rewards['rewards'] = episode_data.rewards
+        computed_rewards['cum_rewards'] = computed_rewards['rewards'].cumsum(axis=0)
 
         attacks_data_table = pd.DataFrame(
             index=range(size),
