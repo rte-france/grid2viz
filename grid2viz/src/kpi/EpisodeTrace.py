@@ -217,3 +217,10 @@ def get_df_rewards_trace(episode):
         go.Scatter(x=df["timestep"], y=df["cum_rewards"],
                    name=episode.agent + "cum_rewards", yaxis='y2')
     ]
+
+
+def get_attacks_trace(episode):
+    df = episode.attacks_data_table
+    return [
+        go.Scatter(x=df["timestamp"], y=df["attack"].astype(int), name=episode.agent + "_attacks")
+    ]

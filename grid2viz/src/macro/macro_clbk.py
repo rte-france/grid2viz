@@ -228,6 +228,11 @@ def register_callbacks_macro(app):
             hazard_traces[0].update({"name": "Nb of hazards"})
             figure_overflow["data"].append(hazard_traces[0])
 
+        attacks_trace = EpisodeTrace.get_attacks_trace(new_episode).copy()
+        if len(attacks_trace) != 0:
+            attacks_trace[0].update({"name": "Attacks"})
+            figure_overflow["data"].append(attacks_trace[0])
+
         figure_usage["data"] = new_episode.usage_rate_trace
 
         return figure_overflow, figure_usage

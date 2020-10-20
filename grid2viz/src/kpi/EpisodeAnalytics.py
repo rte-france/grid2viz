@@ -34,7 +34,7 @@ class EpisodeAnalytics:
         print("computing df")
         beg = time.time()
         print("Environment")
-        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch = self._make_df_from_data(episode_data)
+        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch, self.attacks_data_table = self._make_df_from_data(episode_data)
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
         print("Computing computation intensive indicators...")
@@ -69,6 +69,7 @@ class EpisodeAnalytics:
             - instant and cumulated rewards
             - flow and voltage by line
             - target and actual redispatch
+            - attacks
 
         Returns
         -------
@@ -228,7 +229,22 @@ class EpisodeAnalytics:
         load_data["value"] = load_data["value"].astype(float)
         production["value"] = production["value"].astype(float)
         rho["value"] = rho["value"].astype(float)
-        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch
+
+        attacks_data_table = pd.DataFrame(
+            index=range(size),
+            columns=[
+                'timestep', 'timestamp', 'attack'
+            ]
+        )
+        attacks_data_table['timestep'] = self.timesteps
+        attacks_data_table['timestamp'] = self.timestamps
+        for time_step, attack in enumerate(episode_data.attacks):
+            n_lines_modified, *_ = self.get_lines_modifications(attack)
+            n_subs_modified, *_ = self.get_subs_modifications(attack)
+            is_attacked = n_lines_modified > 0 or n_subs_modified > 0
+            attacks_data_table.loc[time_step, "attack"] = is_attacked
+
+        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch, attacks_data_table
 
     @staticmethod
     def get_action_id(action, list_actions):
