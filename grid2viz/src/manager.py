@@ -35,7 +35,7 @@ def make_network_matplotlib(episode):
         graph_matplotlib = PlotMatplot(
             grid_layout=episode.observation_space.grid_layout,
             observation_space=episode.observation_space,
-            line_name=True, gen_name=False, load_name=False)
+            line_name=False, gen_name=False, load_name=False)
     return graph_matplotlib
 
 
