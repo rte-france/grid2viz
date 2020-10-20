@@ -194,20 +194,19 @@ def register_callbacks_macro(app):
                 figure_overflow["layout"].update(new_axis_layout)
                 return figure_overflow, figure_usage
         new_episode = make_episode(study_agent, scenario)
-        figure_overflow["data"] = new_episode.total_overflow_trace
+        figure_overflow["data"] = new_episode.total_overflow_trace.copy()
         maintenance_traces = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])
         if len(maintenance_traces) != 0:
             maintenance_traces[0].update({"name": "Nb of maintenances"})
             figure_overflow["data"].append(maintenance_traces[0])
 
-        hazard_traces = EpisodeTrace.get_hazard_trace(new_episode, ["total"])
+        hazard_traces = EpisodeTrace.get_hazard_trace(new_episode, ["total"]).copy()
         if len(hazard_traces) != 0:
             hazard_traces[0].update({"name": "Nb of hazards"})
             figure_overflow["data"].append(hazard_traces[0])
 
         figure_usage["data"] = new_episode.usage_rate_trace
 
-        figure_usage["data"] = new_episode.usage_rate_trace
         return figure_overflow, figure_usage
 
 
