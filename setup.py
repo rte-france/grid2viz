@@ -12,7 +12,7 @@ pkgs = {
         "dill>=0.3.2",
         "Flask-Compress>=1.4.0",
         "future>=0.18.2",
-        "grid2op==1.2.3",
+        "Grid2Op @ https://api.github.com/repos/BDonnot/Grid2Op/tarball",
         "imageio>=2.8.0",
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
