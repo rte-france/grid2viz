@@ -84,7 +84,7 @@ def indicator_line(scenario, study_agent, ref_agent):
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="Actions' impacts on network"),
+                        children="//WIP// Actions' impacts on network"),
                 dcc.Graph(
                     id="network_actions",
                     figure=network_graph
