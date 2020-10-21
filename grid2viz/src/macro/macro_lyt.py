@@ -1,12 +1,12 @@
-import dash_html_components as html
-import dash_core_components as dcc
-import plotly.graph_objects as go
-import dash_table as dt
-
 from collections import namedtuple
 
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_table as dt
+import plotly.graph_objects as go
+
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.kpi.maintenances import hist_duration_maintenances
 from grid2viz.src.manager import make_episode, agents, make_network
 from grid2viz.src.utils.graph_utils import layout_def, layout_no_data, max_or_zero
 
@@ -119,7 +119,6 @@ def indicator_line(scenario, study_agent, ref_agent):
         ]),
     ])
 
-
 def overview_line(timestamps=None, from_scenario_selection=True):
     if timestamps is None or from_scenario_selection:
         timestamps = []
@@ -153,12 +152,24 @@ def overview_line(timestamps=None, from_scenario_selection=True):
                     html.Div(className="col-6", children=[
                         html.H6(className="text-center",
                                 children="Instant and Cumulated Reward"),
-                        dcc.Graph(
-                            id="cumulated_rewards_timeserie",
-                            figure=go.Figure(
-                                layout=layout_def,
-                            )
-                        )
+                        dbc.Tabs(children=[
+                            dbc.Tab(label="Instant Reward", children=[
+                                dcc.Graph(
+                                    id="rewards_timeserie",
+                                    figure=go.Figure(
+                                        layout=layout_def,
+                                    )
+                                )
+                            ]),
+                            dbc.Tab(label="Cumulated Reward", children=[
+                                dcc.Graph(
+                                    id="cumulated_rewards_timeserie",
+                                    figure=go.Figure(
+                                        layout=layout_def,
+                                    )
+                                )
+                            ])
+                        ])
                     ]),
 
                     html.Div(className="col-6", children=[

@@ -20,20 +20,24 @@ from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
 
 def register_callbacks_macro(app):
     @app.callback(
-        Output("cumulated_rewards_timeserie", "figure"),
+        [Output("rewards_timeserie", "figure"),
+         Output("cumulated_rewards_timeserie", "figure"),],
         [Input('agent_study', 'data'),
          Input('relayoutStoreMacro', 'data')],
-        [State("cumulated_rewards_timeserie", "figure"),
+        [State("rewards_timeserie", "figure"),
+         State("cumulated_rewards_timeserie", "figure"),
          State("agent_ref", "data"),
          State("scenario", "data"),
          State("agent_study", "modified_timestamp"),
          State("relayoutStoreMacro", "modified_timestamp")]
     )
-    def load_reward_data_scatter(study_agent, relayout_data_store, figure,
+    def load_reward_data_scatter(study_agent, relayout_data_store, rew_figure,
+                                 cumrew_figure,
                                  ref_agent, scenario,
                                  agent_study_ts, relayoutStoreMacro_ts):
         """Compute and  create figure with instant and cumulated rewards of the study and ref agent"""
-        layout = figure["layout"]
+        rew_layout = rew_figure["layout"]
+        cumrew_layout = cumrew_figure["layout"]
         if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
             condition = (relayout_data_store is not None
                          and relayout_data_store["relayout_data"]
@@ -43,13 +47,16 @@ def register_callbacks_macro(app):
                          and relayout_data_store["relayout_data"])
         if condition:
             relayout_data = relayout_data_store["relayout_data"]
-            new_axis_layout = get_axis_relayout(figure, relayout_data)
-            if new_axis_layout is not None:
-                layout.update(new_axis_layout)
-                return figure
+            rew_new_axis_layout = get_axis_relayout(rew_layout, relayout_data)
+            cumrew_new_axis_layout = get_axis_relayout(cumrew_layout, relayout_data)
+            if rew_new_axis_layout is not None or cumrew_new_axis_layout is not None:
+                if rew_new_axis_layout is not None:
+                    rew_layout.update(rew_new_axis_layout)
+                if cumrew_new_axis_layout is not None:
+                    cumrew_new_axis_layout.update(cumrew_new_axis_layout)
+                return rew_figure
 
-        return make_rewards_ts(study_agent, ref_agent, scenario, layout)
-
+        return make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
 
     @app.callback(
         Output("agent_study_pie_chart", "figure"),
@@ -98,7 +105,7 @@ def register_callbacks_macro(app):
 
     @app.callback(
         Output("timeseries_table", "data"),
-        [Input("cumulated_rewards_timeserie", "clickData"),
+        [Input("rewards_timeserie", "clickData"),
          Input("agent_log_selector", "value")],
         [State("timeseries_table", "data"),
          State("agent_study", "data")]
@@ -136,6 +143,7 @@ def register_callbacks_macro(app):
         [Input("usage_rate_graph_study", "relayoutData"),
          Input("action_timeserie", "relayoutData"),
          Input("overflow_graph_study", "relayoutData"),
+         Input("rewards_timeserie", "relayoutData"),
          Input("cumulated_rewards_timeserie", "relayoutData")],
         [State("relayoutStoreMacro", "data")]
     )

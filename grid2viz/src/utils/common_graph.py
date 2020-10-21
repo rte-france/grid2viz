@@ -215,7 +215,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     return figure
 
 
-def make_rewards_ts(study_agent, ref_agent, scenario, layout):
+def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout):
     """
         Make kpi with rewards and cumulated reward for both reference agent and study agent.
 
@@ -253,12 +253,11 @@ def make_rewards_ts(study_agent, ref_agent, scenario, layout):
     ref_reward_cum_trace_copy.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
 
     return {
-        'data': [ref_reward_trace_copy, ref_reward_cum_trace_copy,
-                 studied_agent_reward_trace, studied_agent_reward_cum_trace,
-                 action_trace],
-        'layout': {**layout,
-                   'yaxis': {'title': 'Instant Reward'},
-                   'yaxis2': {'title': 'Cumulated Reward', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}, }
+        'data': [ref_reward_trace_copy, studied_agent_reward_trace, action_trace],
+        'layout': rew_layout,
+    }, {
+        'data': [ref_reward_cum_trace_copy, studied_agent_reward_cum_trace],
+        'layout': cumrew_layout,
     }
 
 
