@@ -96,8 +96,8 @@ def register_callbacks_micro(app):
                          and relayout_data_store["relayout_data"])
         if condition:
             relayout_data = relayout_data_store["relayout_data"]
-            rew_new_axis_layout = get_axis_relayout(rew_layout, relayout_data)
-            cumrew_new_axis_layout = get_axis_relayout(cumrew_layout, relayout_data)
+            rew_new_axis_layout = get_axis_relayout(rew_figure, relayout_data)
+            cumrew_new_axis_layout = get_axis_relayout(cumrew_figure, relayout_data)
             if rew_new_axis_layout is not None or cumrew_new_axis_layout is not None:
                 if rew_new_axis_layout is not None:
                     rew_layout.update(rew_new_axis_layout)
