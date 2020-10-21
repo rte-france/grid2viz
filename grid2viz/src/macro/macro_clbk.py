@@ -53,8 +53,8 @@ def register_callbacks_macro(app):
                 if rew_new_axis_layout is not None:
                     rew_layout.update(rew_new_axis_layout)
                 if cumrew_new_axis_layout is not None:
-                    cumrew_new_axis_layout.update(cumrew_new_axis_layout)
-                return rew_figure
+                    cumrew_layout.update(cumrew_new_axis_layout)
+                return rew_figure, cumrew_figure
 
         return make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
 

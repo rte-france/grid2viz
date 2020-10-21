@@ -40,7 +40,8 @@ def register_callbacks_micro(app):
         [Input("env_charts_ts", "relayoutData"),
          Input("usage_rate_ts", "relayoutData"),
          Input("overflow_ts", "relayoutData"),
-         Input("cum_instant_reward_ts", "relayoutData"),
+         Input("rewards_ts", "relayoutData"),
+         Input("cumulated_rewards_ts", "relayoutData"),
          Input("actions_ts", "relayoutData"),
          Input("voltage_flow_graph", "relayoutData")],
         [State("relayoutStoreMicro", "data")]
@@ -75,33 +76,46 @@ def register_callbacks_micro(app):
 
     # indicator line
     @app.callback(
-        Output("cum_instant_reward_ts", "figure"),
+        [Output("rewards_ts", "figure"),
+         Output("cumulated_rewards_ts", "figure"), ],
         [Input("relayoutStoreMicro", "data"),
          Input("window", "data"),
          Input("user_timestamps", "value")],
-        [State("cum_instant_reward_ts", "figure"),
+        [State("rewards_ts", "figure"),
+         State("cumulated_rewards_ts", "figure"),
          State("agent_study", "data"),
          State("agent_ref", "data"),
          State("scenario", "data")]
     )
-    def load_reward_ts(relayout_data_store, window, selected_timestamp, figure, study_agent, agent_ref, scenario):
+    def load_reward_ts(relayout_data_store, window, selected_timestamp, rew_figure,
+                                cumrew_figure, study_agent, agent_ref, scenario):
 
-        layout = figure["layout"]
-        if relayout_data_store is not None and relayout_data_store["relayout_data"]:
+        rew_layout = rew_figure["layout"]
+        cumrew_layout = cumrew_figure["layout"]
+        condition = (relayout_data_store is not None
+                         and relayout_data_store["relayout_data"])
+        if condition:
             relayout_data = relayout_data_store["relayout_data"]
-            new_axis_layout = get_axis_relayout(figure, relayout_data)
-            if new_axis_layout is not None:
-                layout.update(new_axis_layout)
-                return figure
+            rew_new_axis_layout = get_axis_relayout(rew_layout, relayout_data)
+            cumrew_new_axis_layout = get_axis_relayout(cumrew_layout, relayout_data)
+            if rew_new_axis_layout is not None or cumrew_new_axis_layout is not None:
+                if rew_new_axis_layout is not None:
+                    rew_layout.update(rew_new_axis_layout)
+                if cumrew_new_axis_layout is not None:
+                    cumrew_layout.update(cumrew_new_axis_layout)
+                return rew_figure, cumrew_figure
 
-        figure = common_graph.make_rewards_ts(study_agent, agent_ref, scenario, layout)
+        rew_figure, cumrew_figure = common_graph.make_rewards_ts(study_agent, agent_ref, scenario, rew_layout, cumrew_layout)
 
         if window is not None:
-            figure["layout"].update(
+            rew_figure["layout"].update(
+                xaxis=dict(range=window, autorange=False)
+            )
+            cumrew_figure["layout"].update(
                 xaxis=dict(range=window, autorange=False)
             )
 
-        return figure
+        return rew_figure, cumrew_figure
 
 
     @app.callback(

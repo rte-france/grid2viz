@@ -1,10 +1,12 @@
-import dash_html_components as html
-import dash_core_components as dcc
-import dash_antd_components as dac
-import plotly.graph_objects as go
-import dash_table as dt
 import datetime
 from collections import namedtuple
+
+import dash_antd_components as dac
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_table as dt
+import plotly.graph_objects as go
 
 from grid2viz.src.manager import make_episode, make_network, best_agents
 from grid2viz.src.utils import common_graph
@@ -24,13 +26,24 @@ def indicator_line():
             html.Div(className="col-6", children=[
                 html.H6(className="text-center",
                         children="Rewards instant + cumulated for 2 agent"),
-                dcc.Graph(
-                    id="cum_instant_reward_ts",
-                    figure=go.Figure(
-                        layout=layout_def,
-                        data=[dict(type="scatter")]
-                    )
-                )
+                dbc.Tabs(children=[
+                    dbc.Tab(label="Instant Reward", children=[
+                        dcc.Graph(
+                            id="rewards_ts",
+                            figure=go.Figure(
+                                layout=layout_def,
+                            )
+                        )
+                    ]),
+                    dbc.Tab(label="Cumulated Reward", children=[
+                        dcc.Graph(
+                            id="cumulated_rewards_ts",
+                            figure=go.Figure(
+                                layout=layout_def,
+                            )
+                        )
+                    ])
+                ])
             ]),
 
             html.Div(className="col-6", children=[
