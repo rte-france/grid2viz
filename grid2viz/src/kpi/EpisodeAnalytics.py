@@ -28,10 +28,8 @@ class EpisodeAnalytics:
         self.episode_name = episode_name
         self.agent = agent
 
-
-
         self.timesteps = list(range(len(episode_data.actions)))
-        print("computing df")
+        print(f"Computing DataFrames for scenario {self.episode_name} and agent {self.agent}")
         beg = time.time()
         print("Environment")
         self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch, self.attacks_data_table = self._make_df_from_data(episode_data)
@@ -225,7 +223,7 @@ class EpisodeAnalytics:
         rho["value"] = rho["value"].astype(float)
 
         computed_rewards['timestep'] = self.timestamps
-        computed_rewards['rewards'] = episode_data.rewards
+        computed_rewards['rewards'] = episode_data.rewards[:size]
         computed_rewards['cum_rewards'] = computed_rewards['rewards'].cumsum(axis=0)
 
         attacks_data_table = pd.DataFrame(
