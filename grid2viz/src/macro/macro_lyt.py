@@ -194,7 +194,7 @@ def overview_line(timestamps=None, from_scenario_selection=True):
 
                 html.Div(className="row", children=[
                     html.Div(className="col-6", children=[
-                        html.H6(className="text-center", children="Actions"),
+                        html.H6(className="text-center", children="Distance from initial topology"),
                         dcc.Graph(
                             id="action_timeserie",
                             figure=go.Figure(

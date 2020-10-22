@@ -188,28 +188,57 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     # used below to make sure the x-axis length is the study agent one
     study_agent_length = len(study_episode.action_data_table)
 
+    action_events_df = pd.DataFrame(
+        index=actions_ts.index, data=np.nan, columns=["action_events"])
+    action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
+        study_episode.action_data_table.loc[(actions_ts["Nb Actions"] > 0).values, "distance"].values
+    action_trace = go.Scatter(
+        x=action_events_df.index, y=action_events_df["action_events"],
+        name=study_agent + " Actions",
+        mode='markers', marker_color='#FFEB3B',
+        marker={"symbol": "hexagon", "size": 10}
+    )
+
+    ref_action_events_df = pd.DataFrame(
+        index=ref_agent_actions_ts.index, data=np.nan, columns=["action_events"])
+    ref_action_events_df.loc[(ref_agent_actions_ts["Nb Actions"] > 0).values, "action_events"] = \
+        ref_episode.action_data_table.loc[(ref_agent_actions_ts["Nb Actions"] > 0).values, "distance"].values
+    ref_action_trace = go.Scatter(
+        x=ref_action_events_df.index[:study_agent_length], y=ref_action_events_df["action_events"][:study_agent_length],
+        name=ref_agent + " Actions",
+        mode='markers', marker_color='#FF5000',
+        marker={"symbol": "hexagon", "size": 10}
+    )
+
+    distance_trace = go.Scatter(x=study_episode.action_data_table.timestamp,
+                       y=study_episode.action_data_table["distance"],
+                       name=study_agent)
+
+    layout_def.update(xaxis=dict(
+        range=[distance_trace.x[0], distance_trace.x[-1]])
+    )
+
     figure = {
         'data': [
-            go.Scatter(x=study_episode.action_data_table.timestamp,
-                       y=actions_ts["Nb Actions"], name=study_agent,
-                       text=action_tooltip(study_episode.actions)),
-            go.Scatter(
-                x=ref_episode.action_data_table.timestamp[:study_agent_length],
-                y=ref_agent_actions_ts["Nb Actions"][:study_agent_length],
-                name=ref_agent,
-                text=action_tooltip(ref_episode.actions)),
+            # go.Scatter(x=study_episode.action_data_table.timestamp,
+            #            y=actions_ts["Nb Actions"], name=study_agent,
+            #            text=action_tooltip(study_episode.actions)),
+            # go.Scatter(
+            #     x=ref_episode.action_data_table.timestamp[:study_agent_length],
+            #     y=ref_agent_actions_ts["Nb Actions"][:study_agent_length],
+            #     name=ref_agent,
+            #     text=action_tooltip(ref_episode.actions)),
 
-            go.Scatter(x=study_episode.action_data_table.timestamp,
-                       y=study_episode.action_data_table["distance"],
-                       name=study_agent + " distance", yaxis='y2'),
+            distance_trace,
+            action_trace,
             go.Scatter(
                 x=ref_episode.action_data_table.timestamp[:study_agent_length],
                 y=ref_episode.action_data_table["distance"][:study_agent_length],
-                name=ref_agent + " distance", yaxis='y2'),
+                name=ref_agent),
+            ref_action_trace,
         ],
-        'layout': {**layout_def,
-                   'yaxis': {'title': 'Actions'},
-                   'yaxis2': {'title': 'Distance', 'side': 'right', 'anchor': 'x', 'overlaying': 'y'}}
+        'layout': layout_def,
+
     }
 
     return figure
@@ -251,6 +280,10 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
     ref_reward_trace_copy.y = ref_reward_trace.y[:len(studied_agent_reward_trace.y)]
     ref_reward_cum_trace_copy.x = ref_reward_cum_trace.x
     ref_reward_cum_trace_copy.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
+
+    rew_layout.update(xaxis=dict(
+        range=[ref_reward_trace_copy.x[0], ref_reward_trace_copy.x[-1]])
+    )
 
     return {
         'data': [ref_reward_trace_copy, studied_agent_reward_trace, action_trace],
