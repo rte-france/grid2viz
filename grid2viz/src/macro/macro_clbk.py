@@ -6,9 +6,10 @@ import datetime as dt
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+import numpy as np
 import plotly.graph_objects as go
 
-from grid2viz.src.manager import make_episode
+from grid2viz.src.manager import make_episode, make_network
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.utils.graph_utils import (
@@ -82,25 +83,22 @@ def register_callbacks_macro(app):
             values=[nb_actions["action_line"], nb_actions["action_subs"], nb_actions["action_redisp"]]
         )]
 
-
     @app.callback(
-        Output("maintenance_duration", "figure"),
-        [Input('agent_study', 'data')],
-        [State("maintenance_duration", "figure"),
-         State("scenario", "data")]
+        Output("network_actions", "figure"),
+        [Input("agent_study", "data")],
+        [State("scenario", "data")]
     )
-    def maintenance_duration_hist(study_agent, figure, scenario):
-        new_episode = make_episode(study_agent, scenario)
-        figure['data'] = [go.Histogram(
-            x=hist_duration_maintenances(new_episode)
-        )]
-        figure["layout"].update(
-            actions_model.update_layout(
-                len(figure["data"][0]["x"]) == 0,
-                "No Maintenances for this scenario"))
-        figure["layout"]["xaxis"]["rangemode"] = "tozero"
-
-        return figure
+    def update_network_graph(study_agent, scenario):
+        episode = make_episode(study_agent, scenario)
+        modified_lines = actions_model.get_modified_lines(episode)
+        line_values = [None] * episode.n_lines
+        for line in modified_lines.index:
+            line_values[np.where(episode.line_names == line)[0][0]] = line
+        network_graph = make_network(episode).plot_info(
+            observation=episode.observations[0],
+            line_values=line_values,
+        )
+        return network_graph
 
 
     @app.callback(

@@ -6,6 +6,11 @@ from grid2viz.src.utils.graph_utils import layout_no_data, layout_def
 
 
 def get_action_per_line(new_episode):
+    count = get_modified_lines(new_episode)
+    return [go.Bar(x=count.index, y=count.values, name=new_episode.agent)]
+
+
+def get_modified_lines(new_episode):
     data = get_action_table_data(new_episode)
     # Below to flatten the series of lists "lines_modified"
     try:
@@ -13,17 +18,22 @@ def get_action_per_line(new_episode):
         count = s.value_counts()
     except (IndexError, AttributeError):
         count = pd.Series(dtype=np.float64)
-    return [go.Bar(x=count.index, y=count.values, name=new_episode.agent)]
+    return count
 
 
 def get_action_redispatch(new_epsiode):
-    data = get_action_table_data(new_epsiode)
+    count = get_modified_gens(new_epsiode)
+    return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
+
+def get_modified_gens(new_episode):
+    data = get_action_table_data(new_episode)
+    # Below to flatten the series of lists "lines_modified"
     try:
         s = data[(data["action_redisp"] > 0)]["gens_modified"].apply(pd.Series).stack()
         count = s.value_counts()
     except (IndexError, AttributeError):
         count = pd.Series(dtype=np.float64)
-    return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
+    return count
 
 
 def get_action_table_data(new_episode):

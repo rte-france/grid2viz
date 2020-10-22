@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
+import numpy as np
 import plotly.graph_objects as go
 
 from grid2viz.src.kpi import actions_model
@@ -15,8 +16,14 @@ def indicator_line(scenario, study_agent, ref_agent):
     episode = make_episode(study_agent, scenario)
     ref_episode = make_episode(ref_agent, scenario)
     figures_distribution = action_distrubtion(episode, ref_episode)
+
+    modified_lines = actions_model.get_modified_lines(episode)
+    line_values = [None] * episode.n_lines
+    for line in modified_lines.index:
+        line_values[np.where(episode.line_names == line)[0][0]] = line
     network_graph = make_network(episode).plot_info(
         observation=episode.observations[0],
+        line_values=line_values,
     )
     nb_actions = episode.action_data_table[
         ['action_line', 'action_subs', 'action_redisp']].sum()
