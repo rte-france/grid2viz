@@ -196,7 +196,8 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         x=action_events_df.index, y=action_events_df["action_events"],
         name=study_agent + " Actions",
         mode='markers', marker_color='#FFEB3B',
-        marker={"symbol": "hexagon", "size": 10}
+        marker={"symbol": "hexagon", "size": 10},
+        text=action_tooltip(study_episode.actions)
     )
 
     ref_action_events_df = pd.DataFrame(
@@ -207,12 +208,18 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         x=ref_action_events_df.index[:study_agent_length], y=ref_action_events_df["action_events"][:study_agent_length],
         name=ref_agent + " Actions",
         mode='markers', marker_color='#FF5000',
-        marker={"symbol": "hexagon", "size": 10}
+        marker={"symbol": "hexagon", "size": 10},
+        text=action_tooltip(ref_episode.actions)
     )
 
     distance_trace = go.Scatter(x=study_episode.action_data_table.timestamp,
-                       y=study_episode.action_data_table["distance"],
-                       name=study_agent)
+                                y=study_episode.action_data_table["distance"],
+                                name=study_agent,)
+
+    ref_distance_trace = go.Scatter(
+        x=ref_episode.action_data_table.timestamp[:study_agent_length],
+        y=ref_episode.action_data_table["distance"][:study_agent_length],
+        name=ref_agent,)
 
     layout_def.update(xaxis=dict(
         range=[distance_trace.x[0], distance_trace.x[-1]])
@@ -220,21 +227,9 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
 
     figure = {
         'data': [
-            # go.Scatter(x=study_episode.action_data_table.timestamp,
-            #            y=actions_ts["Nb Actions"], name=study_agent,
-            #            text=action_tooltip(study_episode.actions)),
-            # go.Scatter(
-            #     x=ref_episode.action_data_table.timestamp[:study_agent_length],
-            #     y=ref_agent_actions_ts["Nb Actions"][:study_agent_length],
-            #     name=ref_agent,
-            #     text=action_tooltip(ref_episode.actions)),
-
             distance_trace,
             action_trace,
-            go.Scatter(
-                x=ref_episode.action_data_table.timestamp[:study_agent_length],
-                y=ref_episode.action_data_table["distance"][:study_agent_length],
-                name=ref_agent),
+            ref_distance_trace,
             ref_action_trace,
         ],
         'layout': layout_def,
@@ -267,7 +262,8 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
     action_trace = go.Scatter(
         x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
         mode='markers', marker_color='#FFEB3B',
-        marker={"symbol": "hexagon", "size": 10}
+        marker={"symbol": "hexagon", "size": 10},
+        text=action_tooltip(study_episode.actions)
     )
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
