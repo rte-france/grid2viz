@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
+from grid2op.PlotGrid import PlotPlotly
 import plotly.graph_objects as go
 
 from grid2viz.src.manager import make_episode, make_network, best_agents
@@ -267,7 +268,11 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     best_episode = make_episode(best_agents[scenario]["agent"], scenario)
     new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)
-    network_graph = make_network(new_episode).plot_obs(new_episode.observations[center_indx])
+    graph = PlotPlotly(
+        grid_layout=new_episode.observation_space.grid_layout,
+        observation_space=new_episode.observation_space,
+        responsive=False)
+    network_graph = graph.plot_obs(new_episode.observations[center_indx])
 
     return html.Div(id="micro_page", children=[
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
