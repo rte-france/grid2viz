@@ -1,0 +1,11 @@
+{
+    "agent_seed": null,
+    "backend_type": "LightSimBackend_rte_case14_realistic_rte_case14_realistic_rte_case14_realistic_rte_case14_realistic",
+    "chronics_max_timestep": "2000",
+    "chronics_path": "C:\\Users\\vrenault\\data_grid2op\\rte_case14_realistic\\chronics\\000",
+    "cumulative_reward": 2170627.25,
+    "env_seed": null,
+    "env_type": "Environment_rte_case14_realistic",
+    "grid_path": "C:\\Users\\vrenault\\data_grid2op\\rte_case14_realistic\\grid.json",
+    "nb_timestep_played": 2000
+}
