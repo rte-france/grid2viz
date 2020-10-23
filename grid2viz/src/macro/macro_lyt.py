@@ -57,6 +57,14 @@ def indicator_line(scenario, study_agent, ref_agent):
                     html.P(className="text-muted", children="Score")
                 ]),
                 html.Div(className="m-2", children=[
+                    html.P(id="indicator_nb_maintenances",
+                           className="border-bottom h3 mb-0 text-right",
+                           children='{}/{}'.format(episode.meta['nb_timestep_played'],
+                                                   episode.meta['chronics_max_timestep'])),
+                    html.P(className="text-muted",
+                           children="Agent's Survival")
+                ]),
+                html.Div(className="m-2", children=[
                     html.P(id="indicator_nb_overflow",
                            className="border-bottom h3 mb-0 text-right",
                            children=episode.total_overflow_ts["value"].sum()),
