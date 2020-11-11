@@ -43,6 +43,7 @@ def indicator_line(scenario, study_agent, ref_agent):
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
             html.Div(className="col-2", children=[
+                html.H5("Agent to study Selection"),
                 dcc.Dropdown(
                     id='agent_log_selector',
                     options=[{'label': agent, 'value': agent}
@@ -99,7 +100,7 @@ def indicator_line(scenario, study_agent, ref_agent):
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="//WIP// Actions' impacts on network"),
+                        children="//WIP// Impacted grid assets"),
                 dcc.Graph(
                     id="network_actions",
                     figure=network_graph
@@ -142,6 +143,7 @@ def overview_line(timestamps=None, from_scenario_selection=True):
         html.Div(className="card-body row", children=[
 
             html.Div(className="col-2", children=[
+                html.H4("Agent study Timestep selection"),
                 dt.DataTable(
                     id="timeseries_table",
                     columns=[{"name": "Timestamps", "id": "Timestamps"}],
@@ -157,7 +159,7 @@ def overview_line(timestamps=None, from_scenario_selection=True):
                     },
                 ),
                 html.Div(html.P(
-                    'Select a timestep on the "Instant and Accumulated Reward" '
+                    'Interactively select a timestep by clicking on the "Instant and Accumulated Reward" '
                     'Time Serie to study it on the next page'
                 ), className='mt-1')
             ]),
@@ -202,7 +204,7 @@ def overview_line(timestamps=None, from_scenario_selection=True):
 
                 html.Div(className="row", children=[
                     html.Div(className="col-6", children=[
-                        html.H6(className="text-center", children="Distance from initial topology"),
+                        html.H6(className="text-center", children="Distance from reference grid configuration"),
                         dcc.Graph(
                             id="action_timeserie",
                             figure=go.Figure(

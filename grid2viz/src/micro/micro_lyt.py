@@ -49,7 +49,7 @@ def indicator_line():
 
             html.Div(className="col-6", children=[
                 html.H6(className="text-center",
-                        children="Actions"),
+                        children="Distance from reference grid configuration"),
                 dcc.Graph(
                     id="actions_ts",
                     figure=go.Figure(
@@ -64,14 +64,14 @@ def indicator_line():
 
 def flux_inspector_line(network_graph=None, slider_params=None):
     return html.Div(id="flux_inspector_line_id", className="lineBlock card", children=[
-        html.H4("Flow"),
+        html.H4("State evolution given agent actions"),
         html.Div(className="card-body row", children=[
             html.Div(className="col", children=[
                 html.Div(className="row", children=[
 
                     html.Div(className="col", children=[
                         html.H6(className="text-center",
-                                children="Interactive Graph"),
+                                children="Grid State evolution overtime"),
 
                         dcc.Graph(
                             id="interactive_graph",
@@ -93,7 +93,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                 html.Div(className="row", children=[
                     html.Div(className="col", children=[
                         html.H6(className="text-center",
-                                children="Voltage, Flow and Redispatch"),
+                                children="Voltage, Flow and Redispatch time series"),
                         dac.Radio(options=[
                             {'label': 'Flow', 'value': 'flow'},
                             {'label': 'Voltage (V)', 'value': 'voltage'},
@@ -142,23 +142,23 @@ def context_inspector_line(best_episode, study_episode):
         html.Div(className="card-body col row", children=[
 
             html.Div(className="col-xl-5", children=[
-                html.H5("Best Agent's Environment Time Series"),
+                html.H5("Environment Time Series"),
                 dac.Radio(options=[
-                    {'label': 'Load', "value": "Load"},
                     {'label': 'Production', "value": "Production"},
+                    {'label': 'Load', "value": "Load"},
                     {'label': 'Hazards', "value": "Hazards"},
                     {'label': 'Maintenances', "value": "Maintenances"},
                 ],
-                    value="Load",
+                    value="Production",
                     id="environment_choices_buttons",
                     buttonStyle="solid"
                 ),
                 dac.Select(
                     id='asset_selector',
-                    options=[{'label': load_name,
-                              'value': load_name}
-                             for load_name in best_episode.load_names],
-                    value=best_episode.load_names[0],
+                    options=[{'label': prod_name,
+                              'value': prod_name}
+                             for prod_name in best_episode.prod_names],
+                    value='solar',#episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
                     mode='multiple',
                     showArrow=True
                 ),
@@ -174,7 +174,7 @@ def context_inspector_line(best_episode, study_episode):
             ]),
 
             html.Div(className="col-xl-7", children=[
-
+                html.H5("Studied agent Metrics"),
                 html.Div(className="row", children=[
                     html.Div(className='col-6', children=[
                         html.H5("Usage rate", className='text-center'),

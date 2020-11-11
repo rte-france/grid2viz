@@ -31,18 +31,18 @@ def ts_graph_avail_assets(ts_kind, episode):
     """
     if ts_kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in [*episode.line_names, 'total']], episode.line_names[0]
+                          for line_name in ['total',*episode.line_names]], 'total'#episode.line_names[0]
     elif ts_kind == 'Production':
         prod_types = episode.get_prod_types()
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in [*episode.prod_names, *list(set(prod_types.values())), 'total']]
-        value = episode.prod_names[0]
+                   for prod_name in [*list(set(prod_types.values())), 'total',*episode.prod_names,]]
+        value = 'solar'#episode.prod_names[0]
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in [*episode.load_names, 'total']]
-        value = episode.load_names[0]
+                   for load_name in ['total',*episode.load_names]]
+        value = 'total'#episode.load_names[0]
 
     return options, value
 
