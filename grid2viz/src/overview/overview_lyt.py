@@ -37,7 +37,7 @@ def indicators_line(encoded_image):
         html.Div(children=[
 
             html.Div([
-                html.H5("Best Agent's Consumption Profiles (MW)"),
+                html.H5("Distribution of Daily Load Profiles (MW)"),
                 dcc.Graph(
                     id="indicator_line_charts",
                     style={'margin-top': '1em'},
@@ -48,7 +48,7 @@ def indicators_line(encoded_image):
             ], className="col-xl-5"),
 
             html.Div(children=[
-                html.H5("Best Agent's Production Shares"),
+                html.H5("Production Shares"),
                 dcc.Graph(
                     id="production_share_graph",
                     figure=go.Figure(
@@ -66,22 +66,22 @@ def indicators_line(encoded_image):
                 html.Div(className="mb-4", children=[
                     html.P(id="nb_hazard_card", className="border-bottom h3 mb-0 text-right",
                            children=""),
-                    html.P(className="text-muted", children="Best Agent's Hazards")
+                    html.P(className="text-muted", children="Number of Hazards")
                 ]),
                 html.Div(className="mb-4", children=[
                     html.P(id="nb_maintenance_card", className="border-bottom h3 mb-0 text-right",
                            children=""),
-                    html.P(className="text-muted", children="Best Agent's Maintenances")
+                    html.P(className="text-muted", children="Number of Maintenances")
                 ]),
                 html.Div(className="mb-4", children=[
                     html.P(id="duration_maintenance_card", className="border-bottom h3 mb-0 text-right",
                            children=""),
                     html.P(className="text-muted",
-                           children="Best Agent Maintenances Duration (min)")
+                           children="Maintenances Duration (min)")
                 ])
             ], className="col-xl-3 align-self-center"),
             html.Div([
-                html.H5("Network with max values for the best agent", style={"margin-top": "2%"}),
+                html.H5("Max load and prod values on Power grid", style={"margin-top": "2%"}),
                 html.Img(src='data:image/png;base64,{}'.format(encoded_image))
             ], className="col-xl-12"),
         ], className="card-body row"),
@@ -93,22 +93,22 @@ def summary_line(episode, ref_agent, scenario):
         html.H4("Summary"),
         html.Div(children=[
             html.Div(children=[
-                html.H5("Best Agent's Environment Time Series"),
+                html.H5("Environment Time Series"),
                 dac.Radio(options=[
-                    {'label': 'Load (MW)', "value": "Load"},
                     {'label': 'Production (MW)', "value": "Production"},
+                    {'label': 'Load (MW)', "value": "Load"},
                     {'label': 'Hazards', "value": "Hazards"},
                     {'label': 'Maintenances', "value": "Maintenances"}],
-                    value="Load",
+                    value="Production",
                     id="scen_overview_ts_switch",
                     buttonStyle="solid"
                 ),
                 dac.Select(
                     id='input_assets_selector',
-                    options=[{'label': load_name,
-                              'value': load_name}
-                             for load_name in episode.load_names],
-                    value=episode.load_names[0],
+                    options=[{'label': prod_name,
+                              'value': prod_name}
+                             for prod_name in episode.prod_names],
+                    value='solar',#episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
                     mode='multiple',
                     showArrow=True
                 ),
@@ -122,6 +122,7 @@ def summary_line(episode, ref_agent, scenario):
             ], className="col-xl-5"),
 
             html.Div(children=[
+                html.H5("Reference agent Metrics"),
                 dcc.Dropdown(
                     id="input_agent_selector", placeholder="select a ref agent",
                     options=[{'label': agent, 'value': agent}
@@ -160,7 +161,9 @@ def summary_line(episode, ref_agent, scenario):
 ref_agent_line = html.Div(children=[
     html.H4("Inspector"),
     html.Div(children=[
+
         html.Div(children=[
+            html.H5("Table Filters Selection"),
             dcc.DatePickerRange(
                 id="date_range",
                 display_format='MMM Do, YY',
@@ -179,6 +182,12 @@ ref_agent_line = html.Div(children=[
                 style=dict(marginBottom="1em"))
         ], className="col-xl-2"),
         html.Div(children=[
+            html.Label(
+                children=[
+                    'The documentation for the filtering syntax within the data table header can be found ',
+                    html.A('here.', href='https://dash.plot.ly/datatable/filtering',
+                           target="_blank")]
+            ),
             dt.DataTable(
                 id="inspection_table",
                 filter_action="native",
@@ -188,12 +197,7 @@ ref_agent_line = html.Div(children=[
                 page_current=0,
                 page_size=20,
             ),
-            html.Label(
-                children=[
-                    'The documentation for the filtering syntax can be found ',
-                    html.A('here.', href='https://dash.plot.ly/datatable/filtering',
-                           target="_blank")]
-            ),
+
         ], className="col-xl-10")
     ], className="col-xl-10 p-2")
 ], className="lineBlock card")

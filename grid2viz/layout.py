@@ -12,7 +12,11 @@ nav_items = [
     dbc.NavItem(dbc.NavLink("Agent Study",
                             href="/micro", id="nav_agent_study")),
     dbc.NavItem(dbc.NavLink("Simulation",
-                            href="/simulation", id="nav_simulation"))
+                            href="/simulation", id="nav_simulation")),
+    dbc.NavItem(dbc.NavLink("Help",
+                            href="https://grid2viz.readthedocs.io/en/latest/", id="nav_help", active=True,
+                            target='_blank'))
+                #, style={"background-color": "white"})
 ]
 
 navbar = dbc.Navbar(
@@ -56,7 +60,7 @@ navbar = dbc.Navbar(
             )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
-            dbc.Nav(nav_items, navbar=True), className="nav_menu"
+            dbc.Nav(nav_items, navbar=True, pills=True), className="nav_menu"
         ),
     ],
     color="#2196F3",
