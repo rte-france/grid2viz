@@ -30,6 +30,7 @@ from grid2viz.src.episodes.episodes_clbk import register_callbacks_episodes
 from grid2viz.src.overview.overview_clbk import register_callbacks_overview #as overview_clbk
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro #as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro #as micro_clbk
+from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
 '''
 End Warning
 '''
@@ -48,6 +49,7 @@ register_callbacks_episodes(app)
 register_callbacks_overview(app)
 register_callbacks_macro(app)
 register_callbacks_micro(app)
+register_callbacks_simulation(app)
 
 
 def app_run(port=8050, debug=False):

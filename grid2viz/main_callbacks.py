@@ -12,6 +12,7 @@ The "as ..." are also mandatory, other nothing is done.
 from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.micro import micro_lyt as micro
+from grid2viz.src.simulation import simulation_lyt as simulation
 from grid2viz.src.episodes import episodes_lyt 
 '''
 End Warning
@@ -24,6 +25,7 @@ def register_callbacks_main(app):
         [Output('page-content', 'children'), Output('page', 'data'),
          Output("nav_scen_select", "active"), Output("nav_scen_over", "active"),
          Output("nav_agent_over", "active"), Output("nav_agent_study", "active"),
+         Output("nav_simulation", "active"),
          Output("reset_timeseries_table_macro", "data")],
         [Input('url', 'pathname')],
         [State("scenario", "data"),
@@ -53,17 +55,22 @@ def register_callbacks_main(app):
             reset_ts_table_macro = True
 
         if pathName_split == "episodes" or pathName_split == "" or not pathName_split:
-            return episodes_lyt, "episodes", True, False, False, False, reset_ts_table_macro
+            return episodes_lyt, "episodes", True, False, False, False, False, reset_ts_table_macro
         elif pathName_split == "overview":
-            return overview.layout(scenario, ref_agent), "overview", False, True, False, False, reset_ts_table_macro
+            return overview.layout(scenario, ref_agent), "overview", False, True, False, False, False, reset_ts_table_macro
         elif pathName_split == "macro":
             if ref_agent is None:
                 raise PreventUpdate
-            return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False
+            return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False, False
         elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
                 raise PreventUpdate
-            return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, reset_ts_table_macro
+            return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, False, reset_ts_table_macro
+        elif pathname == "/simulation":
+            if ref_agent is None or study_agent is None:
+                raise PreventUpdate
+            return simulation.layout(scenario,
+                                     study_agent), "simulation", False, False, False, False, True, reset_ts_table_macro
         else:
             return 404, ""
 

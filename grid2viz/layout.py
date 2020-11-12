@@ -10,7 +10,9 @@ nav_items = [
     dbc.NavItem(dbc.NavLink("Agent Overview",
                             href="/macro", id="nav_agent_over")),
     dbc.NavItem(dbc.NavLink("Agent Study",
-                            href="/micro", id="nav_agent_study"))
+                            href="/micro", id="nav_agent_study")),
+    dbc.NavItem(dbc.NavLink("Simulation",
+                            href="/simulation", id="nav_simulation"))
 ]
 
 navbar = dbc.Navbar(
