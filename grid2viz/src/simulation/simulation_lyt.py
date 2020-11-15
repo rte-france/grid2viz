@@ -71,7 +71,8 @@ def choose_assist_line(episode, network_graph):
                             ]),
                             dbc.Tab(label="Dict", children=[
                                 html.P("Enter the action dictionary:"),
-                                dbc.Textarea(className="mb-3", placeholder="{set_line_status: []}"),
+                                dbc.Textarea(id="textarea", className="mb-3",
+                                             placeholder='{"set_line_status": []}'),
                             ])
                         ]),
                     ]),
