@@ -385,6 +385,8 @@ class EpisodeAnalytics:
         for attribute in [elem for elem in dir(episode_data) if
                           not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
             setattr(self, attribute, getattr(episode_data, attribute))
+        # add the reboot method
+        setattr(self, "reboot", getattr(episode_data, "reboot"))
 
     def compute_action_impacts(self, action, list_actions, observation,
                                gens_modified_ids, actual_dispatch_previous_ts):
@@ -524,7 +526,6 @@ class EpisodeAnalytics:
         else:
             elements_formatted = " - ".join(elements)
         return elements_formatted
-
 
 
 class Test():
