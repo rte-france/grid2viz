@@ -6,7 +6,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dill
 import numpy as np
-from dash import Dash
+from dash import Dash, callback_context
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from grid2op.Action import PlayableAction
@@ -47,6 +47,110 @@ network_graph = network_graph_factory.plot_obs(
 )
 
 
+def lines_tab_layout(episode):
+    return [
+        html.P("Choose a line to act on:", className="mt-1"),
+        dac.Select(
+            id='select_lines_simulation',
+            options=[{'label': line_name,
+                      'value': line_name}
+                     for line_name in episode.line_names],
+            mode='default',
+            value=episode.line_names[0]
+        ),
+        html.P("Choose an action type:", className="mt-1"),
+        dac.Radio(options=[
+            {"label": "Set", "value": "Set"},
+            {"label": "Change", "value": "Change"},
+        ], value="Set", id="radio_topology_type_lines", buttonStyle="solid"),
+        html.P("Choose a target type:", className="mt-1"),
+        dac.Radio(options=[
+            {"label": "Status", "value": "Status"},
+            {"label": "Bus", "value": "Bus"},
+        ], value="Status", id="radio_target_lines", buttonStyle="solid"),
+        dac.Radio(options=[
+            {"label": "Disconnect", "value": "Disconnect"},
+            {"label": "Bus 1", "value": "Bus1"},
+            {"label": "Bus 2", "value": "Bus2"},
+        ], value="Disconnect", id="radio_bus_lines", buttonStyle="solid",
+            className="hidden"),
+        dac.Radio(options=[
+            {"label": "Origin", "value": "Origin"},
+            {"label": "Extremity", "value": "Extremity"}
+        ], value="Origin", id="radio_ex_or_lines", buttonStyle="solid",
+            className="hidden"),
+        dac.Radio(options=[
+            {"label": "Reconnect", "value": "Reconnect"},
+            {"label": "Disconnect", "value": "Disconnect"},
+        ], value="Reconnect", id="radio_disc_rec_lines", buttonStyle="solid",
+            className="mt-1"),
+    ]
+
+
+def loads_tab_layout(episode):
+    return [
+        html.P("Choose a Load to act on:"),
+        dac.Select(
+            id='select_loads_simulation',
+            options=[{'label': name,
+                      'value': name}
+                     for name in episode.load_names],
+            mode='default',
+            value=episode.load_names[0]
+        ),
+        html.P("Choose an action type:"),
+        dac.Radio(options=[
+            {"label": "Set", "value": "Set"},
+            {"label": "Change", "value": "Change"},
+        ], value="Set", id="radio_topology_type_loads", buttonStyle="solid"),
+        html.P("Choose an action:", className="mt-1"),
+        dac.Radio(options=[
+            {"label": "Disconnect", "value": "Disconnect"},
+            {"label": "Bus 1", "value": "Bus1"},
+            {"label": "Bus 2", "value": "Bus2"},
+        ], value="Disconnect", id="radio_bus_loads",
+            buttonStyle="solid",
+            className="mt-1"),
+    ]
+
+
+def gens_tab_layout(episode):
+    return [
+        html.P("Choose a generator to act on:"),
+        dac.Select(
+            id='select_gens_simulation',
+            options=[{'label': prod_name,
+                      'value': prod_name}
+                     for prod_name in episode.prod_names],
+            mode='default',
+            value=episode.prod_names[0]
+        ),
+        html.P("Choose an action type:"),
+        dac.Radio(options=[
+            {"label": "Redispatch", "value": "Redispatch"},
+            {"label": "Topology", "value": "Topology"},
+        ], value="Redispatch", id="radio_action_type_gens",
+            buttonStyle="solid"),
+        dcc.Input(id="input_redispatch", type="number",
+                  placeholder="MW", className="mt-1"),
+        dac.Radio(options=[
+            {"label": "Set", "value": "Set"},
+            {"label": "Change", "value": "Change"},
+        ], value="Set",
+            id="radio_topology_type_gens",
+            buttonStyle="solid",
+            className="hidden"),
+        dac.Radio(options=[
+            {"label": "Disconnect", "value": "Disconnect"},
+            {"label": "Bus 1", "value": "Bus1"},
+            {"label": "Bus 2", "value": "Bus2"},
+        ], value="Disconnect",
+            id="radio_bus_gens",
+            buttonStyle="solid",
+            className="hidden"),
+    ]
+
+
 def choose_assist_line(episode, network_graph):
     return html.Div(id="choose_assist_line", className="lineBlock card", children=[
         html.H4("Choose or Assist"),
@@ -63,101 +167,12 @@ def choose_assist_line(episode, network_graph):
                         dbc.Tabs(id="tab_method", children=[
                             dbc.Tab(label="Dropdowns", children=[
                                 dbc.Tabs(id="tab_object", children=[
-                                    dbc.Tab(label='Lines', children=[
-                                        html.P("Choose a line to act on:", className="mt-1"),
-                                        dac.Select(
-                                            id='select_lines_simulation',
-                                            options=[{'label': line_name,
-                                                      'value': line_name}
-                                                     for line_name in episode.line_names],
-                                            mode='default',
-                                            value=episode.line_names[0]
-                                        ),
-                                        html.P("Choose an action type:", className="mt-1"),
-                                        dac.Radio(options=[
-                                            {"label": "Set", "value": "Set"},
-                                            {"label": "Change", "value": "Change"},
-                                        ], value="Set", id="radio_topology_type_lines", buttonStyle="solid"),
-                                        html.P("Choose a target type:", className="mt-1"),
-                                        dac.Radio(options=[
-                                            {"label": "Status", "value": "Status"},
-                                            {"label": "Bus", "value": "Bus"},
-                                        ], value="Status", id="radio_target_lines", buttonStyle="solid"),
-                                        dac.Radio(options=[
-                                            {"label": "Disconnect", "value": "Disconnect"},
-                                            {"label": "Bus 1", "value": "Bus1"},
-                                            {"label": "Bus 2", "value": "Bus2"},
-                                        ], value="Disconnect", id="radio_bus_lines", buttonStyle="solid",
-                                            className="hidden"),
-                                        dac.Radio(options=[
-                                            {"label": "Origin", "value": "Origin"},
-                                            {"label": "Extremity", "value": "Extremity"}
-                                        ], value="Origin", id="radio_ex_or_lines", buttonStyle="solid",
-                                            className="hidden"),
-                                        dac.Radio(options=[
-                                            {"label": "Reconnect", "value": "Reconnect"},
-                                            {"label": "Disconnect", "value": "Disconnect"},
-                                        ], value="Reconnect", id="radio_disc_rec_lines", buttonStyle="solid",
-                                            className="mt-1"),
-                                    ]),
-                                    dbc.Tab(label='Loads', children=[
-                                        html.P("Choose a Load to act on:"),
-                                        dac.Select(
-                                            id='select_loads_simulation',
-                                            options=[{'label': name,
-                                                      'value': name}
-                                                     for name in episode.load_names],
-                                            mode='default',
-                                            value=episode.load_names[0]
-                                        ),
-                                        html.P("Choose an action type:"),
-                                        dac.Radio(options=[
-                                            {"label": "Set", "value": "Set"},
-                                            {"label": "Change", "value": "Change"},
-                                        ], value="Set", id="radio_topology_type_loads", buttonStyle="solid"),
-                                        html.P("Choose an action:", className="mt-1"),
-                                        dac.Radio(options=[
-                                            {"label": "Disconnect", "value": "Disconnect"},
-                                            {"label": "Bus 1", "value": "Bus1"},
-                                            {"label": "Bus 2", "value": "Bus2"},
-                                        ], value="Disconnect", id="radio_bus_loads",
-                                            buttonStyle="solid",
-                                            className="mt-1"),
-                                    ]),
-                                    dbc.Tab(label='Gens', children=[
-                                        html.P("Choose a generator to act on:"),
-                                        dac.Select(
-                                            id='select_gens_simulation',
-                                            options=[{'label': prod_name,
-                                                      'value': prod_name}
-                                                     for prod_name in episode.prod_names],
-                                            mode='default',
-                                            value=episode.prod_names[0]
-                                        ),
-                                        html.P("Choose an action type:"),
-                                        dac.Radio(options=[
-                                            {"label": "Redispatch", "value": "Redispatch"},
-                                            {"label": "Topology", "value": "Topology"},
-                                        ], value="Redispatch", id="radio_action_type_gens",
-                                            buttonStyle="solid"),
-                                        dcc.Input(id="input_redispatch", type="number",
-                                                  placeholder="MW", className="mt-1"),
-                                        dac.Radio(options=[
-                                            {"label": "Set", "value": "Set"},
-                                            {"label": "Change", "value": "Change"},
-                                        ], value="Set",
-                                            id="radio_topology_type_gens",
-                                            buttonStyle="solid",
-                                            className="hidden"),
-                                        dac.Radio(options=[
-                                            {"label": "Disconnect", "value": "Disconnect"},
-                                            {"label": "Bus 1", "value": "Bus1"},
-                                            {"label": "Bus 2", "value": "Bus2"},
-                                        ], value="Disconnect",
-                                            id="radio_bus_gens",
-                                            buttonStyle="solid",
-                                            className="hidden"),
-                                    ])
+                                    dbc.Tab(label='Lines',
+                                            children=lines_tab_layout(episode)),
+                                    dbc.Tab(label='Loads',
+                                            children=loads_tab_layout(episode)),
+                                    dbc.Tab(label='Gens',
+                                            children=gens_tab_layout(episode))
                                 ])
                             ]),
                             dbc.Tab(label="Dict", children=[
@@ -172,6 +187,7 @@ def choose_assist_line(episode, network_graph):
                     ]),
                 ]),
                 dbc.Button("Simulate", id="simulate_action", color="danger", className="mt-3 mb-3"),
+                dbc.Button("Reset", id="reset_action", color="secondary", className="m-3"),
                 html.P(id="action_info", className="more-info-table")
             ]),
         ]),
@@ -244,7 +260,8 @@ def compare_line(network_graph):
     [Output("actions", "data"),
      Output("action_info", "children"),
      Output("graph_div", "children")],
-    [Input("simulate_action", "n_clicks")],
+    [Input("simulate_action", "n_clicks"),
+     Input("reset_action", "n_clicks")],
     [State("actions", "data"),
      State("textarea", "value"),
      State("tab_method", "active_tab"),
@@ -262,17 +279,32 @@ def compare_line(network_graph):
      State("radio_action_type_gens", "value"),
      State("radio_topology_type_gens", "value"),
      State("radio_bus_gens", "value"),
-     State("input_redispatch", "value")
+     State("input_redispatch", "value"),
      ]
 )
-def update_action(n_clicks, actions, action_dict, method_tab, objet_tab,
+def update_action(simulate_n_clicks, reset_n_clicks,
+                  actions, action_dict, method_tab, objet_tab,
                   selected_line, selected_load, selected_gen,
                   topology_type_lines, disc_rec_lines,
                   target_lines, bus_lines, ex_or_lines,
                   topology_type_loads, bus_loads,
                   action_type_gens, topology_type_gens, bus_gens, redisp_volume
                   ):
-    if n_clicks is None:
+    ctx = callback_context
+
+    if not ctx.triggered:
+        raise PreventUpdate
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id == "reset_action":
+        network_graph = network_graph_factory.plot_obs(
+            observation=episode.observations[0]
+        )
+        graph_div = dcc.Graph(figure=network_graph)
+        return None, "", graph_div
+
+    if simulate_n_clicks is None:
         raise PreventUpdate
     if method_tab == "tab-0":
         # Dropdown
