@@ -4,6 +4,7 @@ import os
 import time
 
 import dill
+import pandas as pd
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
 
@@ -165,15 +166,23 @@ def make_ram_cache_id(episode_name, agent):
 def check_all_tree_and_get_meta_and_best(base_dir, agents):
     best_agents = {}
     meta_json = {}
+    scenarios=set()
+    survival_dic={}
 
     for agent in agents:
+        survival_dic_agent={}
         for scenario_name in os.listdir(os.path.join(base_dir, agent)):
+
             scenario_folder = os.path.join(base_dir, agent, scenario_name)
             if not os.path.isdir(scenario_folder):
                 continue
             with open(os.path.join(scenario_folder, "episode_meta.json")) as f:
                 episode_meta = json.load(fp=f)
                 meta_json[scenario_name] = episode_meta
+
+                survival_dic_agent[scenario_name] = int(int(episode_meta["nb_timestep_played"])*100/int(episode_meta["chronics_max_timestep"]))
+                scenarios.add(scenario_name)
+
                 if scenario_name not in best_agents:
                     best_agents[scenario_name] = {"value": -1, "agent": None, "out_of": 0}
                 if best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"]:
@@ -181,7 +190,16 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
                     best_agents[scenario_name]["agent"] = agent
                     best_agents[scenario_name]['cum_reward'] = episode_meta['cumulative_reward']
             best_agents[scenario_name]["out_of"] = best_agents[scenario_name]["out_of"] + 1
-    return meta_json, best_agents
+        survival_dic[agent]=survival_dic_agent
+
+    survival_df=pd.DataFrame(columns=agents,index=scenarios)
+    for agent in agents:
+        survival_dic_agent=survival_dic[agent]
+        for (scenario,survival_time) in survival_dic_agent.items():
+            survival_df.loc[scenario][agent]=survival_time
+    survival_df=survival_df.astype(int)
+
+    return meta_json, best_agents, survival_df
 
 
 """
@@ -199,7 +217,7 @@ cache_dir = os.path.join(agents_dir, "_cache")
 '''Parsing of agent folder tree'''
 agents = sorted([file for file in os.listdir(agents_dir)
                  if os.path.isdir(os.path.join(agents_dir, file)) and not file.startswith("_")])
-meta_json, best_agents = check_all_tree_and_get_meta_and_best(agents_dir, agents)
+meta_json, best_agents,survival_df = check_all_tree_and_get_meta_and_best(agents_dir, agents)
 scenarios = []
 scenarios_agent = {}
 agent_scenario = {}
