@@ -6,6 +6,11 @@ import time
 import pkg_resources
 import argparse
 
+## A bug can appear with MacOSX if matplotlib is not set to a non-interactive mode
+#issue: https://github.com/matplotlib/matplotlib/issues/14304/
+import matplotlib
+matplotlib.use('agg')
+
 CONFIG_FILE_CONTENT = """
 # This file have been automatically generated, please do not modify it. 
 # You can remove it once done with the application.
@@ -101,7 +106,7 @@ def make_cache():
     if(n_cores==1):#no multiprocess useful for debug if needed
         i = 0
         for agent_scenario in agent_scenario_list:
-            agents_data[i]=make_episode_without_decorate(agent_scenario[0],agent_scenario[1])
+            agents_data.append(make_episode_without_decorate(agent_scenario[0],agent_scenario[1]))
             i+=1
     else:
         pool = ProcessPool(n_cores)
