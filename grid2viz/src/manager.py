@@ -85,7 +85,7 @@ def make_episode_without_decorate(agent, episode_name):
         return episode_analytics
     else:
         episode_data = retrieve_episode_from_disk(episode_name, agent)
-        if(episode_data is not None):
+        if (episode_data is not None):
             episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
             save_in_fs_cache(episode_name, agent, episode_analytics)
             return episode_analytics
@@ -166,11 +166,11 @@ def make_ram_cache_id(episode_name, agent):
 def check_all_tree_and_get_meta_and_best(base_dir, agents):
     best_agents = {}
     meta_json = {}
-    scenarios=set()
-    survival_dic={}
+    scenarios = set()
+    survival_dic = {}
 
     for agent in agents:
-        survival_dic_agent={}
+        survival_dic_agent = {}
         for scenario_name in os.listdir(os.path.join(base_dir, agent)):
 
             scenario_folder = os.path.join(base_dir, agent, scenario_name)
@@ -180,17 +180,27 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
                 episode_meta = json.load(fp=f)
                 meta_json[scenario_name] = episode_meta
 
-                survival_dic_agent[scenario_name] = int(int(episode_meta["nb_timestep_played"])*100/int(episode_meta["chronics_max_timestep"]))
+                survival_dic_agent[scenario_name] = int(
+                    int(episode_meta["nb_timestep_played"]) * 100 / int(episode_meta["chronics_max_timestep"]))
                 scenarios.add(scenario_name)
 
                 if scenario_name not in best_agents:
-                    best_agents[scenario_name] = {"value": -1, "agent": None, "out_of": 0}
-                if best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"]:
+                    best_agents[scenario_name] = {
+                        "value": -1, "agent": None, "out_of": 0,
+                        "cum_reward": -1
+                    }
+                condition_to_update_best_agent = (
+                    best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"] or
+                    (best_agents[scenario_name]["value"] == episode_meta["nb_timestep_played"] and
+                     best_agents[scenario_name]['cum_reward'] < episode_meta['cumulative_reward'])
+                )
+                if condition_to_update_best_agent:
                     best_agents[scenario_name]["value"] = episode_meta["nb_timestep_played"]
                     best_agents[scenario_name]["agent"] = agent
                     best_agents[scenario_name]['cum_reward'] = episode_meta['cumulative_reward']
+
             best_agents[scenario_name]["out_of"] = best_agents[scenario_name]["out_of"] + 1
-        survival_dic[agent]=survival_dic_agent
+        survival_dic[agent] = survival_dic_agent
 
     survival_df = pd.DataFrame(columns=agents, index=scenarios)
     for agent in agents:
@@ -219,7 +229,7 @@ cache_dir = os.path.join(agents_dir, "_cache")
 '''Parsing of agent folder tree'''
 agents = sorted([file for file in os.listdir(agents_dir)
                  if os.path.isdir(os.path.join(agents_dir, file)) and not file.startswith("_")])
-meta_json, best_agents,survival_df = check_all_tree_and_get_meta_and_best(agents_dir, agents)
+meta_json, best_agents, survival_df = check_all_tree_and_get_meta_and_best(agents_dir, agents)
 scenarios = []
 scenarios_agent = {}
 agent_scenario = {}
