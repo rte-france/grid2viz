@@ -9,6 +9,10 @@ from tqdm import tqdm
 
 from . import EpisodeTrace, maintenances, consumption_profiles
 
+#TODO: configure the reward key you want to visualize in agent overview.
+# Either as an argument or a dropdown list in the app from which we can choose.
+# The reward dataframe should get bigger with all keys available anyway
+other_reward_key='grid_operation_cost'
 
 class ActionImpacts:
     def __init__(self, action_line, action_subs, action_redisp, redisp_impact,
@@ -224,6 +228,13 @@ class EpisodeAnalytics:
 
         computed_rewards['timestep'] = self.timestamps
         computed_rewards['rewards'] = episode_data.rewards[:size]
+
+        #TO DO: we should give a choice to select different rewards among other rewards
+        if(episode_data.other_rewards):
+            if(other_reward_key):
+                if(other_reward_key in episode_data.other_rewards[0].keys()):
+                    computed_rewards['rewards']=[other_reward[other_reward_key] for other_reward in episode_data.other_rewards]
+                    computed_rewards['rewards']=computed_rewards['rewards'][: size]
         computed_rewards['cum_rewards'] = computed_rewards['rewards'].cumsum(axis=0)
 
         attacks_data_table = pd.DataFrame(
