@@ -192,12 +192,14 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
             best_agents[scenario_name]["out_of"] = best_agents[scenario_name]["out_of"] + 1
         survival_dic[agent]=survival_dic_agent
 
-    survival_df=pd.DataFrame(columns=agents,index=scenarios)
+    survival_df = pd.DataFrame(columns=agents, index=scenarios)
     for agent in agents:
-        survival_dic_agent=survival_dic[agent]
-        for (scenario,survival_time) in survival_dic_agent.items():
-            survival_df.loc[scenario][agent]=survival_time
-    survival_df=survival_df.astype(int)
+        survival_dic_agent = survival_dic[agent]
+        for (scenario, survival_time) in survival_dic_agent.items():
+            survival_df.loc[scenario][agent] = survival_time
+
+    survival_df = survival_df.fillna(-1)  # To be able to cast as int below.
+    survival_df = survival_df.astype(int)
 
     return meta_json, best_agents, survival_df
 
