@@ -1,19 +1,20 @@
 import os
-from pathos.multiprocessing import ProcessPool
 import time
 
-from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.graph_objects as go
 from dash import callback_context
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
+from pathos.multiprocessing import ProcessPool
+
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.manager import (scenarios, best_agents, meta_json,
                                   make_episode_without_decorate, make_episode,
                                   n_cores, retrieve_episode_from_disk,
                                   save_in_ram_cache, cache_dir)
-import dash_html_components as html
-import dash_core_components as dcc
-import dash_bootstrap_components as dbc
-from dash.exceptions import PreventUpdate
-import plotly.graph_objects as go
 
 
 def register_callbacks_episodes(app):
@@ -98,7 +99,7 @@ def register_callbacks_episodes(app):
                                 ]),
                                 dbc.Row(className="align-items-center", children=[
                                     dbc.Col(lg=4, width=12, children=[
-                                        html.H5('Production Share',  className='text-center'),
+                                        html.H5('Production Share', className='text-center'),
                                         dcc.Graph(
                                             style={'height': '150px'},
                                             figure=go.Figure(
@@ -115,8 +116,8 @@ def register_callbacks_episodes(app):
                                                 layout=episode_graph_layout,
                                                 data=consumption
                                             ))
-                                        ]
-                                    )
+                                    ]
+                                            )
                                 ])
                             ]),
                             dbc.CardFooter(dbc.Button(
@@ -129,7 +130,6 @@ def register_callbacks_episodes(app):
                 cards_count += 1
         print('Initial loading time = {:.1f} seconds'.format(time.time() - start_time))
         return cards_list
-
 
     @app.callback(
         [Output('scenario', 'data'), Output('url', 'pathname')],

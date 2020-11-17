@@ -4,9 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
-import numpy as np
 import plotly.graph_objects as go
-import itertools
 
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.manager import make_episode, agents, make_network_agent_overview, best_agents
@@ -102,7 +100,7 @@ def indicator_line(scenario, study_agent, ref_agent):
                 )
             ]),
             html.Div(className="col-12", children=[html.H2(className="text-center",
-                     children="Actions Distributions")]),
+                                                           children="Actions Distributions")]),
             html.Div(className="col-4", children=[
                 html.H6(className="text-center",
                         children="On Substations"),
@@ -130,6 +128,7 @@ def indicator_line(scenario, study_agent, ref_agent):
         ]),
     ])
 
+
 def overview_line(timestamps=None, from_scenario_selection=True):
     if timestamps is None or from_scenario_selection:
         timestamps = []
@@ -149,7 +148,7 @@ def overview_line(timestamps=None, from_scenario_selection=True):
                     sort_action="native",
                     style_table={
                         'overflow-y': 'scroll',
-                        #'width': 'auto',
+                        # 'width': 'auto',
                         'height': '100%'
                     },
                 ),
@@ -229,18 +228,17 @@ def inspector_line(study_agent, scenario):
     new_episode = make_episode(study_agent, scenario)
     cols, data = get_table(new_episode)
 
-
     data_table = dt.DataTable(
-                        columns=cols,
-                        data=data,
-                        id="inspector_datable",
-                        filter_action="native",
-                        sort_action="native",
-                        sort_mode="multi",
-                        page_action="native",
-                        page_current=0,
-                        page_size=7,
-                    )
+        columns=cols,
+        data=data,
+        id="inspector_datable",
+        filter_action="native",
+        sort_action="native",
+        sort_mode="multi",
+        page_action="native",
+        page_current=0,
+        page_size=7,
+    )
 
     return html.Div(className="lineBlock card ", children=[
         html.H4("Inspector For Study Agent"),
@@ -283,7 +281,6 @@ ActionsDistribution = namedtuple("ActionsDistribution", ["on_subs", "on_lines", 
 
 
 def action_distrubtion(episode, ref_episode):
-
     actions_per_sub = actions_model.get_action_per_sub(episode)
     actions_per_sub.append(actions_model.get_action_per_sub(ref_episode)[0])
     y_max = None

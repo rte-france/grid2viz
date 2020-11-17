@@ -4,14 +4,14 @@ This tab handles the generic information about the environment and the selection
 """
 import base64
 import io
-import matplotlib.pyplot as plt
 
+import dash_antd_components as dac
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_antd_components as dac
 import dash_table as dt
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 
 from grid2viz.src.manager import (agent_scenario, make_episode, best_agents,
                                   make_network_matplotlib)
@@ -32,7 +32,6 @@ layout_pie = {
 
 
 def indicators_line(encoded_image):
-
     return html.Div(id="indicator_line", children=[
         html.H4("Indicators"),
         html.Div(children=[
@@ -82,7 +81,8 @@ def indicators_line(encoded_image):
                 ])
             ], className="col-xl-3 align-self-center"),
             html.Div([
-                html.H5("Max prod & laod values and dashed lines in maintenance on Power grid", style={"margin-top": "2%"}),
+                html.H5("Max prod & laod values and dashed lines in maintenance on Power grid",
+                        style={"margin-top": "2%"}),
                 html.Img(src='data:image/png;base64,{}'.format(encoded_image))
             ], className="col-xl-12"),
         ], className="card-body row"),
@@ -109,7 +109,8 @@ def summary_line(episode, ref_agent, scenario):
                     options=[{'label': prod_name,
                               'value': prod_name}
                              for prod_name in episode.prod_names],
-                    value='solar',#episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
+                    value='solar',
+                    # episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
                     mode='multiple',
                     showArrow=True
                 ),
@@ -152,7 +153,7 @@ def summary_line(episode, ref_agent, scenario):
                             ),
                             config=dict(displayModeBar=False)
                         )
-                    ],  className='col-6')
+                    ], className='col-6')
                 ], className="row"),
             ], className="col-xl-7"),
         ], className="card-body row"),
@@ -214,36 +215,36 @@ def layout(scenario, ref_agent):
         ref_agent = best_agents[scenario]["agent"]
     max_loads = episode.load[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
     max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
-    lines_in_maintenance=list(episode.maintenances['line_name'][episode.maintenances.value==1].unique())
+    lines_in_maintenance = list(episode.maintenances['line_name'][episode.maintenances.value == 1].unique())
 
     graph = make_network_matplotlib(episode)
 
-    #to color assets on our graph with different colors while not overloading it with information
+    # to color assets on our graph with different colors while not overloading it with information
     # we will use plot_obs instead of plot_info for now
     ####
-    #For that we override an observation with the desired values
-    obs_colored=episode.observations[0]
+    # For that we override an observation with the desired values
+    obs_colored = episode.observations[0]
 
-    #having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
-    #line in maintenance would display as dashed lines
-    rho_to_color=np.array([ float(0.0) if line in lines_in_maintenance else float(0.4) for line in  episode.line_names])
+    # having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
+    # line in maintenance would display as dashed lines
+    rho_to_color = np.array([float(0.0) if line in lines_in_maintenance else float(0.4) for line in episode.line_names])
     line_status_colored = np.array([False if line in lines_in_maintenance else True for line in episode.line_names])
     obs_colored.rho = rho_to_color
-    obs_colored.line_status=line_status_colored
+    obs_colored.line_status = line_status_colored
 
-    obs_colored.load_p=np.array(max_loads.value)
-    obs_colored.prod_p=np.array(max_gens.value)
+    obs_colored.load_p = np.array(max_loads.value)
+    obs_colored.prod_p = np.array(max_gens.value)
 
-    network_graph=graph.plot_obs(obs_colored,line_info=None)#)
-   #network_graph=graph.plot_info(
-   #    #observation=episode.observations[0],
-   #    load_values=max_loads.values.flatten(),
-   #    load_unit="MW",
-   #    gen_values=max_gens.values.flatten(),
-   #    gen_unit="MW"
-   #    #line_values=[ 1 if line in lines_in_maintenance else 0 for line in  episode.line_names],
-   #    #coloring="line"
-   #)
+    network_graph = graph.plot_obs(obs_colored, line_info=None)  # )
+    # network_graph=graph.plot_info(
+    #    #observation=episode.observations[0],
+    #    load_values=max_loads.values.flatten(),
+    #    load_unit="MW",
+    #    gen_values=max_gens.values.flatten(),
+    #    gen_unit="MW"
+    #    #line_values=[ 1 if line in lines_in_maintenance else 0 for line in  episode.line_names],
+    #    #coloring="line"
+    # )
     best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
 
     # /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained

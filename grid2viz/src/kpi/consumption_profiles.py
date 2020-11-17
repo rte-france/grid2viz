@@ -5,7 +5,6 @@ from .observation_model import quantile10, quantile25, quantile75, quantile90
 
 
 def consumption_profiles(episode, freq="30T"):
-
     load = pd.pivot_table(
         episode.load, index="timestamp", columns=["equipment_name"], values="value"
     ).sum(axis=1).resample(freq).mean().to_frame(name="load").reset_index()

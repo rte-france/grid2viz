@@ -1,5 +1,3 @@
-import numpy as np
-
 from .env_actions import env_actions
 
 
@@ -13,4 +11,3 @@ def hist_duration_maintenances(episode):
     # Suppose that there is at most one maintenance per line per episode
 
     return [t for t in episode.observations[0].duration_next_maintenance if t]
-

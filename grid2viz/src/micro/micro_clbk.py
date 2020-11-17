@@ -4,10 +4,10 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-#from grid2viz.app import app
+# from grid2viz.app import app
 from grid2viz.src.manager import make_episode, make_network
-from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
 from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
 
 
 def register_callbacks_micro(app):
@@ -34,7 +34,6 @@ def register_callbacks_micro(app):
 
         return min_, max_, value, marks
 
-
     @app.callback(
         Output("relayoutStoreMicro", "data"),
         [Input("env_charts_ts", "relayoutData"),
@@ -48,7 +47,6 @@ def register_callbacks_micro(app):
     )
     def relayout_store_overview(*args):
         return relayout_callback(*args)
-
 
     @app.callback(
         Output("window", "data"),
@@ -73,7 +71,6 @@ def register_callbacks_micro(app):
             new_episode, center_indx, n_clicks_left, n_clicks_right
         )
 
-
     # indicator line
     @app.callback(
         [Output("rewards_ts", "figure"),
@@ -88,12 +85,12 @@ def register_callbacks_micro(app):
          State("scenario", "data")]
     )
     def load_reward_ts(relayout_data_store, window, selected_timestamp, rew_figure,
-                                cumrew_figure, study_agent, agent_ref, scenario):
+                       cumrew_figure, study_agent, agent_ref, scenario):
 
         rew_layout = rew_figure["layout"]
         cumrew_layout = cumrew_figure["layout"]
         condition = (relayout_data_store is not None
-                         and relayout_data_store["relayout_data"])
+                     and relayout_data_store["relayout_data"])
         if condition:
             relayout_data = relayout_data_store["relayout_data"]
             rew_new_axis_layout = get_axis_relayout(rew_figure, relayout_data)
@@ -105,7 +102,8 @@ def register_callbacks_micro(app):
                     cumrew_layout.update(cumrew_new_axis_layout)
                 return rew_figure, cumrew_figure
 
-        rew_figure, cumrew_figure = common_graph.make_rewards_ts(study_agent, agent_ref, scenario, rew_layout, cumrew_layout)
+        rew_figure, cumrew_figure = common_graph.make_rewards_ts(study_agent, agent_ref, scenario, rew_layout,
+                                                                 cumrew_layout)
 
         if window is not None:
             rew_figure["layout"].update(
@@ -116,7 +114,6 @@ def register_callbacks_micro(app):
             )
 
         return rew_figure, cumrew_figure
-
 
     @app.callback(
         Output("actions_ts", "figure"),
@@ -147,7 +144,6 @@ def register_callbacks_micro(app):
             )
 
         return figure
-
 
     # flux line callback
     @app.callback(
@@ -203,7 +199,6 @@ def register_callbacks_micro(app):
 
         return option, [option[0]['value']]
 
-
     @app.callback(
         Output('voltage_flow_graph', 'figure'),
         [Input('line_side_choices', 'value'),
@@ -238,7 +233,6 @@ def register_callbacks_micro(app):
 
         return figure
 
-
     @app.callback(
         Output('flow_radio', 'style'),
         [Input('voltage_flow_choice', 'value')],
@@ -248,7 +242,6 @@ def register_callbacks_micro(app):
             return {'display': 'block'}
         else:
             return {'display': 'none'}
-
 
     def load_voltage_for_lines(lines, new_episode):
         voltage = new_episode.flow_and_voltage_line
@@ -273,7 +266,6 @@ def register_callbacks_micro(app):
                 )
         return traces
 
-
     def load_redispatch(generators, new_episode):
         actual_dispatch = new_episode.actual_redispatch
         target_dispatch = new_episode.target_redispatch
@@ -294,7 +286,6 @@ def register_callbacks_micro(app):
             )
 
         return traces
-
 
     def load_flows_for_lines(lines, new_episode):
         flow = new_episode.flow_and_voltage_line
@@ -331,7 +322,6 @@ def register_callbacks_micro(app):
 
         return traces
 
-
     # context line callback
     @app.callback(
         [Output("asset_selector", "options"),
@@ -343,7 +333,6 @@ def register_callbacks_micro(app):
     def update_ts_graph_avail_assets(kind, study_agent, scenario):
         new_episode = make_episode(study_agent, scenario)
         return common_graph.ts_graph_avail_assets(kind, new_episode)
-
 
     @app.callback(
         Output("env_charts_ts", "figure"),
@@ -377,7 +366,6 @@ def register_callbacks_micro(app):
             )
 
         return figure
-
 
     @app.callback(
         [Output("overflow_ts", "figure"), Output("usage_rate_ts", "figure")],
@@ -414,14 +402,12 @@ def register_callbacks_micro(app):
             figure_usage
         )
 
-
     @app.callback(
         Output("timeseries_table_micro", "data"),
         [Input("timeseries_table", "data")]
     )
     def sync_timeseries_table(data):
         return data
-
 
     @app.callback(
         [Output("interactive_graph", "figure"), Output("tooltip_table_micro", "children")],

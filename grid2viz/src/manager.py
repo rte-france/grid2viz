@@ -1,18 +1,18 @@
 import configparser
+import itertools
 import json
 import os
 import time
 
 import dill
+import numpy as np
 import pandas as pd
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
-import itertools
-import numpy as np
-#refer to https://github.com/rte-france/Grid2Op/blob/master/getting_started/8_PlottingCapabilities.ipynb for better usage
-
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
+
+# refer to https://github.com/rte-france/Grid2Op/blob/master/getting_started/8_PlottingCapabilities.ipynb for better usage
 
 graph = None
 graph_matplotlib = None
@@ -43,16 +43,17 @@ def make_network_matplotlib(episode):
             line_name=False, gen_name=False, load_name=False)
     return graph_matplotlib
 
+
 def make_network_agent_overview(episode):
     graph = make_network(episode)
 
-    #modified_lines = actions_model.get_modified_lines(episode)
-    #line_values = [None] * episode.n_lines
-    #for line in modified_lines.index:
+    # modified_lines = actions_model.get_modified_lines(episode)
+    # line_values = [None] * episode.n_lines
+    # for line in modified_lines.index:
     #    line_values[np.where(episode.line_names == line)[0][0]] = line
 
-    lines_attacked=list(episode.attacks_data_table['id_lines'][episode.attacks_data_table.attack].unique())
-    lines_overflowed_ids=list(itertools.chain.from_iterable(episode.total_overflow_ts.line_ids))
+    lines_attacked = list(episode.attacks_data_table['id_lines'][episode.attacks_data_table.attack].unique())
+    lines_overflowed_ids = list(itertools.chain.from_iterable(episode.total_overflow_ts.line_ids))
     # to color assets on our graph with different colors while not overloading it with information
     # we will use plot_obs instead of plot_info for now
     ####
@@ -61,17 +62,17 @@ def make_network_agent_overview(episode):
 
     # having a rho with value 1.0 give us a red line while 0.7 gives us an orange line and 0.3 a blue line
     rho_to_color = np.array([float(0.6) if line in lines_attacked else float(0.3) for line in episode.line_names])
-    rho_to_color[lines_overflowed_ids]=1.0
+    rho_to_color[lines_overflowed_ids] = 1.0
     line_status_colored = np.array([False if line in lines_attacked else True for line in episode.line_names])
     obs_colored.rho = rho_to_color
     obs_colored.line_status = line_status_colored
 
-    #network_graph = make_network(episode).plot_info(
+    # network_graph = make_network(episode).plot_info(
     #    line_values=[ line if line in lines_attacked else None for line in  episode.line_names]
     #    #coloring="line"
-    #)
+    # )
 
-    return graph.plot_obs(obs_colored, line_info=None,gen_info=None,load_info=None)
+    return graph.plot_obs(obs_colored, line_info=None, gen_info=None, load_info=None)
 
 
 store = {}
@@ -224,9 +225,9 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
                         "cum_reward": -1
                     }
                 condition_to_update_best_agent = (
-                    best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"] or
-                    (best_agents[scenario_name]["value"] == episode_meta["nb_timestep_played"] and
-                     best_agents[scenario_name]['cum_reward'] < episode_meta['cumulative_reward'])
+                        best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"] or
+                        (best_agents[scenario_name]["value"] == episode_meta["nb_timestep_played"] and
+                         best_agents[scenario_name]['cum_reward'] < episode_meta['cumulative_reward'])
                 )
                 if condition_to_update_best_agent:
                     best_agents[scenario_name]["value"] = episode_meta["nb_timestep_played"]

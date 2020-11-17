@@ -1,9 +1,9 @@
-import dash_core_components as dcc
-import dash_html_components as html
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
 
-from grid2viz.src.manager import (agent_scenario, make_network, make_episode)
+from grid2viz.src.manager import (make_network, make_episode)
 
 
 def choose_assist_line(episode, network_graph):
@@ -12,7 +12,7 @@ def choose_assist_line(episode, network_graph):
         html.Div(className="card-body row", children=[
             html.Div(className="col-7", children=[
                 html.H5("Network at time step t"),
-                dcc.Graph(id="network_graph_choose", figure=network_graph,),
+                dcc.Graph(id="network_graph_choose", figure=network_graph, ),
             ]),
             html.Div(className="col-5", children=[
                 dbc.Tabs(children=[

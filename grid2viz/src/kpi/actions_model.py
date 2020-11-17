@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 from grid2viz.src.utils.graph_utils import layout_no_data, layout_def
@@ -24,6 +24,7 @@ def get_modified_lines(new_episode):
 def get_action_redispatch(new_epsiode):
     count = get_modified_gens(new_epsiode)
     return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
+
 
 def get_modified_gens(new_episode):
     data = get_action_table_data(new_episode)

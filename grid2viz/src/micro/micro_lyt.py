@@ -6,10 +6,10 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
-from grid2op.PlotGrid import PlotPlotly
 import plotly.graph_objects as go
+from grid2op.PlotGrid import PlotPlotly
 
-from grid2viz.src.manager import make_episode, make_network, best_agents
+from grid2viz.src.manager import make_episode, best_agents
 from grid2viz.src.utils import common_graph
 
 layout_def = {
@@ -158,7 +158,8 @@ def context_inspector_line(best_episode, study_episode):
                     options=[{'label': prod_name,
                               'value': prod_name}
                              for prod_name in best_episode.prod_names],
-                    value='solar',#episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
+                    value='solar',
+                    # episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
                     mode='multiple',
                     showArrow=True
                 ),
