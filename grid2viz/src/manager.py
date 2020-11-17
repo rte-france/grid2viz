@@ -2,6 +2,7 @@ import configparser
 import itertools
 import json
 import os
+from pathlib import Path
 import time
 
 import dill
@@ -284,3 +285,7 @@ for agent in agents:
     scenarios = scenarios + scens
 
 scenarios = set(scenarios)
+
+# Create a .grid2viz directory in the user home directory
+grid2viz_home_directory = Path.home() / ".grid2viz"
+grid2viz_home_directory.mkdir(parents=False, exist_ok=True)

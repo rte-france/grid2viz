@@ -4,6 +4,7 @@ This tab handles the generic information about the environment and the selection
 """
 import base64
 import io
+from pathlib import Path
 
 import dash_antd_components as dac
 import dash_core_components as dcc
@@ -14,7 +15,9 @@ import numpy as np
 import plotly.graph_objects as go
 
 from grid2viz.src.manager import (agent_scenario, make_episode, best_agents,
-                                  make_network_matplotlib)
+                                  make_network_matplotlib, grid2viz_home_directory)
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -258,9 +261,17 @@ def layout(scenario, ref_agent):
     encoded_image = base64.b64encode(buf.read())
     buf.close()
 
+    open_help = should_help_open(
+        Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
+    )
+    header = "Take a look at the Scenario"
+    body = "Select a reference agent in the dropdown menu and explore the " \
+           "Scenario's characteristics through the eyes of the best agent."
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line(encoded_image.decode()),
         summary_line(episode, ref_agent, scenario),
-        ref_agent_line
+        ref_agent_line,
+        modal(id_suffix="overview", is_open=open_help,
+              header=header, body=body)
     ])

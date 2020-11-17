@@ -1,5 +1,6 @@
 import datetime
 from collections import namedtuple
+from pathlib import Path
 
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
@@ -9,8 +10,10 @@ import dash_table as dt
 import plotly.graph_objects as go
 from grid2op.PlotGrid import PlotPlotly
 
-from grid2viz.src.manager import make_episode, best_agents
+from grid2viz.src.manager import make_episode, best_agents, grid2viz_home_directory
 from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -274,11 +277,18 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
         observation_space=new_episode.observation_space,
         responsive=False)
     network_graph = graph.plot_obs(new_episode.observations[center_indx])
-
+    open_help = should_help_open(
+        Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("micro")
+    )
+    header = "Analyze further your agent"
+    body = "Select a time step in the navbar dropdown and analyze when happened " \
+           "around this moment."
     return html.Div(id="micro_page", children=[
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(),
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
         context_inspector_line(best_episode, new_episode),
-        all_info_line
+        all_info_line,
+        modal(id_suffix="micro", is_open=open_help,
+              header=header, body=body)
     ])

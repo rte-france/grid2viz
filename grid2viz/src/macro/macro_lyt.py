@@ -1,4 +1,5 @@
 from collections import namedtuple
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -7,8 +8,10 @@ import dash_table as dt
 import plotly.graph_objects as go
 
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.manager import make_episode, agents, make_network_agent_overview, best_agents
+from grid2viz.src.manager import make_episode, agents, make_network_agent_overview, best_agents, grid2viz_home_directory
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import layout_def, layout_no_data, max_or_zero
+from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
 
 def indicator_line(scenario, study_agent, ref_agent):
@@ -335,11 +338,20 @@ def action_distrubtion(episode, ref_episode):
 def layout(timestamps, scenario, study_agent, ref_agent, from_scenario_selection):
     if study_agent is None:
         study_agent = best_agents[scenario]["agent"]
-    # if scenario is None:
-    #     scenario = list(scenarios)[0]
+    open_help = should_help_open(
+        Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("macro")
+    )
+    header = "Take a look at your agent"
+    body = "Select an agent to study in the dropdown menu and analyse it with " \
+           "respect to the reference agent. Click on the reward graph to select " \
+           "some time steps to study further. When you have selected time steps, " \
+           "go on to the Study agent view."
+
     return html.Div(id="overview_page", children=[
         dcc.Store(id='relayoutStoreMacro'),
         indicator_line(scenario, study_agent, ref_agent),
         overview_line(timestamps, from_scenario_selection),
-        inspector_line(study_agent, scenario)
+        inspector_line(study_agent, scenario),
+        modal(id_suffix="macro", is_open=open_help,
+              header=header, body=body)
     ])

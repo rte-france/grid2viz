@@ -3,6 +3,7 @@
     and let choose and compute study agent information.
 """
 import datetime as dt
+from pathlib import Path
 
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
@@ -10,8 +11,10 @@ from dash.exceptions import PreventUpdate
 
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.manager import make_episode, make_network_agent_overview
+from grid2viz.src.manager import make_episode, make_network_agent_overview, grid2viz_home_directory
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import (
     get_axis_relayout, relayout_callback, max_or_zero)
 
@@ -353,3 +356,17 @@ def register_callbacks_macro(app):
         row_id = active_cell["row_id"]
         act = new_episode.actions[row_id]
         return str(act)
+
+    @app.callback(
+        [Output("modal_macro", "is_open"),
+         Output("dont_show_again_div_macro", "className")],
+        [Input("close_macro", "n_clicks"),
+         Input("page_help", "n_clicks")],
+        [State("modal_macro", "is_open"),
+         State("dont_show_again_macro", "checked")]
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("macro")
+        return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
+                                   dont_show_again, dsa_filepath,
+                                   "page_help")

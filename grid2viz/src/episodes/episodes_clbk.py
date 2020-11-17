@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import time
 
 import dash_bootstrap_components as dbc
@@ -14,7 +15,10 @@ from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.manager import (scenarios, best_agents, meta_json,
                                   make_episode_without_decorate, make_episode,
                                   n_cores, retrieve_episode_from_disk,
-                                  save_in_ram_cache, cache_dir)
+                                  save_in_ram_cache, cache_dir,
+                                  grid2viz_home_directory)
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 
 
 def register_callbacks_episodes(app):
@@ -162,3 +166,17 @@ def register_callbacks_episodes(app):
         scenario = input_key
 
         return scenario, '/overview'
+
+    @app.callback(
+        [Output("modal_episodes", "is_open"),
+         Output("dont_show_again_div_episodes", "className")],
+        [Input("close_episodes", "n_clicks"),
+         Input("page_help", "n_clicks")],
+        [State("modal_episodes", "is_open"),
+         State("dont_show_again_episodes", "checked")]
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("episodes")
+        return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
+                                   dont_show_again, dsa_filepath,
+                                   "page_help")

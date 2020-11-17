@@ -12,7 +12,7 @@ The "as ..." are also mandatory, other nothing is done.
 from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.micro import micro_lyt as micro
-from grid2viz.src.episodes import episodes_lyt
+from grid2viz.src.episodes import episodes_lyt as episodes
 
 '''
 End Warning
@@ -54,7 +54,7 @@ def register_callbacks_main(app):
             reset_ts_table_macro = True
 
         if pathName_split == "episodes" or pathName_split == "" or not pathName_split:
-            return episodes_lyt, "episodes", True, False, False, False, reset_ts_table_macro
+            return episodes.layout(), "episodes", True, False, False, False, reset_ts_table_macro
         elif pathName_split == "overview":
             return overview.layout(scenario, ref_agent), "overview", False, True, False, False, reset_ts_table_macro
         elif pathName_split == "macro":

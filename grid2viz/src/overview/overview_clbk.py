@@ -1,11 +1,14 @@
-# from grid2viz.app import app
+from pathlib import Path
+
 import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from grid2viz.src.kpi import observation_model, EpisodeTrace
-from grid2viz.src.manager import make_episode, best_agents
+from grid2viz.src.manager import make_episode, best_agents, grid2viz_home_directory
 from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
 
 
@@ -258,3 +261,17 @@ def register_callbacks_overview(app):
         episode = make_episode(agent_ref, scenario)
         return episode.production["timestamp"].dt.date.values[0], \
                episode.production["timestamp"].dt.date.values[-1]
+
+    @app.callback(
+        [Output("modal_overview", "is_open"),
+         Output("dont_show_again_div_overview", "className")],
+        [Input("close_overview", "n_clicks"),
+         Input("page_help", "n_clicks")],
+        [State("modal_overview", "is_open"),
+         State("dont_show_again_overview", "checked")]
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
+        return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
+                                   dont_show_again, dsa_filepath,
+                                   "page_help")

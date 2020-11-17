@@ -1,12 +1,15 @@
 import datetime as dt
+from pathlib import Path
 
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 # from grid2viz.app import app
-from grid2viz.src.manager import make_episode, make_network
+from grid2viz.src.manager import make_episode, make_network, grid2viz_home_directory
 from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
 
 
@@ -423,3 +426,17 @@ def register_callbacks_micro(app):
         else:
             act_as_str = "NO ACTION"
         return make_network(new_episode).plot_obs(new_episode.observations[slider_value]), act_as_str
+
+    @app.callback(
+        [Output("modal_micro", "is_open"),
+         Output("dont_show_again_div_micro", "className")],
+        [Input("close_micro", "n_clicks"),
+         Input("page_help", "n_clicks")],
+        [State("modal_micro", "is_open"),
+         State("dont_show_again_micro", "checked")]
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("micro")
+        return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
+                                   dont_show_again, dsa_filepath,
+                                   "page_help")
