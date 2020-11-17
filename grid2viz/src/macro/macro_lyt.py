@@ -4,9 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
-import numpy as np
 import plotly.graph_objects as go
-import itertools
 
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.manager import make_episode, agents, make_network_agent_overview
@@ -95,7 +93,7 @@ def indicator_line(scenario, study_agent, ref_agent):
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="Impacted grid assets: attacks (dash orange) & overflow (red)"),
+                        children="Impacted grid assets: attacks (dash orange) & overflow (red) and subs with action"),
                 dcc.Graph(
                     id="network_actions",
                     figure=network_graph

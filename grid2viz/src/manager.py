@@ -7,6 +7,8 @@ import dill
 import pandas as pd
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import itertools
 import numpy as np
 #refer to https://github.com/rte-france/Grid2Op/blob/master/getting_started/8_PlottingCapabilities.ipynb for better usage
@@ -17,8 +19,42 @@ from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 graph = None
 graph_matplotlib = None
 
+##TODO: addSubstationColor - integrate that into grid2op Plotgrid
+def addSubstationColorMatplot(subs, plot_helper,fig):
+    radius_size = plot_helper._sub_radius
+    #fig = plot_helper.plot_layout()
+    ax = fig.gca()
 
-def make_network(episode):
+    for id_sub in subs:
+        subName = 'sub_' + str(id_sub)
+        x, y = plot_helper._grid_layout[subName]
+        circle = plt.Circle((x, y), int(radius_size), color='gold')
+        ax.add_artist(circle)
+
+    return fig
+
+def addSubstationColorPlotly(subs, plot_helper,fig):
+    radius_size = int(plot_helper._sub_radius*0.8)
+
+    for id_sub in subs:
+        subName = 'sub_' + str(id_sub)
+        x_center, y_center = plot_helper._grid_layout[subName]
+
+        marker_dict = dict(
+            size=radius_size,
+            color='gold',
+            showscale=False,
+            opacity=0.5,
+        )
+        fig.add_trace(go.Scatter(x=[x_center], y=[y_center],
+                          mode="markers",
+                          text=[subName],
+                          name="sub" + subName,
+                          marker=marker_dict,
+                          showlegend=False))
+    return fig
+
+def make_network(episode,responsive=True):
     """
         Create a Plotly network graph with the layout configuration and the selected episode.
 
@@ -30,7 +66,7 @@ def make_network(episode):
         graph = PlotPlotly(
             grid_layout=episode.observation_space.grid_layout,
             observation_space=episode.observation_space,
-            responsive=True)
+            responsive=responsive)
     return graph
 
 
@@ -42,6 +78,24 @@ def make_network_matplotlib(episode):
             observation_space=episode.observation_space,
             line_name=False, gen_name=False, load_name=False)
     return graph_matplotlib
+
+######
+#we want a non responsive graph for now in agent_study
+# so we have to define it differently from the global graph in make_network that we don't use here
+def make_network_agent_study(episode,timestep):
+    graph = PlotPlotly(
+        grid_layout=episode.observation_space.grid_layout,
+        observation_space=episode.observation_space,
+        responsive=False)
+
+    fig=graph.plot_obs(episode.observations[timestep], line_info=None,gen_info=None,load_info=None)
+
+    ##########
+    #We color subs where we had actions
+    sub_name_modified=list(itertools.chain.from_iterable(episode.action_data_table.subs_modified))
+    sub_id_modified=[int(str.split('_')[1]) for str in episode.action_data_table.subs_modified[timestep]]
+    fig=addSubstationColorPlotly(sub_id_modified,graph,fig)
+    return fig
 
 def make_network_agent_overview(episode):
     graph = make_network(episode)
@@ -70,8 +124,52 @@ def make_network_agent_overview(episode):
     #    line_values=[ line if line in lines_attacked else None for line in  episode.line_names]
     #    #coloring="line"
     #)
+    fig=graph.plot_obs(obs_colored, line_info=None,gen_info=None,load_info=None)
 
-    return graph.plot_obs(obs_colored, line_info=None,gen_info=None,load_info=None)
+    ##########
+    #We color subs where we had actions
+    sub_name_modified=list(itertools.chain.from_iterable(episode.action_data_table.subs_modified))
+    sub_id_modified=set([int(str.split('_')[1]) for str in sub_name_modified])
+    fig=addSubstationColorPlotly(sub_id_modified,graph,fig)
+
+    return fig
+
+def make_network_scenario_overview(episode):
+
+    max_loads = episode.load[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
+    max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
+    lines_in_maintenance=list(episode.maintenances['line_name'][episode.maintenances.value==1].unique())
+
+    graph = make_network_matplotlib(episode)
+
+    #to color assets on our graph with different colors while not overloading it with information
+    # we will use plot_obs instead of plot_info for now
+    ####
+    #For that we override an observation with the desired values
+    obs_colored=episode.observations[0]
+
+    #having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
+    #line in maintenance would display as dashed lines
+    rho_to_color=np.array([ float(0.0) if line in lines_in_maintenance else float(0.4) for line in  episode.line_names])
+    line_status_colored = np.array([False if line in lines_in_maintenance else True for line in episode.line_names])
+    obs_colored.rho = rho_to_color
+    obs_colored.line_status=line_status_colored
+
+    obs_colored.load_p=np.array(max_loads.value)
+    obs_colored.prod_p=np.array(max_gens.value)
+
+    network_graph=graph.plot_obs(obs_colored,line_info=None)
+    # network_graph=graph.plot_info(
+    #    #observation=episode.observations[0],
+    #    load_values=max_loads.values.flatten(),
+    #    load_unit="MW",
+    #    gen_values=max_gens.values.flatten(),
+    #    gen_unit="MW"
+    #    #line_values=[ 1 if line in lines_in_maintenance else 0 for line in  episode.line_names],
+    #    #coloring="line"
+    # )
+
+    return network_graph
 
 
 store = {}
