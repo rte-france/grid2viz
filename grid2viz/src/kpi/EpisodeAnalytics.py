@@ -240,16 +240,20 @@ class EpisodeAnalytics:
         attacks_data_table = pd.DataFrame(
             index=range(size),
             columns=[
-                'timestep', 'timestamp', 'attack'
+                'timestep', 'timestamp', 'attack','id_lines'
             ]
         )
         attacks_data_table['timestep'] = self.timesteps
         attacks_data_table['timestamp'] = self.timestamps
         for time_step, attack in enumerate(episode_data.attacks):
-            n_lines_modified, *_ = self.get_lines_modifications(attack)
+            n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(attack)
             n_subs_modified, *_ = self.get_subs_modifications(attack)
             is_attacked = n_lines_modified > 0 or n_subs_modified > 0
             attacks_data_table.loc[time_step, "attack"] = is_attacked
+            if (len(lines_modified)==0):
+                attacks_data_table.loc[time_step, "id_lines"]=''
+            else:
+                attacks_data_table.loc[time_step, "id_lines"] = lines_modified[0]
 
         return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch, attacks_data_table
 
