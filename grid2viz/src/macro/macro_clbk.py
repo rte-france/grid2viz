@@ -8,8 +8,9 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import numpy as np
 import plotly.graph_objects as go
+import itertools
 
-from grid2viz.src.manager import make_episode, make_network
+from grid2viz.src.manager import make_episode, make_network_agent_overview
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.utils.graph_utils import (
@@ -90,15 +91,8 @@ def register_callbacks_macro(app):
     )
     def update_network_graph(study_agent, scenario):
         episode = make_episode(study_agent, scenario)
-        modified_lines = actions_model.get_modified_lines(episode)
-        line_values = [None] * episode.n_lines
-        for line in modified_lines.index:
-            line_values[np.where(episode.line_names == line)[0][0]] = line
-        network_graph = make_network(episode).plot_info(
-            observation=episode.observations[0],
-            line_values=line_values,
-        )
-        return network_graph
+
+        return make_network_agent_overview(episode)
 
 
     @app.callback(
