@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import itertools
 
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.manager import make_episode, agents, make_network_agent_overview
+from grid2viz.src.manager import make_episode, agents, make_network_agent_overview, best_agents
 from grid2viz.src.utils.graph_utils import layout_def, layout_no_data, max_or_zero
 
 
@@ -337,7 +337,7 @@ def action_distrubtion(episode, ref_episode):
 
 def layout(timestamps, scenario, study_agent, ref_agent, from_scenario_selection):
     if study_agent is None:
-        study_agent = agents[0]
+        study_agent = best_agents[scenario]["agent"]
     # if scenario is None:
     #     scenario = list(scenarios)[0]
     return html.Div(id="overview_page", children=[
