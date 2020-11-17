@@ -119,10 +119,11 @@ def get_all_prod_trace(episode, prod_types, selection):
     prod_type_names = prod_types.values()
     trace = []
     if 'total' in selection:
+        total_series = prod_with_type.groupby('timestamp')['value'].sum()
         trace.append(
             go.Scatter(
-                x=prod_with_type['timestamp'].unique(),
-                y=prod_with_type.groupby('timestamp')['value'].sum(),
+                x=total_series.index,
+                y=total_series,
                 name='total'
             )
         )

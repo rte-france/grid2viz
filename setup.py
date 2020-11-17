@@ -12,7 +12,7 @@ pkgs = {
         "dill>=0.3.2",
         "Flask-Compress>=1.4.0",
         "future>=0.18.2",
-        "Grid2Op @ https://api.github.com/repos/BDonnot/Grid2Op/tarball",
+        "Grid2Op==1.3.1",
         "imageio>=2.8.0",
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
@@ -48,7 +48,7 @@ pkgs = {
 }
 
 setup(name='Grid2Viz',
-      version='0.1.1rc',
+      version='1.0.0rc',
       description='Grid2Op Visualization companion app',
       classifiers=[
           'Development Status :: 4 - Beta',
