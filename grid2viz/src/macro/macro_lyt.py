@@ -6,9 +6,10 @@ import dash_html_components as html
 import dash_table as dt
 import numpy as np
 import plotly.graph_objects as go
+import itertools
 
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.manager import make_episode, agents, make_network
+from grid2viz.src.manager import make_episode, agents, make_network_agent_overview
 from grid2viz.src.utils.graph_utils import layout_def, layout_no_data, max_or_zero
 
 
@@ -17,14 +18,8 @@ def indicator_line(scenario, study_agent, ref_agent):
     ref_episode = make_episode(ref_agent, scenario)
     figures_distribution = action_distrubtion(episode, ref_episode)
 
-    modified_lines = actions_model.get_modified_lines(episode)
-    line_values = [None] * episode.n_lines
-    for line in modified_lines.index:
-        line_values[np.where(episode.line_names == line)[0][0]] = line
-    network_graph = make_network(episode).plot_info(
-        observation=episode.observations[0],
-        line_values=line_values,
-    )
+    network_graph = make_network_agent_overview(episode)
+
     nb_actions = episode.action_data_table[
         ['action_line', 'action_subs', 'action_redisp']].sum()
 
@@ -100,7 +95,7 @@ def indicator_line(scenario, study_agent, ref_agent):
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="//WIP// Impacted grid assets"),
+                        children="Impacted grid assets: attacks (dash orange) & overflow (red)"),
                 dcc.Graph(
                     id="network_actions",
                     figure=network_graph
