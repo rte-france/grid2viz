@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import dash_bootstrap_components as dbc
@@ -12,47 +13,58 @@ from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
 
 # This is to improve readability of the heatmap of survival steps for agents
-def get_heatmap_survival_score(survival_df):
-    if (survival_df.shape[0] >= 2) and (survival_df.shape[1] >= 2):
-        clustered_df = sn.clustermap(survival_df)
+def get_heatmap_survival_score(df):
+    if (df.shape[0] >= 2) and (df.shape[1] >= 2):
+        clustered_df = sn.clustermap(df)
         reordered_scenarios = clustered_df.dendrogram_row.reordered_ind
         reordered_agents = clustered_df.dendrogram_col.reordered_ind
-        return survival_df.iloc[reordered_scenarios, reordered_agents]
+        return df.iloc[reordered_scenarios, reordered_agents]
     else:
-        return survival_df
+        return df
 
 
-clustered_survival_df = get_heatmap_survival_score(survival_df)
+def create_heatmap_figure(df):
 
-z_text = clustered_survival_df.copy().astype(str)
-z_text[z_text == "-1"] = ""
+    clustered_survival_df = get_heatmap_survival_score(df)
 
-heatmap_figure = ff.create_annotated_heatmap(  # go.Figure(data=go.Heatmap(
-    z=clustered_survival_df.values,  # survival_df.values,#z=pd.concat([survival_df, survival_df]))),
-    x=clustered_survival_df.columns.tolist(), y=clustered_survival_df.index.tolist(),
-    colorscale='RdYlGn',
-    zmid=50,
-    annotation_text=z_text.values
-)
+    z_text = clustered_survival_df.copy().astype(str)
+    z_text[z_text == "-1"] = ""
 
-heatmap_div = html.Div(children=[
-    html.H5("Heatmap"),
-    dcc.Graph(
-        id="heatmap",
-        figure=heatmap_figure,
-    )], style={'textAlign': 'center'}, className="col-xl-12 align-self-center")
+    heatmap_figure = ff.create_annotated_heatmap(  # go.Figure(data=go.Heatmap(
+        z=clustered_survival_df.values,  # survival_df.values,#z=pd.concat([survival_df, survival_df]))),
+        x=clustered_survival_df.columns.tolist(), y=clustered_survival_df.index.tolist(),
+        colorscale='RdYlGn',
+        zmid=50,
+        annotation_text=z_text.values
+    )
+    return heatmap_figure
 
-SurvivalHeatmap_div = html.Div(id="h", children=[
-    html.H4("h"),
-    html.Div(children=[
-        html.Details([
-            html.Summary('Heatmap'),
-            heatmap_div
-        ])
-    ], className='card-body row'),
-], className="lineBlock card")
 
-cards = dbc.Row(id='cards_container', className="m-1")
+def generate_heatmap_components(df):
+
+    heatmap_div = html.Div(children=[
+        html.H5("Agents' survival in percent of the scenario length"),
+        dcc.Graph(
+            id="heatmap",
+            figure=create_heatmap_figure(df),
+        ),
+    ], style={'textAlign': 'center'}, className="col-xl-12 align-self-center")
+
+    return html.Div(id="h", children=[
+        html.Div(children=[
+            html.H5(
+                dbc.Button(
+                    "Scenarios comparison",
+                    id="collapse-button",
+                    color="link",
+                )
+            ),
+            dbc.Collapse(
+                heatmap_div,
+                id="collapse"
+            ),
+        ], className='card-body row p-1'),
+    ], className="lineBlockSlim card")
 
 
 def layout():
@@ -66,8 +78,8 @@ def layout():
     return html.Div(
         id="scenario_page",
         children=[dcc.Store(id="relayoutStoreScenario"),
-                  SurvivalHeatmap_div,
-                  cards,
+                  generate_heatmap_components(survival_df),
+                  dbc.Row(id='cards_container', className="m-1"),
                   modal(id_suffix="episodes", is_open=open_help,
                         header=header, body=body)]
     )
