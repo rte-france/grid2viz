@@ -38,6 +38,8 @@ def create_heatmap_figure(df):
         zmid=50,
         annotation_text=z_text.values
     )
+    heatmap_figure.update_layout({'yaxis': {'type': 'category'},
+                                  'xaxis': {'type': 'category'}})
     return heatmap_figure
 
 
