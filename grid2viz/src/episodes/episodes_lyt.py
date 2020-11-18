@@ -1,13 +1,14 @@
 import os
 from pathlib import Path
 
+import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.figure_factory as ff
 import seaborn as sn
 
-from grid2viz.src.manager import survival_df, grid2viz_home_directory
+from grid2viz.src.manager import survival_df, grid2viz_home_directory, scenarios
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
@@ -63,8 +64,26 @@ def generate_heatmap_components(df):
                 heatmap_div,
                 id="collapse"
             ),
+            scenarios_filter(sorted(list(scenarios))),
         ], className='card-body row p-1'),
     ], className="lineBlockSlim card")
+
+
+def scenarios_filter(scenarios):
+    return html.Div(
+        id="scenario_filter_div", children=[
+            html.H5("Select the scenarios you want to see below."),
+            dac.Select(
+                id="scenarios_filter",
+                options=[
+                    {'label': scenario, 'value': scenario}
+                    for scenario in scenarios
+                ],
+                value=scenarios,
+                mode='multiple'
+            )
+        ]
+    )
 
 
 def layout():

@@ -1,3 +1,4 @@
+from functools import partial
 import os
 from pathlib import Path
 import time
@@ -71,7 +72,7 @@ def register_callbacks_episodes(app):
                 prod_share = EpisodeTrace.get_prod_share_trace(best_agent_episode)
                 consumption = best_agent_episode.profile_traces
                 cards_list.append(
-                    dbc.Col(lg=4, width=12, children=[
+                    dbc.Col(id=f"card_{scenario}", lg=4, width=12, children=[
                         dbc.Card(className='mb-3', children=[
                             dbc.CardBody([
                                 html.H5(className="card-title",
@@ -197,3 +198,28 @@ def register_callbacks_episodes(app):
     )
     def show_image(pathname):
         return app.get_asset_url("screenshots/scenario_selection.png")
+
+    @app.callback(
+        Output("scenario_filter_div", "className"),
+        [Input("collapse", "is_open")]
+    )
+    def toggle_scenario_filter(is_open):
+        if is_open:
+            return ""
+        else:
+            return "hidden"
+
+    def filter_scenarios(selected_scenarios, scenario):
+        if selected_scenarios is None:
+            raise PreventUpdate
+        if scenario in selected_scenarios:
+            return ""
+        else:
+            return "hidden"
+
+    for scenario in scenarios:
+        app.callback(
+            Output(f"card_{scenario}", "className"),
+            [Input("scenarios_filter", "value")]
+        )(partial(filter_scenarios, scenario=scenario))
+
