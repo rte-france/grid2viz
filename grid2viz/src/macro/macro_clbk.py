@@ -370,3 +370,10 @@ def register_callbacks_macro(app):
         return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
                                    dont_show_again, dsa_filepath,
                                    "page_help")
+
+    @app.callback(
+        Output("modal_image_macro", "src"),
+        [Input("url", "pathname")]
+    )
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/agent_overview.png")

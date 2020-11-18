@@ -190,3 +190,10 @@ def register_callbacks_episodes(app):
         if n:
             return not is_open
         return is_open
+
+    @app.callback(
+        Output("modal_image_episodes", "src"),
+        [Input("url", "pathname")]
+    )
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/scenario_selection.png")

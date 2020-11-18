@@ -26,13 +26,18 @@ def modal(id_suffix: str = "", is_open: bool = True,
     id_close_btn = f"close_{id_suffix}"
     id_dont_show_again = f"dont_show_again_{id_suffix}"
     id_dont_show_again_div = f"dont_show_again_div_{id_suffix}"
+    id_image = f"modal_image_{id_suffix}"
 
     return html.Div(
         [
             dbc.Modal(
                 [
                     dbc.ModalHeader(header),
-                    dbc.ModalBody(body),
+                    dbc.ModalBody(children=[
+                        body,
+                        dbc.Card(dbc.CardImg(id=id_image))
+                    ]
+                    ),
                     dbc.ModalFooter(children=[
                         html.Div(id=id_dont_show_again_div, children=[
                             dbc.Checkbox(
@@ -44,7 +49,7 @@ def modal(id_suffix: str = "", is_open: bool = True,
                         dbc.Button("Close", id=id_close_btn, className="ml-auto"),
                     ]),
                 ],
-                id=id_modal, is_open=is_open
+                id=id_modal, is_open=is_open, size="xl"
             ),
         ]
     )

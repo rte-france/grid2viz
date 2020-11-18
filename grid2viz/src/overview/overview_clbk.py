@@ -275,3 +275,10 @@ def register_callbacks_overview(app):
         return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
                                    dont_show_again, dsa_filepath,
                                    "page_help")
+
+    @app.callback(
+        Output("modal_image_overview", "src"),
+        [Input("url", "pathname")]
+    )
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/scenario_overview.png")
