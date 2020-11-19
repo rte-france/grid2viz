@@ -214,10 +214,7 @@ def layout(scenario, ref_agent):
         print(ex)
         return
     if ref_agent is None:
-        ref_agent = best_agents[scenario]["agent"]
-    max_loads = episode.load[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
-    max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
-    lines_in_maintenance = list(episode.maintenances['line_name'][episode.maintenances.value == 1].unique())
+        ref_agent = agent_scenario[scenario][0]
 
     network_graph = make_network_scenario_overview(episode)
 
