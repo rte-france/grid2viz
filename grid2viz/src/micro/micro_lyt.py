@@ -8,9 +8,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
 import plotly.graph_objects as go
-from grid2op.PlotGrid import PlotPlotly
 
-from grid2viz.src.manager import make_episode, best_agents, grid2viz_home_directory
+from grid2viz.src.manager import grid2viz_home_directory
+from grid2viz.src.manager import make_episode, make_network_agent_study, best_agents
 from grid2viz.src.utils import common_graph
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.layout_helpers import modal, should_help_open
@@ -74,7 +74,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
 
                     html.Div(className="col", children=[
                         html.H6(className="text-center",
-                                children="Grid State evolution overtime"),
+                                children="Grid State evolution overtime & highlighted subs with action "),
 
                         dcc.Graph(
                             id="interactive_graph",
@@ -272,11 +272,8 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     best_episode = make_episode(best_agents[scenario]["agent"], scenario)
     new_episode = make_episode(study_agent, scenario)
     center_indx = center_index(user_selected_timestamp, new_episode)
-    graph = PlotPlotly(
-        grid_layout=new_episode.observation_space.grid_layout,
-        observation_space=new_episode.observation_space,
-        responsive=False)
-    network_graph = graph.plot_obs(new_episode.observations[center_indx])
+    network_graph = make_network_agent_study(new_episode, timestep=center_indx)
+
     open_help = should_help_open(
         Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("micro")
     )

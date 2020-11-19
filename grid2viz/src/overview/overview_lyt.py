@@ -11,11 +11,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
 import matplotlib.pyplot as plt
-import numpy as np
 import plotly.graph_objects as go
 
 from grid2viz.src.manager import (agent_scenario, make_episode, best_agents,
-                                  make_network_matplotlib, grid2viz_home_directory)
+                                  grid2viz_home_directory,
+                                  make_network_scenario_overview)
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
@@ -113,7 +113,6 @@ def summary_line(episode, ref_agent, scenario):
                               'value': prod_name}
                              for prod_name in episode.prod_names],
                     value='solar',
-                    # episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
                     mode='multiple',
                     showArrow=True
                 ),
@@ -220,35 +219,7 @@ def layout(scenario, ref_agent):
     max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
     lines_in_maintenance = list(episode.maintenances['line_name'][episode.maintenances.value == 1].unique())
 
-    graph = make_network_matplotlib(episode)
-
-    # to color assets on our graph with different colors while not overloading it with information
-    # we will use plot_obs instead of plot_info for now
-    ####
-    # For that we override an observation with the desired values
-    obs_colored = episode.observations[0]
-
-    # having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
-    # line in maintenance would display as dashed lines
-    rho_to_color = np.array([float(0.0) if line in lines_in_maintenance else float(0.4) for line in episode.line_names])
-    line_status_colored = np.array([False if line in lines_in_maintenance else True for line in episode.line_names])
-    obs_colored.rho = rho_to_color
-    obs_colored.line_status = line_status_colored
-
-    obs_colored.load_p = np.array(max_loads.value)
-    obs_colored.prod_p = np.array(max_gens.value)
-
-    network_graph = graph.plot_obs(obs_colored, line_info=None)  # )
-    # network_graph=graph.plot_info(
-    #    #observation=episode.observations[0],
-    #    load_values=max_loads.values.flatten(),
-    #    load_unit="MW",
-    #    gen_values=max_gens.values.flatten(),
-    #    gen_unit="MW"
-    #    #line_values=[ 1 if line in lines_in_maintenance else 0 for line in  episode.line_names],
-    #    #coloring="line"
-    # )
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    network_graph = make_network_scenario_overview(episode)
 
     # /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained
     # It calls a deprecated function of matplotlib.

@@ -96,7 +96,7 @@ def indicator_line(scenario, study_agent, ref_agent):
 
             html.Div(className="col-7", children=[
                 html.H6(className="text-center",
-                        children="Impacted grid assets: attacks (dash orange) & overflow (red)"),
+                        children="Impacted grid assets: attacks (dash orange) & overflow (red) and subs with action"),
                 dcc.Graph(
                     id="network_actions",
                     figure=network_graph

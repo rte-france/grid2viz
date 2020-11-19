@@ -5,8 +5,8 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-# from grid2viz.app import app
-from grid2viz.src.manager import make_episode, make_network, grid2viz_home_directory
+from grid2viz.src.manager import grid2viz_home_directory
+from grid2viz.src.manager import make_episode, make_network_agent_study
 from grid2viz.src.utils import common_graph
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
@@ -425,7 +425,7 @@ def register_callbacks_micro(app):
             act_as_str = str(act)
         else:
             act_as_str = "NO ACTION"
-        return make_network(new_episode).plot_obs(new_episode.observations[slider_value]), act_as_str
+        return make_network_agent_study(new_episode, timestep=slider_value), act_as_str
 
     @app.callback(
         [Output("modal_micro", "is_open"),
