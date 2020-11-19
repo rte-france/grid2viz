@@ -197,7 +197,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         name=study_agent + " Actions",
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(study_episode.actions)
+        text=["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     )
 
     ref_action_events_df = pd.DataFrame(
@@ -209,7 +209,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         name=ref_agent + " Actions",
         mode='markers', marker_color='#FF5000',
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(ref_episode.actions)
+        text=["<br>-".join(str(act).split("-")) for act in ref_episode.actions]
     )
 
     distance_trace = go.Scatter(x=study_episode.action_data_table.timestamp,
@@ -263,7 +263,7 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
         x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(study_episode.actions)
+        text=["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     )
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
