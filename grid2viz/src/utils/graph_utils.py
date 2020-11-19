@@ -122,6 +122,7 @@ layout_def = {
     "plot_bgcolor": '#E5ECF6'
 }
 
+
 def layout_no_data(msg):
     return {
         "xaxis": {
@@ -143,4 +144,3 @@ def layout_no_data(msg):
             }
         ]
     }
-

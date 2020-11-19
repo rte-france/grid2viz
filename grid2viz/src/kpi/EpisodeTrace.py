@@ -1,17 +1,19 @@
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+
 from . import observation_model
 from .env_actions import env_actions
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 
-#colors for production share sunburst pie
-dic_colors_prod_types={'nuclear': 'darkgoldenrod', 'thermal': 'coral', 'wind': 'darkgreen', 'solar': 'gold', 'hydro':'steelblue'}
+# colors for production share sunburst pie
+dic_colors_prod_types = {'nuclear': 'darkgoldenrod', 'thermal': 'coral', 'wind': 'darkgreen', 'solar': 'gold',
+                         'hydro': 'steelblue'}
 ##WARNING: make sure the "light" color equivalent exists or override it with another "light" color name
-dic_light_colors_prod_types={k: 'light'+v for k,v in dic_colors_prod_types.items()}
-dic_light_colors_prod_types['nuclear']='goldenrod'
-dic_light_colors_prod_types['wind']='green'
-dic_light_colors_prod_types['solar']='palegoldenrod'
+dic_light_colors_prod_types = {k: 'light' + v for k, v in dic_colors_prod_types.items()}
+dic_light_colors_prod_types['nuclear'] = 'goldenrod'
+dic_light_colors_prod_types['wind'] = 'green'
+dic_light_colors_prod_types['solar'] = 'palegoldenrod'
+
 
 def get_total_overflow_trace(episode_analytics, episode_data):
     df = get_total_overflow_ts(episode_analytics, episode_data)
@@ -24,14 +26,14 @@ def get_total_overflow_trace(episode_analytics, episode_data):
 
 def get_total_overflow_ts(episode_analytics, episode_data):
     df = pd.DataFrame(index=episode_analytics.timesteps,
-                      columns=["time", "value","line_ids"])
+                      columns=["time", "value", "line_ids"])
     for (time_step, obs) in enumerate(episode_data.observations):
         # TODO: observations length and timsteps length should match
         try:
             tstamp = episode_analytics.timestamps[time_step]
             ov = obs.timestep_overflow
-            overflows=[i for i in range(len(ov)) if ov[i]==1]
-            df.loc[time_step, :] = [tstamp, (ov > 0).sum(),overflows]
+            overflows = [i for i in range(len(ov)) if ov[i] == 1]
+            df.loc[time_step, :] = [tstamp, (ov > 0).sum(), overflows]
         except:
             pass
     return df
@@ -49,9 +51,9 @@ def get_prod_share_trace(episode):
     labels = [*df.index.values, *np.unique(prod_type_values)]
 
     parents = [prod_types.get(name) for name in df.index.values]
-    #labelTypes=[l if l in dic_colors_prod_types.keys() else prod_types.get(l) for l in labels]
-    colors=[dic_colors_prod_types[l] if l in dic_colors_prod_types.keys()
-            else dic_light_colors_prod_types[prod_types.get(l)] for l in labels]
+    # labelTypes=[l if l in dic_colors_prod_types.keys() else prod_types.get(l) for l in labels]
+    colors = [dic_colors_prod_types[l] if l in dic_colors_prod_types.keys()
+              else dic_light_colors_prod_types[prod_types.get(l)] for l in labels]
     values = list(df)
 
     for prod_type in unique_prod_types:
@@ -62,9 +64,9 @@ def get_prod_share_trace(episode):
                 value = value + df.get(gen)
         values.append(value)
 
-    return     [go.Sunburst(labels=labels, values=values,
-                        parents=parents, branchvalues="total", marker = dict(colors=colors,
-        colorscale='RdBu'))]
+    return [go.Sunburst(labels=labels, values=values,
+                        parents=parents, branchvalues="total", marker=dict(colors=colors,
+                                                                           colorscale='RdBu'))]
 
 
 def get_hazard_trace(episode, equipments=None):
@@ -92,10 +94,10 @@ def get_hazard_trace(episode, equipments=None):
 def get_maintenance_trace(episode, equipments=None):
     ts_maintenances_by_line = env_actions(
         episode, which="maintenances", kind="ts", aggr=False)
-    
+
     if ts_maintenances_by_line.empty:
         return []
-    
+
     if 'total' in equipments:
         ts_maintenances_by_line = ts_maintenances_by_line.assign(
             total=episode.maintenances.groupby(

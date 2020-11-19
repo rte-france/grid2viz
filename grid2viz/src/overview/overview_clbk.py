@@ -1,13 +1,16 @@
+from pathlib import Path
+
+import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-#from grid2viz.app import app
-import pandas as pd
-
-from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
-from grid2viz.src.utils import common_graph
 from grid2viz.src.kpi import observation_model, EpisodeTrace
-from grid2viz.src.manager import make_episode, best_agents
+from grid2viz.src.manager import make_episode, best_agents, grid2viz_home_directory
+from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
+
 
 def register_callbacks_overview(app):
     @app.callback(
@@ -19,7 +22,6 @@ def register_callbacks_overview(app):
     )
     def relayout_store_overview(*args):
         return relayout_callback(*args)
-
 
     @app.callback(
         [Output("input_assets_selector", "options"),
@@ -36,7 +38,6 @@ def register_callbacks_overview(app):
         """
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         return common_graph.ts_graph_avail_assets(kind, best_agent_ep)
-
 
     @app.callback(
         Output("input_env_charts", "figure"),
@@ -74,7 +75,6 @@ def register_callbacks_overview(app):
 
         return figure
 
-
     @app.callback(
         Output("select_loads_for_tb", "options"),
         [Input('indicator_line', 'children')],
@@ -91,7 +91,6 @@ def register_callbacks_overview(app):
             {'label': load, "value": load} for load in [*episode.load_names, 'total']
         ]
 
-
     @app.callback(
         Output("select_prods_for_tb", "options"),
         [Input('indicator_line', 'children')],
@@ -107,7 +106,6 @@ def register_callbacks_overview(app):
         return [
             {'label': prod, "value": prod} for prod in episode.prod_names
         ]
-
 
     @app.callback(
         [Output("inspection_table", "columns"),
@@ -154,7 +152,6 @@ def register_callbacks_overview(app):
         cols = [{"name": i, "id": i} for i in df.columns]
         return cols, df.to_dict('records')
 
-
     @app.callback(
         Output("nb_steps_card", "children"),
         [Input('scenario', 'data')]
@@ -163,7 +160,6 @@ def register_callbacks_overview(app):
         """Display the best agent number of step when the page is loaded."""
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         return '{} / {}'.format(best_agent_ep.meta['nb_timestep_played'], best_agent_ep.meta['chronics_max_timestep'])
-
 
     @app.callback(
         Output("nb_maintenance_card", "children"),
@@ -174,7 +170,6 @@ def register_callbacks_overview(app):
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         return best_agent_ep.nb_maintenances
 
-
     @app.callback(
         Output("nb_hazard_card", "children"),
         [Input('scenario', 'data')]
@@ -183,7 +178,6 @@ def register_callbacks_overview(app):
         """Display the number of hazard of the best agent when page is loaded."""
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         return best_agent_ep.nb_hazards
-
 
     @app.callback(
         Output("duration_maintenance_card", "children"),
@@ -196,7 +190,6 @@ def register_callbacks_overview(app):
         """
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         return best_agent_ep.total_maintenance_duration
-
 
     @app.callback(
         Output("agent_ref", "data"),
@@ -211,7 +204,6 @@ def register_callbacks_overview(app):
         """
         make_episode(ref_agent, scenario)
         return ref_agent
-
 
     @app.callback(
         [Output("overflow_graph", "figure"), Output("usage_rate_graph", "figure")],
@@ -236,7 +228,6 @@ def register_callbacks_overview(app):
             figure_usage
         )
 
-
     @app.callback(
         Output("indicator_line_charts", "figure"),
         [Input('scenario', 'data')],
@@ -247,7 +238,6 @@ def register_callbacks_overview(app):
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         figure["data"] = best_agent_ep.profile_traces
         return figure
-
 
     @app.callback(
         Output("production_share_graph", "figure"),
@@ -261,7 +251,6 @@ def register_callbacks_overview(app):
         figure["data"] = share_prod
         return figure
 
-
     @app.callback(
         [Output("date_range", "start_date"), Output("date_range", "end_date")],
         [Input('agent_ref', 'data')],
@@ -272,3 +261,24 @@ def register_callbacks_overview(app):
         episode = make_episode(agent_ref, scenario)
         return episode.production["timestamp"].dt.date.values[0], \
                episode.production["timestamp"].dt.date.values[-1]
+
+    @app.callback(
+        [Output("modal_overview", "is_open"),
+         Output("dont_show_again_div_overview", "className")],
+        [Input("close_overview", "n_clicks"),
+         Input("page_help", "n_clicks")],
+        [State("modal_overview", "is_open"),
+         State("dont_show_again_overview", "checked")]
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
+        return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
+                                   dont_show_again, dsa_filepath,
+                                   "page_help")
+
+    @app.callback(
+        Output("modal_image_overview", "src"),
+        [Input("url", "pathname")]
+    )
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/scenario_overview.png")

@@ -11,10 +11,17 @@ nav_items = [
                             href="/macro", id="nav_agent_over")),
     dbc.NavItem(dbc.NavLink("Agent Study",
                             href="/micro", id="nav_agent_study")),
-    dbc.NavItem(dbc.NavLink("Help",
-                            href="https://grid2viz.readthedocs.io/en/latest/", id="nav_help", active=True,
-                            target='_blank'))
-                #, style={"background-color": "white"})
+    dbc.DropdownMenu(label="Help", color="link", in_navbar=True, nav=True,
+                     right=True,
+                     children=[
+                         dbc.DropdownMenuItem("Page Help", id="page_help"),
+                         dbc.DropdownMenuItem(divider=True),
+                         dbc.NavLink("Documentation",
+                                     href="https://grid2viz.readthedocs.io/en/latest/",
+                                     id="nav_help",
+                                     target='_blank')
+                     ],
+    )
 ]
 
 navbar = dbc.Navbar(
@@ -58,7 +65,7 @@ navbar = dbc.Navbar(
             )
         ], id="user_timestamp_div", className="col-xl-1"),
         html.Div(
-            dbc.Nav(nav_items, navbar=True,pills=True), className="nav_menu"
+            dbc.Nav(nav_items, navbar=True, pills=True), className="nav_menu"
         ),
     ],
     color="#2196F3",

@@ -4,17 +4,20 @@ This tab handles the generic information about the environment and the selection
 """
 import base64
 import io
-import matplotlib.pyplot as plt
+from pathlib import Path
 
+import dash_antd_components as dac
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_antd_components as dac
 import dash_table as dt
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-import numpy as np
 
 from grid2viz.src.manager import (agent_scenario, make_episode, best_agents,
+                                  grid2viz_home_directory,
                                   make_network_scenario_overview)
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
 layout_def = {
     'legend': {'orientation': 'h'},
@@ -32,7 +35,6 @@ layout_pie = {
 
 
 def indicators_line(encoded_image):
-
     return html.Div(id="indicator_line", children=[
         html.H4("Indicators"),
         html.Div(children=[
@@ -82,7 +84,8 @@ def indicators_line(encoded_image):
                 ])
             ], className="col-xl-3 align-self-center"),
             html.Div([
-                html.H5("Max prod & laod values and dashed lines in maintenance on Power grid", style={"margin-top": "2%"}),
+                html.H5("Max prod & laod values and dashed lines in maintenance on Power grid",
+                        style={"margin-top": "2%"}),
                 html.Img(src='data:image/png;base64,{}'.format(encoded_image))
             ], className="col-xl-12"),
         ], className="card-body row"),
@@ -109,7 +112,7 @@ def summary_line(episode, ref_agent, scenario):
                     options=[{'label': prod_name,
                               'value': prod_name}
                              for prod_name in episode.prod_names],
-                    value='solar',#episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
+                    value='solar',
                     mode='multiple',
                     showArrow=True
                 ),
@@ -152,7 +155,7 @@ def summary_line(episode, ref_agent, scenario):
                             ),
                             config=dict(displayModeBar=False)
                         )
-                    ],  className='col-6')
+                    ], className='col-6')
                 ], className="row"),
             ], className="col-xl-7"),
         ], className="card-body row"),
@@ -212,13 +215,8 @@ def layout(scenario, ref_agent):
         return
     if ref_agent is None:
         ref_agent = agent_scenario[scenario][0]
-    max_loads = episode.load[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
-    max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
-    lines_in_maintenance=list(episode.maintenances['line_name'][episode.maintenances.value==1].unique())
 
-    network_graph =make_network_scenario_overview(episode)
-
-    best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
+    network_graph = make_network_scenario_overview(episode)
 
     # /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained
     # It calls a deprecated function of matplotlib.
@@ -231,9 +229,17 @@ def layout(scenario, ref_agent):
     encoded_image = base64.b64encode(buf.read())
     buf.close()
 
+    open_help = should_help_open(
+        Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
+    )
+    header = "Take a look at the Scenario"
+    body = "Select a reference agent in the dropdown menu and explore the " \
+           "Scenario's characteristics through the eyes of the best agent."
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line(encoded_image.decode()),
         summary_line(episode, ref_agent, scenario),
-        ref_agent_line
+        ref_agent_line,
+        modal(id_suffix="overview", is_open=open_help,
+              header=header, body=body)
     ])

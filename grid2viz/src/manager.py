@@ -1,28 +1,30 @@
 import configparser
+import itertools
 import json
 import os
 import time
+from pathlib import Path
 
 import dill
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-import itertools
-import numpy as np
-#refer to https://github.com/rte-france/Grid2Op/blob/master/getting_started/8_PlottingCapabilities.ipynb for better usage
-
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
+
+# refer to https://github.com/rte-france/Grid2Op/blob/master/getting_started/8_PlottingCapabilities.ipynb for better usage
 
 graph = None
 graph_matplotlib = None
 
-##TODO: addSubstationColor - integrate that into grid2op Plotgrid
-def addSubstationColorMatplot(subs, plot_helper,fig):
+
+# TODO: addSubstationColor - integrate that into grid2op Plotgrid
+def add_substation_color_matplot(subs, plot_helper, fig):
     radius_size = plot_helper._sub_radius
-    #fig = plot_helper.plot_layout()
+    # fig = plot_helper.plot_layout()
     ax = fig.gca()
 
     for id_sub in subs:
@@ -33,8 +35,9 @@ def addSubstationColorMatplot(subs, plot_helper,fig):
 
     return fig
 
-def addSubstationColorPlotly(subs, plot_helper,fig):
-    radius_size = int(plot_helper._sub_radius*0.8)
+
+def add_substation_color_plotly(subs, plot_helper, fig):
+    radius_size = int(plot_helper._sub_radius * 0.8)
 
     for id_sub in subs:
         subName = 'sub_' + str(id_sub)
@@ -47,14 +50,15 @@ def addSubstationColorPlotly(subs, plot_helper,fig):
             opacity=0.5,
         )
         fig.add_trace(go.Scatter(x=[x_center], y=[y_center],
-                          mode="markers",
-                          text=[subName],
-                          name="sub" + subName,
-                          marker=marker_dict,
-                          showlegend=False))
+                                 mode="markers",
+                                 text=[subName],
+                                 name="sub" + subName,
+                                 marker=marker_dict,
+                                 showlegend=False))
     return fig
 
-def make_network(episode,responsive=True):
+
+def make_network(episode, responsive=True):
     """
         Create a Plotly network graph with the layout configuration and the selected episode.
 
@@ -79,34 +83,36 @@ def make_network_matplotlib(episode):
             line_name=False, gen_name=False, load_name=False)
     return graph_matplotlib
 
+
 ######
-#we want a non responsive graph for now in agent_study
+# we want a non responsive graph for now in agent_study
 # so we have to define it differently from the global graph in make_network that we don't use here
-def make_network_agent_study(episode,timestep):
+def make_network_agent_study(episode, timestep):
     graph = PlotPlotly(
         grid_layout=episode.observation_space.grid_layout,
         observation_space=episode.observation_space,
         responsive=False)
 
-    fig=graph.plot_obs(episode.observations[timestep], line_info=None,gen_info=None,load_info=None)
+    fig = graph.plot_obs(episode.observations[timestep], line_info=None, gen_info=None, load_info=None)
 
     ##########
-    #We color subs where we had actions
-    sub_name_modified=list(itertools.chain.from_iterable(episode.action_data_table.subs_modified))
-    sub_id_modified=[int(str.split('_')[1]) for str in episode.action_data_table.subs_modified[timestep]]
-    fig=addSubstationColorPlotly(sub_id_modified,graph,fig)
+    # We color subs where we had actions
+    sub_name_modified = list(itertools.chain.from_iterable(episode.action_data_table.subs_modified))
+    sub_id_modified = [int(str.split('_')[1]) for str in episode.action_data_table.subs_modified[timestep]]
+    fig = add_substation_color_plotly(sub_id_modified, graph, fig)
     return fig
+
 
 def make_network_agent_overview(episode):
     graph = make_network(episode)
 
-    #modified_lines = actions_model.get_modified_lines(episode)
-    #line_values = [None] * episode.n_lines
-    #for line in modified_lines.index:
+    # modified_lines = actions_model.get_modified_lines(episode)
+    # line_values = [None] * episode.n_lines
+    # for line in modified_lines.index:
     #    line_values[np.where(episode.line_names == line)[0][0]] = line
 
-    lines_attacked=list(episode.attacks_data_table['id_lines'][episode.attacks_data_table.attack].unique())
-    lines_overflowed_ids=list(itertools.chain.from_iterable(episode.total_overflow_ts.line_ids))
+    lines_attacked = list(episode.attacks_data_table['id_lines'][episode.attacks_data_table.attack].unique())
+    lines_overflowed_ids = list(itertools.chain.from_iterable(episode.total_overflow_ts.line_ids))
     # to color assets on our graph with different colors while not overloading it with information
     # we will use plot_obs instead of plot_info for now
     ####
@@ -115,50 +121,51 @@ def make_network_agent_overview(episode):
 
     # having a rho with value 1.0 give us a red line while 0.7 gives us an orange line and 0.3 a blue line
     rho_to_color = np.array([float(0.6) if line in lines_attacked else float(0.3) for line in episode.line_names])
-    rho_to_color[lines_overflowed_ids]=1.0
+    rho_to_color[lines_overflowed_ids] = 1.0
     line_status_colored = np.array([False if line in lines_attacked else True for line in episode.line_names])
     obs_colored.rho = rho_to_color
     obs_colored.line_status = line_status_colored
 
-    #network_graph = make_network(episode).plot_info(
+    # network_graph = make_network(episode).plot_info(
     #    line_values=[ line if line in lines_attacked else None for line in  episode.line_names]
     #    #coloring="line"
-    #)
-    fig=graph.plot_obs(obs_colored, line_info=None,gen_info=None,load_info=None)
+    # )
+    # )
+    fig = graph.plot_obs(obs_colored, line_info=None, gen_info=None, load_info=None)
 
     ##########
-    #We color subs where we had actions
-    sub_name_modified=list(itertools.chain.from_iterable(episode.action_data_table.subs_modified))
-    sub_id_modified=set([int(str.split('_')[1]) for str in sub_name_modified])
-    fig=addSubstationColorPlotly(sub_id_modified,graph,fig)
+    # We color subs where we had actions
+    sub_name_modified = list(itertools.chain.from_iterable(episode.action_data_table.subs_modified))
+    sub_id_modified = set([int(str.split('_')[1]) for str in sub_name_modified])
+    fig = add_substation_color_plotly(sub_id_modified, graph, fig)
 
     return fig
 
-def make_network_scenario_overview(episode):
 
+def make_network_scenario_overview(episode):
     max_loads = episode.load[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
     max_gens = episode.production[["value", "equipement_id"]].groupby("equipement_id").max().sort_index()
-    lines_in_maintenance=list(episode.maintenances['line_name'][episode.maintenances.value==1].unique())
+    lines_in_maintenance = list(episode.maintenances['line_name'][episode.maintenances.value == 1].unique())
 
     graph = make_network_matplotlib(episode)
 
-    #to color assets on our graph with different colors while not overloading it with information
+    # to color assets on our graph with different colors while not overloading it with information
     # we will use plot_obs instead of plot_info for now
     ####
-    #For that we override an observation with the desired values
-    obs_colored=episode.observations[0]
+    # For that we override an observation with the desired values
+    obs_colored = episode.observations[0]
 
-    #having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
-    #line in maintenance would display as dashed lines
-    rho_to_color=np.array([ float(0.0) if line in lines_in_maintenance else float(0.4) for line in  episode.line_names])
+    # having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
+    # line in maintenance would display as dashed lines
+    rho_to_color = np.array([float(0.0) if line in lines_in_maintenance else float(0.4) for line in episode.line_names])
     line_status_colored = np.array([False if line in lines_in_maintenance else True for line in episode.line_names])
     obs_colored.rho = rho_to_color
-    obs_colored.line_status=line_status_colored
+    obs_colored.line_status = line_status_colored
 
-    obs_colored.load_p=np.array(max_loads.value)
-    obs_colored.prod_p=np.array(max_gens.value)
+    obs_colored.load_p = np.array(max_loads.value)
+    obs_colored.prod_p = np.array(max_gens.value)
 
-    network_graph=graph.plot_obs(obs_colored,line_info=None)
+    network_graph = graph.plot_obs(obs_colored, line_info=None)
     # network_graph=graph.plot_info(
     #    #observation=episode.observations[0],
     #    load_values=max_loads.values.flatten(),
@@ -322,9 +329,9 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
                         "cum_reward": -1
                     }
                 condition_to_update_best_agent = (
-                    best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"] or
-                    (best_agents[scenario_name]["value"] == episode_meta["nb_timestep_played"] and
-                     best_agents[scenario_name]['cum_reward'] < episode_meta['cumulative_reward'])
+                        best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"] or
+                        (best_agents[scenario_name]["value"] == episode_meta["nb_timestep_played"] and
+                         best_agents[scenario_name]['cum_reward'] < episode_meta['cumulative_reward'])
                 )
                 if condition_to_update_best_agent:
                     best_agents[scenario_name]["value"] = episode_meta["nb_timestep_played"]
@@ -381,3 +388,7 @@ for agent in agents:
     scenarios = scenarios + scens
 
 scenarios = set(scenarios)
+
+# Create a .grid2viz directory in the user home directory
+grid2viz_home_directory = Path.home() / ".grid2viz"
+grid2viz_home_directory.mkdir(parents=False, exist_ok=True)

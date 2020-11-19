@@ -12,7 +12,8 @@ The "as ..." are also mandatory, other nothing is done.
 from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.micro import micro_lyt as micro
-from grid2viz.src.episodes import episodes_lyt 
+from grid2viz.src.episodes import episodes_lyt as episodes
+
 '''
 End Warning
 '''
@@ -44,7 +45,7 @@ def register_callbacks_main(app):
         # When you have a proxy, like on Binder, the pathname can be long.
         # So we split it and only keep the last piece
         pathName_split = pathname.split("/")
-        pathName_split = pathName_split[len(pathName_split)-1]
+        pathName_split = pathName_split[len(pathName_split) - 1]
 
         if pathName_split and pathName_split[1:] == prev_page:
             raise PreventUpdate
@@ -53,17 +54,19 @@ def register_callbacks_main(app):
             reset_ts_table_macro = True
 
         if pathName_split == "episodes" or pathName_split == "" or not pathName_split:
-            return episodes_lyt, "episodes", True, False, False, False, reset_ts_table_macro
+            return episodes.layout(), "episodes", True, False, False, False, reset_ts_table_macro
         elif pathName_split == "overview":
             return overview.layout(scenario, ref_agent), "overview", False, True, False, False, reset_ts_table_macro
         elif pathName_split == "macro":
             if ref_agent is None:
                 raise PreventUpdate
-            return macro.layout(timestamps, scenario, study_agent, ref_agent, reset_ts_table_macro), "macro", False, False, True, False, False
+            return macro.layout(timestamps, scenario, study_agent, ref_agent,
+                                reset_ts_table_macro), "macro", False, False, True, False, False
         elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
                 raise PreventUpdate
-            return micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario), "micro", False, False, False, True, reset_ts_table_macro
+            return micro.layout(user_selected_timestamp, study_agent, ref_agent,
+                                scenario), "micro", False, False, False, True, reset_ts_table_macro
         else:
             return 404, ""
 
@@ -81,7 +84,6 @@ def register_callbacks_main(app):
             agent = ""
         return agent
 
-
     @app.callback(Output("study_ag_lbl", "children"),
                   [Input("agent_study", "data")])
     def update_study_agent_label(agent):
@@ -89,12 +91,11 @@ def register_callbacks_main(app):
             agent = ""
         return agent
 
-
     @app.callback(Output("user_timestamp_div", "className"),
                   [Input("url", "pathname")])
     def show_user_timestamps(pathname):
-        pathName_split=pathname.split("/")
-        pathName_split=pathName_split[len(pathName_split)-1]
+        pathName_split = pathname.split("/")
+        pathName_split = pathName_split[len(pathName_split) - 1]
 
         class_name = "ml-4 row"
         if pathName_split != "micro":
@@ -125,12 +126,10 @@ def register_callbacks_main(app):
         if filtered_data:
             return filtered_data[0]["value"]
 
-
     @app.callback(Output("enlarge_left", "n_clicks"),
                   [Input("user_timestamps", "value")])
     def reset_n_cliks_left(value):
         return 0
-
 
     @app.callback(Output("enlarge_right", "n_clicks"),
                   [Input("user_timestamps", "value")])

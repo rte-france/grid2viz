@@ -3,12 +3,12 @@
 """
 from copy import copy
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from plotly import graph_objects as go
+
 from grid2viz.src.kpi import EpisodeTrace, observation_model
 from grid2viz.src.kpi.actions_model import get_actions_sum
-
 from grid2viz.src.manager import make_episode
 
 
@@ -31,18 +31,18 @@ def ts_graph_avail_assets(ts_kind, episode):
     """
     if ts_kind in ["Hazards", "Maintenances"]:
         options, value = [{'label': line_name, 'value': line_name}
-                          for line_name in ['total',*episode.line_names]], 'total'#episode.line_names[0]
+                          for line_name in ['total', *episode.line_names]], 'total'  # episode.line_names[0]
     elif ts_kind == 'Production':
         prod_types = episode.get_prod_types()
         options = [{'label': prod_name,
                     'value': prod_name}
-                   for prod_name in [*list(set(prod_types.values())), 'total',*episode.prod_names,]]
-        value = 'solar'#episode.prod_names[0]
+                   for prod_name in [*list(set(prod_types.values())), 'total', *episode.prod_names, ]]
+        value = 'solar'  # episode.prod_names[0]
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in ['total',*episode.load_names]]
-        value = 'total'#episode.load_names[0]
+                   for load_name in ['total', *episode.load_names]]
+        value = 'total'  # episode.load_names[0]
 
     return options, value
 
@@ -197,7 +197,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         name=study_agent + " Actions",
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(study_episode.actions)
+        text=["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     )
 
     ref_action_events_df = pd.DataFrame(
@@ -209,17 +209,17 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         name=ref_agent + " Actions",
         mode='markers', marker_color='#FF5000',
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(ref_episode.actions)
+        text=["<br>-".join(str(act).split("-")) for act in ref_episode.actions]
     )
 
     distance_trace = go.Scatter(x=study_episode.action_data_table.timestamp,
                                 y=study_episode.action_data_table["distance"],
-                                name=study_agent,)
+                                name=study_agent, )
 
     ref_distance_trace = go.Scatter(
         x=ref_episode.action_data_table.timestamp[:study_agent_length],
         y=ref_episode.action_data_table["distance"][:study_agent_length],
-        name=ref_agent,)
+        name=ref_agent, )
 
     layout_def.update(xaxis=dict(
         range=[distance_trace.x[0], distance_trace.x[-1]])
@@ -263,7 +263,7 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
         x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(study_episode.actions)
+        text=["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     )
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
@@ -282,12 +282,12 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
     )
 
     return {
-        'data': [ref_reward_trace_copy, studied_agent_reward_trace, action_trace],
-        'layout': rew_layout,
-    }, {
-        'data': [ref_reward_cum_trace_copy, studied_agent_reward_cum_trace],
-        'layout': cumrew_layout,
-    }
+               'data': [ref_reward_trace_copy, studied_agent_reward_trace, action_trace],
+               'layout': rew_layout,
+           }, {
+               'data': [ref_reward_cum_trace_copy, studied_agent_reward_cum_trace],
+               'layout': cumrew_layout,
+           }
 
 
 def compute_windows_range(episode, center_idx, n_clicks_left, n_clicks_right):

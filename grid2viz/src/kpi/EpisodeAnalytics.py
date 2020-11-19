@@ -1,18 +1,19 @@
 import datetime as dt
 import time
 
-from .env_actions import env_actions
-from grid2op.Episode import EpisodeData
 import numpy as np
 import pandas as pd
+from grid2op.Episode import EpisodeData
 from tqdm import tqdm
 
 from . import EpisodeTrace, maintenances, consumption_profiles
+from .env_actions import env_actions
 
-#TODO: configure the reward key you want to visualize in agent overview.
+# TODO: configure the reward key you want to visualize in agent overview.
 # Either as an argument or a dropdown list in the app from which we can choose.
 # The reward dataframe should get bigger with all keys available anyway
-other_reward_key='grid_operation_cost'
+other_reward_key = 'grid_operation_cost'
+
 
 class ActionImpacts:
     def __init__(self, action_line, action_subs, action_redisp, redisp_impact,
@@ -27,6 +28,7 @@ class ActionImpacts:
         self.gen_name = gen_name
         self.action_id = action_id
 
+
 class EpisodeAnalytics:
     def __init__(self, episode_data, episode_name, agent):
         self.episode_name = episode_name
@@ -36,7 +38,8 @@ class EpisodeAnalytics:
         print(f"Computing DataFrames for scenario {self.episode_name} and agent {self.agent}")
         beg = time.time()
         print("Environment")
-        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch, self.attacks_data_table = self._make_df_from_data(episode_data)
+        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch, self.attacks_data_table = self._make_df_from_data(
+            episode_data)
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
         print("Computing computation intensive indicators...")
@@ -229,18 +232,19 @@ class EpisodeAnalytics:
         computed_rewards['timestep'] = self.timestamps
         computed_rewards['rewards'] = episode_data.rewards[:size]
 
-        #TO DO: we should give a choice to select different rewards among other rewards
-        if(episode_data.other_rewards):
-            if(other_reward_key):
-                if(other_reward_key in episode_data.other_rewards[0].keys()):
-                    computed_rewards['rewards']=[other_reward[other_reward_key] for other_reward in episode_data.other_rewards]
-                    computed_rewards['rewards']=computed_rewards['rewards'][: size]
+        # TODO: we should give a choice to select different rewards among other rewards
+        if episode_data.other_rewards:
+            if other_reward_key:
+                if other_reward_key in episode_data.other_rewards[0].keys():
+                    computed_rewards['rewards'] = [other_reward[other_reward_key] for other_reward in
+                                                   episode_data.other_rewards]
+                    computed_rewards['rewards'] = computed_rewards['rewards'][: size]
         computed_rewards['cum_rewards'] = computed_rewards['rewards'].cumsum(axis=0)
 
         attacks_data_table = pd.DataFrame(
             index=range(size),
             columns=[
-                'timestep', 'timestamp', 'attack','id_lines'
+                'timestep', 'timestamp', 'attack', 'id_lines'
             ]
         )
         attacks_data_table['timestep'] = self.timesteps
@@ -250,8 +254,8 @@ class EpisodeAnalytics:
             n_subs_modified, *_ = self.get_subs_modifications(attack)
             is_attacked = n_lines_modified > 0 or n_subs_modified > 0
             attacks_data_table.loc[time_step, "attack"] = is_attacked
-            if (len(lines_modified)==0):
-                attacks_data_table.loc[time_step, "id_lines"]=''
+            if len(lines_modified) == 0:
+                attacks_data_table.loc[time_step, "id_lines"] = ''
             else:
                 attacks_data_table.loc[time_step, "id_lines"] = lines_modified[0]
 
@@ -353,7 +357,7 @@ class EpisodeAnalytics:
 
     # @jit(forceobj=True)
     def _env_actions_as_df(self, episode_data):
-        agent_length = len(episode_data.actions) # int(episode_data.meta['nb_timestep_played'])
+        agent_length = len(episode_data.actions)  # int(episode_data.meta['nb_timestep_played'])
         hazards_size = agent_length * episode_data.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
         hazards = pd.DataFrame(index=range(hazards_size),
@@ -373,7 +377,6 @@ class EpisodeAnalytics:
             begin = time_step * episode_data.n_lines
             end = (time_step + 1) * episode_data.n_lines - 1
             maintenances.loc[begin:end, "value"] = env_act._maintenance.astype(int)
-
 
         hazards["timestep"] = np.repeat(range(agent_length), episode_data.n_lines)
         maintenances["timestep"] = hazards["timestep"]
@@ -443,8 +446,8 @@ class EpisodeAnalytics:
         str_lines_modified = ""
         if "set_line_status" in action_dict:
             n_lines_modified += (
-                action_dict["set_line_status"]["nb_connected"] +
-                action_dict["set_line_status"]["nb_disconnected"]
+                    action_dict["set_line_status"]["nb_connected"] +
+                    action_dict["set_line_status"]["nb_disconnected"]
             )
             lines_reconnected = [
                 *lines_reconnected,
@@ -489,14 +492,14 @@ class EpisodeAnalytics:
             subs_modified = [
                 *subs_modified,
                 *[action.name_sub[int(sub_id)] for sub_id in
-                 action_dict["set_bus_vect"]["modif_subs_id"]]
+                  action_dict["set_bus_vect"]["modif_subs_id"]]
             ]
         if "change_bus_vect" in action_dict:
             n_subs_modified += action_dict["change_bus_vect"]["nb_modif_subs"]
             subs_modified = [
                 *subs_modified,
                 *[action.name_sub[int(sub_id)] for sub_id in
-                 action_dict["change_bus_vect"]["modif_subs_id"]]
+                  action_dict["change_bus_vect"]["modif_subs_id"]]
             ]
 
         subs_modified_set = set(subs_modified)
@@ -539,7 +542,6 @@ class EpisodeAnalytics:
         else:
             elements_formatted = " - ".join(elements)
         return elements_formatted
-
 
 
 class Test():

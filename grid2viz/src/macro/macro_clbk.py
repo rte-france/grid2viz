@@ -3,27 +3,26 @@
     and let choose and compute study agent information.
 """
 import datetime as dt
+from pathlib import Path
 
+import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import numpy as np
-import plotly.graph_objects as go
-import itertools
 
-from grid2viz.src.manager import make_episode, make_network_agent_overview
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
-from grid2viz.src.utils.graph_utils import (
-    get_axis_relayout, relayout_callback, layout_def, layout_no_data, max_or_zero)
-from grid2viz.src.kpi.maintenances import (hist_duration_maintenances)
-
+from grid2viz.src.manager import make_episode, make_network_agent_overview, grid2viz_home_directory
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.graph_utils import (
+    get_axis_relayout, relayout_callback, max_or_zero)
 
 
 def register_callbacks_macro(app):
     @app.callback(
         [Output("rewards_timeserie", "figure"),
-         Output("cumulated_rewards_timeserie", "figure"),],
+         Output("cumulated_rewards_timeserie", "figure"), ],
         [Input('agent_study', 'data'),
          Input('relayoutStoreMacro', 'data')],
         [State("rewards_timeserie", "figure"),
@@ -75,7 +74,6 @@ def register_callbacks_macro(app):
                 "No Actions for this Agent"))
         return figure
 
-
     def action_repartition_pie(agent):
         nb_actions = agent.action_data_table[
             ['action_line', 'action_subs', 'action_redisp']].sum()
@@ -93,7 +91,6 @@ def register_callbacks_macro(app):
         episode = make_episode(study_agent, scenario)
 
         return make_network_agent_overview(episode)
-
 
     @app.callback(
         Output("timeseries_table", "data"),
@@ -118,7 +115,6 @@ def register_callbacks_macro(app):
             data.append(new_data)
         return data
 
-
     @app.callback(
         Output("user_timestamps_store", "data"),
         [Input("timeseries_table", "data")]
@@ -128,7 +124,6 @@ def register_callbacks_macro(app):
             raise PreventUpdate
         return [dict(label=timestamp["Timestamps"], value=timestamp["Timestamps"])
                 for timestamp in timestamps]
-
 
     @app.callback(
         Output("relayoutStoreMacro", "data"),
@@ -141,7 +136,6 @@ def register_callbacks_macro(app):
     )
     def relayout_store(*args):
         return relayout_callback(*args)
-
 
     @app.callback(
         [Output("indicator_score_output", "children"),
@@ -158,20 +152,16 @@ def register_callbacks_macro(app):
 
         return score, nb_overflow, nb_action
 
-
     def get_score_agent(agent):
         score = agent.meta["cumulative_reward"]
         return round(score)
 
-
     def get_nb_overflow_agent(agent):
         return agent.total_overflow_ts["value"].sum()
-
 
     def get_nb_action_agent(agent):
         return int(agent.action_data_table[['action_line', 'action_subs']].sum(
             axis=1).sum())
-
 
     @app.callback(
         Output("agent_study", "data"),
@@ -184,7 +174,6 @@ def register_callbacks_macro(app):
             raise PreventUpdate
         make_episode(study_agent, scenario)
         return study_agent
-
 
     @app.callback(
         [Output("overflow_graph_study", "figure"), Output(
@@ -237,7 +226,6 @@ def register_callbacks_macro(app):
 
         return figure_overflow, figure_usage
 
-
     @app.callback(
         Output("action_timeserie", "figure"),
         [Input('agent_study', 'data'),
@@ -267,7 +255,6 @@ def register_callbacks_macro(app):
                 return figure
 
         return make_action_ts(study_agent, agent_ref, scenario, figure['layout'])
-
 
     action_table_name_converter = dict(
         timestep="Timestep",
@@ -299,7 +286,6 @@ def register_callbacks_macro(app):
         cols = [{"name": action_table_name_converter[col], "id": col} for col in
                 table.columns if col not in cols_to_exclude]
         return cols, table.to_dict("record")
-
 
     @app.callback(
         [Output("distribution_substation_action_chart", "figure"),
@@ -356,7 +342,6 @@ def register_callbacks_macro(app):
 
         return figure_sub, figure_switch_line, figure_redisp
 
-
     @app.callback(
         Output("tooltip_table", "children"),
         [Input("inspector_datable", "active_cell")],
@@ -371,3 +356,24 @@ def register_callbacks_macro(app):
         row_id = active_cell["row_id"]
         act = new_episode.actions[row_id]
         return str(act)
+
+    @app.callback(
+        [Output("modal_macro", "is_open"),
+         Output("dont_show_again_div_macro", "className")],
+        [Input("close_macro", "n_clicks"),
+         Input("page_help", "n_clicks")],
+        [State("modal_macro", "is_open"),
+         State("dont_show_again_macro", "checked")]
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("macro")
+        return toggle_modal_helper(close_n_clicks, open_n_clicks, is_open,
+                                   dont_show_again, dsa_filepath,
+                                   "page_help")
+
+    @app.callback(
+        Output("modal_image_macro", "src"),
+        [Input("url", "pathname")]
+    )
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/agent_overview.png")

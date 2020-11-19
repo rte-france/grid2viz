@@ -3,27 +3,25 @@ This file handles the html entry point of the application through dash component
 It will generate the layout of a given page and handle the routing
 """
 
-#from dash import Dash
-from jupyter_dash import JupyterDash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+# from dash import Dash
+from jupyter_dash import JupyterDash
 
 # We need to create app before importing the rest of the project as it uses @app decorators
-JupyterDash.infer_jupyter_proxy_config()#for binder or jupyterHub for instance
-app = JupyterDash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])#,server_url="http://127.0.0.1:8050/")
+JupyterDash.infer_jupyter_proxy_config()  # for binder or jupyterHub for instance
+app = JupyterDash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])  # ,server_url="http://127.0.0.1:8050/")
 
 '''
 Get Imports to create layout and callbacks 
 '''
-from grid2viz.main_callbacks import register_callbacks_main 
+from grid2viz.main_callbacks import register_callbacks_main
 from grid2viz.layout import make_layout as layout
 
-
 from grid2viz.src.episodes.episodes_clbk import register_callbacks_episodes
-from grid2viz.src.overview.overview_clbk import register_callbacks_overview #as overview_clbk
-from grid2viz.src.macro.macro_clbk import register_callbacks_macro #as macro_clbk
-from grid2viz.src.micro.micro_clbk import register_callbacks_micro #as micro_clbk
+from grid2viz.src.overview.overview_clbk import register_callbacks_overview  # as overview_clbk
+from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
+from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
+
 '''
 End Warning
 '''
@@ -46,6 +44,7 @@ register_callbacks_micro(app)
 
 def app_run(port=8050, debug=False):
     app.run_server(port=port, debug=debug)
-    
+
+
 if __name__ == "__main__":
     app_run()
