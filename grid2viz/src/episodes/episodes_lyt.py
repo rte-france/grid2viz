@@ -46,29 +46,20 @@ def create_heatmap_figure(df):
 def generate_heatmap_components(df):
 
     heatmap_div = html.Div(children=[
-        html.H5("Agents' survival in percent of the scenario length"),
+        html.H5("Percentage of Agents' survival time over a scenario"),
         dcc.Graph(
             id="heatmap",
             figure=create_heatmap_figure(df),
         ),
     ], style={'textAlign': 'center'}, className="col-xl-12 align-self-center")
 
-    return html.Div(id="h", children=[
-        html.Div(children=[
-            html.H5(
-                dbc.Button(
-                    "Scenarios comparison",
-                    id="collapse-button",
-                    color="link",
-                )
-            ),
+    return html.Div(className="lineBlockSlim card",children=[
             dbc.Collapse(
                 heatmap_div,
                 id="collapse"
             ),
             scenarios_filter(sorted(list(scenarios))),
-        ], className='card-body row p-1'),
-    ], className="lineBlockSlim card")
+        ])
 
 
 def scenarios_filter(scenarios):
@@ -87,6 +78,19 @@ def scenarios_filter(scenarios):
         ]
     )
 
+def comparisonButton():
+    return html.Div(className="row", children=[
+                      dbc.Button(
+                          "Open scenarios comparison & filtering",
+                          id="collapse-button",
+                          color="info",
+                          #active=True,
+                          size="lg",
+                          outline=True,
+                          block=True
+                      )
+                  ], style={'width': '100%', 'padding-left':'40%','padding-right':'40%'})
+
 
 def layout():
     open_help = should_help_open(
@@ -99,6 +103,7 @@ def layout():
     return html.Div(
         id="scenario_page",
         children=[dcc.Store(id="relayoutStoreScenario"),
+                  comparisonButton(),
                   generate_heatmap_components(survival_df),
                   dbc.Row(id='cards_container', className="m-1"),
                   modal(id_suffix="episodes", is_open=open_help,
