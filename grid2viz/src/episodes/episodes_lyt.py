@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import dash_antd_components as dac
@@ -25,7 +24,6 @@ def get_heatmap_survival_score(df):
 
 
 def create_heatmap_figure(df):
-
     clustered_survival_df = get_heatmap_survival_score(df)
 
     z_text = clustered_survival_df.copy().astype(str)
@@ -44,22 +42,21 @@ def create_heatmap_figure(df):
 
 
 def generate_heatmap_components(df):
-
     heatmap_div = html.Div(children=[
         html.H5("Percentage of Agents' survival time over a scenario"),
         dcc.Graph(
             id="heatmap",
             figure=create_heatmap_figure(df),
         ),
-    ], style={'textAlign': 'center'}, className="col-xl-12 align-self-center")
+    ], className="col-xl-12 align-self-center heatmap")
 
-    return html.Div(className="lineBlockSlim card",children=[
-            dbc.Collapse(
-                heatmap_div,
-                id="collapse"
-            ),
-            scenarios_filter(sorted(list(scenarios))),
-        ])
+    return html.Div(className="lineBlockSlim card", children=[
+        dbc.Collapse(
+            heatmap_div,
+            id="collapse"
+        ),
+        scenarios_filter(sorted(list(scenarios))),
+    ])
 
 
 def scenarios_filter(scenarios):
@@ -78,18 +75,18 @@ def scenarios_filter(scenarios):
         ]
     )
 
-def comparisonButton():
-    return html.Div(className="row", children=[
-                      dbc.Button(
-                          "Open scenarios comparison & filtering",
-                          id="collapse-button",
-                          color="info",
-                          #active=True,
-                          size="lg",
-                          outline=True,
-                          block=True
-                      )
-                  ], style={'width': '100%', 'padding-left':'40%','padding-right':'40%'})
+
+def comparison_button():
+    return html.Div(className="row comparison-btn", children=[
+        dbc.Button(
+            "Open scenarios comparison & filtering",
+            id="collapse-button",
+            color="info",
+            size="lg",
+            outline=True,
+            block=True
+        )
+    ])
 
 
 def layout():
@@ -103,7 +100,7 @@ def layout():
     return html.Div(
         id="scenario_page",
         children=[dcc.Store(id="relayoutStoreScenario"),
-                  comparisonButton(),
+                  comparison_button(),
                   generate_heatmap_components(survival_df),
                   dbc.Row(id='cards_container', className="m-1"),
                   modal(id_suffix="episodes", is_open=open_help,
