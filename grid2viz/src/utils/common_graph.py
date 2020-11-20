@@ -41,7 +41,7 @@ def ts_graph_avail_assets(ts_kind, episode):
     else:
         options = [{'label': load_name,
                     'value': load_name}
-                   for load_name in ['total', *episode.load_names]]
+                   for load_name in ['total','total_intercos', *episode.load_names]]
         value = 'total'  # episode.load_names[0]
 
     return options, value

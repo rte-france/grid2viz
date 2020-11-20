@@ -88,7 +88,7 @@ def register_callbacks_overview(app):
         """
         episode = make_episode(best_agents[scenario]["agent"], scenario)
         return [
-            {'label': load, "value": load} for load in [*episode.load_names, 'total']
+            {'label': load, "value": load} for load in [*episode.load_names, 'total','total_intercos']
         ]
 
     @app.callback(
