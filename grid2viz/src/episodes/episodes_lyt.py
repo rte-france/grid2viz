@@ -94,9 +94,8 @@ def layout():
         Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("episodes")
     )
     header = "Take a look at the Scenarios"
-    body = "The heatmap provides a quick look at the agents' performances across " \
-           "all scenarios. Click the open button to continue the analysis on a " \
-           "specific scenario. Once you're down, go on to the Agent overview."
+    body = " Choose a specific scenario to analyze by clicking its Open button.  " \
+           "Get more detailed information when choosing your scenario by clicking on the comparison & filtering button"
     return html.Div(
         id="scenario_page",
         children=[dcc.Store(id="relayoutStoreScenario"),

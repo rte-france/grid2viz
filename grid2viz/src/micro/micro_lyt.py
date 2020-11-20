@@ -278,8 +278,8 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
         Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("micro")
     )
     header = "Analyze further your agent"
-    body = "Select a time step in the navbar dropdown and analyze when happened " \
-           "around this moment."
+    body = "Select a time step in the navbar dropdown and analyze what happened " \
+           "at that time to understand the agent behavior."
     return html.Div(id="micro_page", children=[
         dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(),

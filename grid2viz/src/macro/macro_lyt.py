@@ -344,7 +344,7 @@ def layout(timestamps, scenario, study_agent, ref_agent, from_scenario_selection
     header = "Take a look at your agent"
     body = "Select an agent to study in the dropdown menu and analyse it with " \
            "respect to the reference agent. Click on the reward graph to select " \
-           "some time steps to study further. When you have selected time steps, " \
+           "some time steps to study further your agent. When you have selected time steps, " \
            "go on to the Study agent view."
 
     return html.Div(id="overview_page", children=[
