@@ -93,7 +93,7 @@ def make_network_agent_study(episode, timestep):
         observation_space=episode.observation_space,
         responsive=False)
 
-    fig = graph.plot_obs(episode.observations[timestep], line_info=None, gen_info=None, load_info=None)
+    fig = graph.plot_obs(episode.observations[timestep])
 
     ##########
     # We color subs where we had actions
