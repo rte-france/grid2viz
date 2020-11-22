@@ -277,7 +277,7 @@ class EpisodeAnalytics:
             effect = act.effect_on(substation_id=sub)
             if np.any(effect["change_bus"] is True):
                 return self.name_sub[sub]
-            if np.any(effect["set_bus"] is 1) or np.any(effect["set_bus"] is -1):
+            if np.any(effect["set_bus"] == 1) or np.any(effect["set_bus"] == -1):
                 return self.name_sub[sub]
         return None
 
