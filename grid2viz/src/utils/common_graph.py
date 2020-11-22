@@ -1,7 +1,6 @@
 """
     Utility functions for creation of graph and graph component used several times.
 """
-from copy import copy
 
 import numpy as np
 import pandas as pd
@@ -239,7 +238,8 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     return figure
 
 
-def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout):
+def make_rewards_ts(study_agent, ref_agent, scenario,
+                    reward_figure, cumulative_reward_figure):
     """
         Make kpi with rewards and cumulated reward for both reference agent and study agent.
 
@@ -267,27 +267,25 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
     )
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
+    reward_figure["data"] = [
+        ref_reward_trace, studied_agent_reward_trace, action_trace
+    ]
+    cumulative_reward_figure["data"] = [
+        ref_reward_cum_trace, studied_agent_reward_cum_trace
+    ]
 
-    # Make sure the timeframe is the study agent one
-    # Copy is needed to avoid modifying the objects in place
-    ref_reward_trace_copy = copy(ref_reward_trace)
-    ref_reward_cum_trace_copy = copy(ref_reward_cum_trace)
-    ref_reward_trace_copy.x = studied_agent_reward_trace.x
-    ref_reward_trace_copy.y = ref_reward_trace.y[:len(studied_agent_reward_trace.y)]
-    ref_reward_cum_trace_copy.x = ref_reward_cum_trace.x
-    ref_reward_cum_trace_copy.y = ref_reward_cum_trace.y[:len(studied_agent_reward_cum_trace.y)]
+    for figure in [reward_figure, cumulative_reward_figure]:
+        # Base on the hypothesis that the study agent trace is in position one
+        # TODO: clean this up. We should not rely on the position of the study
+        # agent in the traces.
+        figure["layout"].update(
+            {'xaxis': {
+                'range': [reward_figure["data"][1].x[0], reward_figure["data"][1].x[-1]],
+            }
+            }
+        )
 
-    rew_layout.update(xaxis=dict(
-        range=[ref_reward_trace_copy.x[0], ref_reward_trace_copy.x[-1]])
-    )
-
-    return {
-               'data': [ref_reward_trace_copy, studied_agent_reward_trace, action_trace],
-               'layout': rew_layout,
-           }, {
-               'data': [ref_reward_cum_trace_copy, studied_agent_reward_cum_trace],
-               'layout': cumrew_layout,
-           }
+    return reward_figure, cumulative_reward_figure
 
 
 def compute_windows_range(episode, center_idx, n_clicks_left, n_clicks_right):

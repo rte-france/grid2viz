@@ -77,76 +77,55 @@ def register_callbacks_micro(app):
     # indicator line
     @app.callback(
         [Output("rewards_ts", "figure"),
-         Output("cumulated_rewards_ts", "figure"), ],
+         Output("cumulated_rewards_ts", "figure"),
+         Output("actions_ts", "figure"),
+        ],
         [Input("relayoutStoreMicro", "data"),
          Input("window", "data"),
          Input("user_timestamps", "value")],
         [State("rewards_ts", "figure"),
          State("cumulated_rewards_ts", "figure"),
+         State("actions_ts", "figure"),
          State("agent_study", "data"),
          State("agent_ref", "data"),
          State("scenario", "data")]
     )
-    def load_reward_ts(relayout_data_store, window, selected_timestamp, rew_figure,
-                       cumrew_figure, study_agent, agent_ref, scenario):
+    def load_ts(relayout_data_store, window, selected_timestamp,
+                rew_figure, cumrew_figure, actions_figure,
+                study_agent, agent_ref, scenario):
 
-        rew_layout = rew_figure["layout"]
-        cumrew_layout = cumrew_figure["layout"]
+        figures = [rew_figure, cumrew_figure, actions_figure]
+
         condition = (relayout_data_store is not None
                      and relayout_data_store["relayout_data"])
         if condition:
             relayout_data = relayout_data_store["relayout_data"]
-            rew_new_axis_layout = get_axis_relayout(rew_figure, relayout_data)
-            cumrew_new_axis_layout = get_axis_relayout(cumrew_figure, relayout_data)
-            if rew_new_axis_layout is not None or cumrew_new_axis_layout is not None:
-                if rew_new_axis_layout is not None:
-                    rew_layout.update(rew_new_axis_layout)
-                if cumrew_new_axis_layout is not None:
-                    cumrew_layout.update(cumrew_new_axis_layout)
-                return rew_figure, cumrew_figure
+            relayouted = False
+            for figure in figures:
+                axis_layout = get_axis_relayout(figure, relayout_data)
+                if axis_layout is not None:
+                    figure["layout"].update(axis_layout)
+                    relayouted = True
+            if relayouted:
+                return figures
 
-        rew_figure, cumrew_figure = common_graph.make_rewards_ts(study_agent, agent_ref, scenario, rew_layout,
-                                                                 cumrew_layout)
+        rew_figure, cumrew_figure = common_graph.make_rewards_ts(
+            study_agent, agent_ref, scenario,
+            rew_figure, cumrew_figure
+        )
 
-        if window is not None:
-            rew_figure["layout"].update(
-                xaxis=dict(range=window, autorange=False)
-            )
-            cumrew_figure["layout"].update(
-                xaxis=dict(range=window, autorange=False)
-            )
+        actions_figure = common_graph.make_action_ts(
+            study_agent, agent_ref, scenario, actions_figure["layout"])
 
-        return rew_figure, cumrew_figure
-
-    @app.callback(
-        Output("actions_ts", "figure"),
-        [Input('relayoutStoreMicro', 'data'),
-         Input("window", "data")],
-        [State("actions_ts", "figure"),
-         State("user_timestamps", "value"),
-         State('agent_study', 'data'),
-         State('agent_ref', 'data'),
-         State("scenario", "data")]
-    )
-    def load_actions_ts(relayout_data_store, window, figure, selected_timestamp, study_agent, agent_ref, scenario):
-
-        layout = figure["layout"]
-        if relayout_data_store is not None and relayout_data_store["relayout_data"]:
-            relayout_data = relayout_data_store["relayout_data"]
-
-            new_axis_layout = get_axis_relayout(figure, relayout_data)
-            if new_axis_layout is not None:
-                layout.update(new_axis_layout)
-                return figure
-
-        figure = common_graph.make_action_ts(study_agent, agent_ref, scenario, layout)
+        figures = [rew_figure, cumrew_figure, actions_figure]
 
         if window is not None:
-            figure["layout"].update(
-                xaxis=dict(range=window, autorange=False)
-            )
+            for figure in figures:
+                figure["layout"].update(
+                    xaxis=dict(range=window, autorange=False)
+                )
 
-        return figure
+        return figures
 
     # flux line callback
     @app.callback(

@@ -236,8 +236,10 @@ def get_df_rewards_trace(episode):
     ]
 
 
-def get_attacks_trace(episode):
+def get_attacks_trace(episode, equipments=None):
     df = episode.attacks_data_table
     return [
-        go.Scatter(x=df["timestamp"], y=df["attack"].astype(int), name=episode.agent + "_attacks")
+        go.Scatter(x=df["timestamp"], y=df["attack"].astype(int),
+                   name=episode.agent + "_attacks",
+                   text=df["id_lines"])
     ]

@@ -117,7 +117,7 @@ layout_def = {
     'legend': {'orientation': 'h'},
     'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
     'xaxis': {'visible': True},
-    'yaxis': {'visible': True},
+    'yaxis': {'visible': True, 'fixedrange': True, 'autorange': True},
     'annotations': [],
     "plot_bgcolor": '#E5ECF6'
 }
