@@ -191,24 +191,28 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         index=actions_ts.index, data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
         study_episode.action_data_table.loc[(actions_ts["Nb Actions"] > 0).values, "distance"].values
+    study_text = ["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     action_trace = go.Scatter(
         x=action_events_df.index, y=action_events_df["action_events"],
         name=study_agent + " Actions",
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10},
-        text=["<br>-".join(str(act).split("-")) for act in study_episode.actions]
+        text=study_text
     )
 
     ref_action_events_df = pd.DataFrame(
         index=ref_agent_actions_ts.index, data=np.nan, columns=["action_events"])
     ref_action_events_df.loc[(ref_agent_actions_ts["Nb Actions"] > 0).values, "action_events"] = \
         ref_episode.action_data_table.loc[(ref_agent_actions_ts["Nb Actions"] > 0).values, "distance"].values
+
+    ref_text = ["<br>-".join(str(act).split("-")) for act in ref_episode.actions]
+    ref_text = ref_text[:study_agent_length]
     ref_action_trace = go.Scatter(
         x=ref_action_events_df.index[:study_agent_length], y=ref_action_events_df["action_events"][:study_agent_length],
         name=ref_agent + " Actions",
         mode='markers', marker_color='#FF5000',
         marker={"symbol": "hexagon", "size": 10},
-        text=["<br>-".join(str(act).split("-")) for act in ref_episode.actions]
+        text=ref_text
     )
 
     distance_trace = go.Scatter(x=study_episode.action_data_table.timestamp,
@@ -259,12 +263,14 @@ def make_rewards_ts(study_agent, ref_agent, scenario,
         index=df["timestep"], data=np.nan, columns=["action_events"])
     action_events_df.loc[(actions_ts["Nb Actions"] > 0).values, "action_events"] = \
         df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
+    text = ["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     action_trace = go.Scatter(
         x=action_events_df.index, y=action_events_df["action_events"], name="Actions",
         mode='markers', marker_color='#FFEB3B',
         marker={"symbol": "hexagon", "size": 10},
-        text=["<br>-".join(str(act).split("-")) for act in study_episode.actions]
+        text=text
     )
+
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     studied_agent_reward_trace, studied_agent_reward_cum_trace = study_episode.reward_trace
     reward_figure["data"] = [
