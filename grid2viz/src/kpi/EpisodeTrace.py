@@ -149,13 +149,37 @@ def get_load_trace_per_equipment(episode, equipements):
     load_equipments = observation_model.get_load(episode, equipements)
 
     if 'total' in equipements:
+        # filter intercos
+        idx_no_interco = [i for i in range(len(all_equipements.equipment_name)) if
+                          'interco' not in all_equipements.equipment_name[i]]
+
         load_equipments = load_equipments.append(pd.DataFrame({
-            'equipement_id': ['nan' for i in all_equipements.groupby('timestep').size()],
-            'equipment_name': ['total' for i in all_equipements.groupby('timestep').size()],
-            'timestamp': [timestamp for timestamp in all_equipements['timestamp'].unique()],
-            'timestep': [timestep for timestep in all_equipements['timestep'].unique()],
-            'value': [value for value in all_equipements.groupby('timestep')['value'].sum()]
+            'equipement_id': ['nan' for i in all_equipements.loc[idx_no_interco].groupby('timestep').size()],
+            'equipment_name': ['total' for i in all_equipements.loc[idx_no_interco].groupby('timestep').size()],
+            'timestamp': [timestamp for timestamp in all_equipements.loc[idx_no_interco]['timestamp'].unique()],
+            'timestep': [timestep for timestep in all_equipements.loc[idx_no_interco]['timestep'].unique()],
+            'value': [value for value in all_equipements.loc[idx_no_interco].groupby('timestep')['value'].sum()]
         }))
+    if 'total_intercos' in equipements:
+        # filter intercos
+        idx_interco = [i for i in range(len(all_equipements.equipment_name)) if
+                          'interco' in all_equipements.equipment_name[i]]
+        if(len(idx_interco)!=0):
+            load_equipments = load_equipments.append(pd.DataFrame({
+                'equipement_id': ['nan' for i in all_equipements.loc[idx_interco].groupby('timestep').size()],
+                'equipment_name': ['total' for i in all_equipements.loc[idx_interco].groupby('timestep').size()],
+                'timestamp': [timestamp for timestamp in all_equipements.loc[idx_interco]['timestamp'].unique()],
+                'timestep': [timestep for timestep in all_equipements.loc[idx_interco]['timestep'].unique()],
+                'value': [value for value in all_equipements.loc[idx_interco].groupby('timestep')['value'].sum()]
+            }))
+        else:
+            load_equipments = load_equipments.append(pd.DataFrame({
+                'equipement_id': ['nan' for i in all_equipements.groupby('timestep').size()],
+                'equipment_name': ['total' for i in all_equipements.groupby('timestep').size()],
+                'timestamp': [timestamp for timestamp in all_equipements['timestamp'].unique()],
+                'timestep': [timestep for timestep in all_equipements['timestep'].unique()],
+                'value': [0 for timestep in all_equipements['timestep'].unique()]
+            }))
 
     return get_df_trace_per_equipment(load_equipments)
 

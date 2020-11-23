@@ -232,9 +232,10 @@ def layout(scenario, ref_agent):
     open_help = should_help_open(
         Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
     )
-    header = "Take a look at the Scenario"
-    body = "Select a reference agent in the dropdown menu and explore the " \
-           "Scenario's characteristics through the eyes of the best agent."
+    header = "Take a deeper look at the Scenario"
+    body = "Look at the grid, inspect indicators as well as chronics" \
+           "Select a reference agent in the dropdown menu to get a sense of flows and overflows over the scenario" \
+           "When done, move to Agent Overview section. The reference agent will be used there as baseline to compare with"
     return html.Div(id="overview_page", children=[
         dcc.Store(id="relayoutStoreOverview"),
         indicators_line(encoded_image.decode()),
