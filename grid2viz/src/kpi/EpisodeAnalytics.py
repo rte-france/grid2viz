@@ -12,13 +12,21 @@ from .env_actions import env_actions
 # TODO: configure the reward key you want to visualize in agent overview.
 # Either as an argument or a dropdown list in the app from which we can choose.
 # The reward dataframe should get bigger with all keys available anyway
-other_reward_key = 'grid_operation_cost'
+other_reward_key = "grid_operation_cost"
 
 
 class ActionImpacts:
-    def __init__(self, action_line, action_subs, action_redisp, redisp_impact,
-                 line_name, sub_name, gen_name,
-                 action_id):
+    def __init__(
+        self,
+        action_line,
+        action_subs,
+        action_redisp,
+        redisp_impact,
+        line_name,
+        sub_name,
+        gen_name,
+        action_id,
+    ):
         self.action_line = action_line
         self.action_subs = action_subs
         self.action_redisp = action_redisp
@@ -35,30 +43,46 @@ class EpisodeAnalytics:
         self.agent = agent
 
         self.timesteps = list(range(len(episode_data.actions)))
-        print(f"Computing DataFrames for scenario {self.episode_name} and agent {self.agent}")
+        print(
+            f"Computing DataFrames for scenario {self.episode_name} and agent {self.agent}"
+        )
         beg = time.time()
         print("Environment")
-        self.load, self.production, self.rho, self.action_data_table, self.computed_reward, self.flow_and_voltage_line, self.target_redispatch, self.actual_redispatch, self.attacks_data_table = self._make_df_from_data(
-            episode_data)
+        (
+            self.load,
+            self.production,
+            self.rho,
+            self.action_data_table,
+            self.computed_reward,
+            self.flow_and_voltage_line,
+            self.target_redispatch,
+            self.actual_redispatch,
+            self.attacks_data_table,
+        ) = self._make_df_from_data(episode_data)
         print("Hazards-Maintenances")
         self.hazards, self.maintenances = self._env_actions_as_df(episode_data)
         print("Computing computation intensive indicators...")
-        self.total_overflow_trace = EpisodeTrace.get_total_overflow_trace(self, episode_data)
+        self.total_overflow_trace = EpisodeTrace.get_total_overflow_trace(
+            self, episode_data
+        )
         self.usage_rate_trace = EpisodeTrace.get_usage_rate_trace(self)
         self.reward_trace = EpisodeTrace.get_df_rewards_trace(self)
         self.total_overflow_ts = EpisodeTrace.get_total_overflow_ts(self, episode_data)
         self.profile_traces = consumption_profiles.profiles_traces(self)
         self.total_maintenance_duration = maintenances.total_duration_maintenance(self)
         self.nb_hazards = env_actions(self, which="hazards", kind="nb", aggr=True)
-        self.nb_maintenances = env_actions(self, which="maintenances", kind="nb", aggr=True)
+        self.nb_maintenances = env_actions(
+            self, which="maintenances", kind="nb", aggr=True
+        )
 
         end = time.time()
         print(f"end computing df: {end - beg}")
 
     @staticmethod
     def timestamp(obs):
-        return dt.datetime(obs.year, obs.month, obs.day, obs.hour_of_day,
-                           obs.minute_of_hour)
+        return dt.datetime(
+            obs.year, obs.month, obs.day, obs.hour_of_day, obs.minute_of_hour
+        )
 
     # @jit(forceobj=True)
     def _make_df_from_data(self, episode_data):
@@ -88,41 +112,68 @@ class EpisodeAnalytics:
         n_rho = len(episode_data.observations[0].rho)
         rho_size = size * n_rho
 
-        load_data = pd.DataFrame(index=range(load_size),
-                                 columns=["timestamp", "value"])
+        load_data = pd.DataFrame(index=range(load_size), columns=["timestamp", "value"])
         load_data.loc[:, "value"] = load_data.loc[:, "value"].astype(float)
 
-        production = pd.DataFrame(index=range(prod_size),
-                                  columns=["value"])
+        production = pd.DataFrame(index=range(prod_size), columns=["value"])
 
-        rho = pd.DataFrame(index=range(rho_size), columns=['value'])
+        rho = pd.DataFrame(index=range(rho_size), columns=["value"])
 
         cols_loop_action_data_table = [
-            'action_line', 'action_subs', 'action_redisp', 'redisp_impact',
-            'line_name', 'sub_name',
-            'gen_name', 'action_id', 'distance', 'lines_modified', 'subs_modified',
-            'gens_modified'
+            "action_line",
+            "action_subs",
+            "action_redisp",
+            "redisp_impact",
+            "line_name",
+            "sub_name",
+            "gen_name",
+            "action_id",
+            "distance",
+            "lines_modified",
+            "subs_modified",
+            "gens_modified",
         ]
         action_data_table = pd.DataFrame(
             index=range(size),
             columns=[
-                'timestep', 'timestamp', 'timestep_reward', 'action_line',
-                'action_subs', 'action_redisp', 'redisp_impact',
-                'line_name', 'sub_name',
-                'gen_name', 'action_id',
-                'distance', 'lines_modified', 'subs_modified',
-                'gens_modified'
-            ]
+                "timestep",
+                "timestamp",
+                "timestep_reward",
+                "action_line",
+                "action_subs",
+                "action_redisp",
+                "redisp_impact",
+                "line_name",
+                "sub_name",
+                "gen_name",
+                "action_id",
+                "distance",
+                "lines_modified",
+                "subs_modified",
+                "gens_modified",
+            ],
         )
 
-        computed_rewards = pd.DataFrame(index=range(size),
-                                        columns=['timestep', 'rewards', 'cum_rewards'])
+        computed_rewards = pd.DataFrame(
+            index=range(size), columns=["timestep", "rewards", "cum_rewards"]
+        )
         flow_voltage_cols = pd.MultiIndex.from_product(
-            [['or', 'ex'], ['active', 'reactive', 'current', 'voltage'], episode_data.line_names])
-        flow_voltage_line_table = pd.DataFrame(index=range(size), columns=flow_voltage_cols)
+            [
+                ["or", "ex"],
+                ["active", "reactive", "current", "voltage"],
+                episode_data.line_names,
+            ]
+        )
+        flow_voltage_line_table = pd.DataFrame(
+            index=range(size), columns=flow_voltage_cols
+        )
 
-        target_redispatch = pd.DataFrame(index=range(size), columns=episode_data.prod_names)
-        actual_redispatch = pd.DataFrame(index=range(size), columns=episode_data.prod_names)
+        target_redispatch = pd.DataFrame(
+            index=range(size), columns=episode_data.prod_names
+        )
+        actual_redispatch = pd.DataFrame(
+            index=range(size), columns=episode_data.prod_names
+        )
 
         topo_vect = episode_data.observations[0].topo_vect
         if topo_vect.sum() != len(topo_vect):
@@ -148,11 +199,21 @@ class EpisodeAnalytics:
         actual_redispatch_previous_ts = obs_0.actual_dispatch
 
         list_actions = []
-        for (time_step, (obs, act)) in tqdm(enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
-                                            total=size):
+        for (time_step, (obs, act)) in tqdm(
+            enumerate(zip(episode_data.observations[:-1], episode_data.actions)),
+            total=size,
+        ):
             time_stamp = self.timestamp(obs)
-            action_impacts, list_actions, lines_modified, subs_modified, gens_modified_names, gens_modified_ids = self.compute_action_impacts(
-                act, list_actions, obs, gens_modified_ids, actual_redispatch_previous_ts)
+            (
+                action_impacts,
+                list_actions,
+                lines_modified,
+                subs_modified,
+                gens_modified_names,
+                gens_modified_ids,
+            ) = self.compute_action_impacts(
+                act, list_actions, obs, gens_modified_ids, actual_redispatch_previous_ts
+            )
 
             actual_redispatch_previous_ts = obs.actual_dispatch
 
@@ -172,7 +233,12 @@ class EpisodeAnalytics:
 
             pos = time_step
 
-            distance, line_statuses, subs_on_bus_2, objs_on_bus_2 = self.get_distance_from_obs(
+            (
+                distance,
+                line_statuses,
+                subs_on_bus_2,
+                objs_on_bus_2,
+            ) = self.get_distance_from_obs(
                 act, line_statuses, subs_on_bus_2, objs_on_bus_2, obs_0
             )
 
@@ -188,19 +254,21 @@ class EpisodeAnalytics:
                 distance,
                 lines_modified,
                 subs_modified,
-                gens_modified_names
+                gens_modified_names,
             ]
 
-            flow_voltage_line_table.loc[time_step, :] = np.array([
-                obs.p_ex,
-                obs.q_ex,
-                obs.a_ex,
-                obs.v_ex,
-                obs.p_or,
-                obs.q_or,
-                obs.a_or,
-                obs.v_or
-            ]).flatten()
+            flow_voltage_line_table.loc[time_step, :] = np.array(
+                [
+                    obs.p_ex,
+                    obs.q_ex,
+                    obs.a_ex,
+                    obs.v_ex,
+                    obs.p_or,
+                    obs.q_or,
+                    obs.a_or,
+                    obs.v_or,
+                ]
+            ).flatten()
 
             target_redispatch.loc[time_step, :] = obs.target_dispatch
             actual_redispatch.loc[time_step, :] = obs.actual_dispatch
@@ -229,37 +297,50 @@ class EpisodeAnalytics:
         production["value"] = production["value"].astype(float)
         rho["value"] = rho["value"].astype(float)
 
-        computed_rewards['timestep'] = self.timestamps
-        computed_rewards['rewards'] = episode_data.rewards[:size]
+        computed_rewards["timestep"] = self.timestamps
+        computed_rewards["rewards"] = episode_data.rewards[:size]
 
         # TODO: we should give a choice to select different rewards among other rewards
         if episode_data.other_rewards:
             if other_reward_key:
                 if other_reward_key in episode_data.other_rewards[0].keys():
-                    computed_rewards['rewards'] = [other_reward[other_reward_key] for other_reward in
-                                                   episode_data.other_rewards]
-                    computed_rewards['rewards'] = computed_rewards['rewards'][: size]
-        computed_rewards['cum_rewards'] = computed_rewards['rewards'].cumsum(axis=0)
+                    computed_rewards["rewards"] = [
+                        other_reward[other_reward_key]
+                        for other_reward in episode_data.other_rewards
+                    ]
+                    computed_rewards["rewards"] = computed_rewards["rewards"][:size]
+        computed_rewards["cum_rewards"] = computed_rewards["rewards"].cumsum(axis=0)
 
         attacks_data_table = pd.DataFrame(
-            index=range(size),
-            columns=[
-                'timestep', 'timestamp', 'attack', 'id_lines'
-            ]
+            index=range(size), columns=["timestep", "timestamp", "attack", "id_lines"]
         )
-        attacks_data_table['timestep'] = self.timesteps
-        attacks_data_table['timestamp'] = self.timestamps
+        attacks_data_table["timestep"] = self.timesteps
+        attacks_data_table["timestamp"] = self.timestamps
         for time_step, attack in enumerate(episode_data.attacks):
-            n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(attack)
+            (
+                n_lines_modified,
+                str_lines_modified,
+                lines_modified,
+            ) = self.get_lines_modifications(attack)
             n_subs_modified, *_ = self.get_subs_modifications(attack)
             is_attacked = n_lines_modified > 0 or n_subs_modified > 0
             attacks_data_table.loc[time_step, "attack"] = is_attacked
             if len(lines_modified) == 0:
-                attacks_data_table.loc[time_step, "id_lines"] = ''
+                attacks_data_table.loc[time_step, "id_lines"] = ""
             else:
                 attacks_data_table.loc[time_step, "id_lines"] = lines_modified[0]
 
-        return load_data, production, rho, action_data_table, computed_rewards, flow_voltage_line_table, target_redispatch, actual_redispatch, attacks_data_table
+        return (
+            load_data,
+            production,
+            rho,
+            action_data_table,
+            computed_rewards,
+            flow_voltage_line_table,
+            target_redispatch,
+            actual_redispatch,
+            attacks_data_table,
+        )
 
     @staticmethod
     def get_action_id(action, list_actions):
@@ -281,90 +362,109 @@ class EpisodeAnalytics:
                 return self.name_sub[sub]
         return None
 
-    def get_distance_from_obs(self, act, line_statuses, subs_on_bus_2,
-                              objs_on_bus_2, obs):
+    def get_distance_from_obs(
+        self, act, line_statuses, subs_on_bus_2, objs_on_bus_2, obs
+    ):
 
         impact_on_objs = act.impact_on_objects()
 
         # lines reconnetions/disconnections
-        line_statuses[impact_on_objs['force_line']['disconnections']['powerlines']] = False
-        line_statuses[impact_on_objs['force_line']['reconnections']['powerlines']] = True
-        line_statuses[impact_on_objs['switch_line']['powerlines']] = np.invert(
-            line_statuses[impact_on_objs['switch_line']['powerlines']]
+        line_statuses[
+            impact_on_objs["force_line"]["disconnections"]["powerlines"]
+        ] = False
+        line_statuses[
+            impact_on_objs["force_line"]["reconnections"]["powerlines"]
+        ] = True
+        line_statuses[impact_on_objs["switch_line"]["powerlines"]] = np.invert(
+            line_statuses[impact_on_objs["switch_line"]["powerlines"]]
         )
 
         topo_vect_dict = {
-            'load': obs.load_pos_topo_vect,
-            'generator': obs.gen_pos_topo_vect,
-            'line (extremity)': obs.line_ex_pos_topo_vect,
-            'line (origin)': obs.line_or_pos_topo_vect
+            "load": obs.load_pos_topo_vect,
+            "generator": obs.gen_pos_topo_vect,
+            "line (extremity)": obs.line_ex_pos_topo_vect,
+            "line (origin)": obs.line_or_pos_topo_vect,
         }
 
         # Bus manipulation
-        if impact_on_objs['topology']['changed']:
-            for modif_type in ['bus_switch', 'assigned_bus']:
+        if impact_on_objs["topology"]["changed"]:
+            for modif_type in ["bus_switch", "assigned_bus"]:
 
-                for elem in impact_on_objs['topology'][modif_type]:
+                for elem in impact_on_objs["topology"][modif_type]:
                     objs_on_bus_2 = self.update_objs_on_bus(
-                        objs_on_bus_2, elem, topo_vect_dict, kind=modif_type)
+                        objs_on_bus_2, elem, topo_vect_dict, kind=modif_type
+                    )
 
-            for elem in impact_on_objs['topology']['disconnect_bus']:
+            for elem in impact_on_objs["topology"]["disconnect_bus"]:
                 # Disconnected bus counts as one for the distance
-                subs_on_bus_2[elem['substation']] = True
+                subs_on_bus_2[elem["substation"]] = True
 
-        subs_on_bus_2 = [True if objs_on_2 else False for _, objs_on_2 in objs_on_bus_2.items()]
+        subs_on_bus_2 = [
+            True if objs_on_2 else False for _, objs_on_2 in objs_on_bus_2.items()
+        ]
 
         distance = len(line_statuses) - line_statuses.sum() + sum(subs_on_bus_2)
         return distance, line_statuses, subs_on_bus_2, objs_on_bus_2
 
     def update_objs_on_bus(self, objs_on_bus_2, elem, topo_vect_dict, kind):
         for object_type, pos_topo_vect in topo_vect_dict.items():
-            if elem['object_type'] == object_type and elem['bus']:
-                if kind == 'bus_switch':
+            if elem["object_type"] == object_type and elem["bus"]:
+                if kind == "bus_switch":
                     objs_on_bus_2 = self.update_objs_on_bus_switch(
-                        objs_on_bus_2, elem, pos_topo_vect)
+                        objs_on_bus_2, elem, pos_topo_vect
+                    )
                 else:
                     objs_on_bus_2 = self.update_objs_on_bus_assign(
-                        objs_on_bus_2, elem, pos_topo_vect)
+                        objs_on_bus_2, elem, pos_topo_vect
+                    )
                 break
         return objs_on_bus_2
 
     @staticmethod
     def update_objs_on_bus_switch(objs_on_bus_2, elem, pos_topo_vect):
-        if pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']]:
+        if pos_topo_vect[elem["object_id"]] in objs_on_bus_2[elem["substation"]]:
             # elem was on bus 2, remove it from objs_on_bus_2
-            objs_on_bus_2[elem['substation']] = [
-                x for x in objs_on_bus_2[elem['substation']] if
-                x != pos_topo_vect[elem['object_id']]
+            objs_on_bus_2[elem["substation"]] = [
+                x
+                for x in objs_on_bus_2[elem["substation"]]
+                if x != pos_topo_vect[elem["object_id"]]
             ]
         else:
-            objs_on_bus_2[elem['substation']].append(
-                pos_topo_vect[elem['object_id']])
+            objs_on_bus_2[elem["substation"]].append(pos_topo_vect[elem["object_id"]])
         return objs_on_bus_2
 
     @staticmethod
     def update_objs_on_bus_assign(objs_on_bus_2, elem, pos_topo_vect):
-        if pos_topo_vect[elem['object_id']] in objs_on_bus_2[elem['substation']] and elem['bus'] == 1:
+        if (
+            pos_topo_vect[elem["object_id"]] in objs_on_bus_2[elem["substation"]]
+            and elem["bus"] == 1
+        ):
             # elem was on bus 2, remove it from objs_on_bus_2
-            objs_on_bus_2[elem['substation']] = [
-                x for x in objs_on_bus_2[elem['substation']] if
-                x != pos_topo_vect[elem['object_id']]
+            objs_on_bus_2[elem["substation"]] = [
+                x
+                for x in objs_on_bus_2[elem["substation"]]
+                if x != pos_topo_vect[elem["object_id"]]
             ]
-        elif pos_topo_vect[elem['object_id']] not in objs_on_bus_2[elem['substation']] and elem['bus'] == 2:
-            objs_on_bus_2[elem['substation']].append(
-                pos_topo_vect[elem['object_id']])
+        elif (
+            pos_topo_vect[elem["object_id"]] not in objs_on_bus_2[elem["substation"]]
+            and elem["bus"] == 2
+        ):
+            objs_on_bus_2[elem["substation"]].append(pos_topo_vect[elem["object_id"]])
         return objs_on_bus_2
 
     # @jit(forceobj=True)
     def _env_actions_as_df(self, episode_data):
-        agent_length = len(episode_data.actions)  # int(episode_data.meta['nb_timestep_played'])
+        agent_length = len(
+            episode_data.actions
+        )  # int(episode_data.meta['nb_timestep_played'])
         hazards_size = agent_length * episode_data.n_lines
         cols = ["timestep", "timestamp", "line_id", "line_name", "value"]
-        hazards = pd.DataFrame(index=range(hazards_size),
-                               columns=["value"], dtype=int)
+        hazards = pd.DataFrame(index=range(hazards_size), columns=["value"], dtype=int)
         maintenances = hazards.copy()
 
-        for (time_step, env_act) in tqdm(enumerate(episode_data.env_actions), total=len(episode_data.env_actions)):
+        for (time_step, env_act) in tqdm(
+            enumerate(episode_data.env_actions), total=len(episode_data.env_actions)
+        ):
             if env_act is None:
                 continue
 
@@ -400,25 +500,42 @@ class EpisodeAnalytics:
 
     def decorate(self, episode_data):
         # Add EpisodeData attributes to EpisodeAnalytics
-        for attribute in [elem for elem in dir(episode_data) if
-                          not (elem.startswith("__") or callable(getattr(episode_data, elem)))]:
+        for attribute in [
+            elem
+            for elem in dir(episode_data)
+            if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
+        ]:
             setattr(self, attribute, getattr(episode_data, attribute))
 
-    def compute_action_impacts(self, action, list_actions, observation,
-                               gens_modified_ids, actual_dispatch_previous_ts):
+    def compute_action_impacts(
+        self,
+        action,
+        list_actions,
+        observation,
+        gens_modified_ids,
+        actual_dispatch_previous_ts,
+    ):
 
-        n_lines_modified, str_lines_modified, lines_modified = self.get_lines_modifications(
-            action)
+        (
+            n_lines_modified,
+            str_lines_modified,
+            lines_modified,
+        ) = self.get_lines_modifications(action)
         n_subs_modified, str_subs_modified, subs_modified = self.get_subs_modifications(
             action
         )
 
-        n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, redisp_volume = self.get_gens_modifications(
+        (
+            n_gens_modified,
+            str_gens_modified,
+            gens_modified_names,
+            gens_modified_ids,
+            redisp_volume,
+        ) = self.get_gens_modifications(
             action, observation, gens_modified_ids, actual_dispatch_previous_ts
         )
 
-        action_id, list_actions = self.get_action_id(
-            action, list_actions)
+        action_id, list_actions = self.get_action_id(action, list_actions)
 
         return (
             ActionImpacts(
@@ -429,12 +546,13 @@ class EpisodeAnalytics:
                 line_name=str_lines_modified,
                 sub_name=str_subs_modified,
                 gen_name=str_gens_modified,
-                action_id=action_id),
+                action_id=action_id,
+            ),
             list_actions,
             lines_modified,
             subs_modified,
             gens_modified_names,
-            gens_modified_ids
+            gens_modified_ids,
         )
 
     def get_lines_modifications(self, action):
@@ -446,20 +564,24 @@ class EpisodeAnalytics:
         str_lines_modified = ""
         if "set_line_status" in action_dict:
             n_lines_modified += (
-                    action_dict["set_line_status"]["nb_connected"] +
-                    action_dict["set_line_status"]["nb_disconnected"]
+                action_dict["set_line_status"]["nb_connected"]
+                + action_dict["set_line_status"]["nb_disconnected"]
             )
             lines_reconnected = [
                 *lines_reconnected,
-                *[action.name_line[int(line_id)] for line_id in
-                  action_dict["set_line_status"]["connected_id"]]
+                *[
+                    action.name_line[int(line_id)]
+                    for line_id in action_dict["set_line_status"]["connected_id"]
+                ],
             ]
             if lines_reconnected:
                 str_lines_modified += "Reconnect: " + ", ".join(lines_reconnected)
             lines_disconnected = [
                 *lines_disconnected,
-                *[action.name_line[int(line_id)] for line_id in
-                  action_dict["set_line_status"]["disconnected_id"]]
+                *[
+                    action.name_line[int(line_id)]
+                    for line_id in action_dict["set_line_status"]["disconnected_id"]
+                ],
             ]
             if lines_disconnected:
                 if str_lines_modified:
@@ -469,14 +591,15 @@ class EpisodeAnalytics:
             n_lines_modified += action_dict["change_line_status"]["nb_changed"]
             lines_switched = [
                 *lines_switched,
-                *[action.name_line[int(line_id)] for line_id in
-                  action_dict["change_line_status"]["changed_id"]]
+                *[
+                    action.name_line[int(line_id)]
+                    for line_id in action_dict["change_line_status"]["changed_id"]
+                ],
             ]
             if lines_switched:
                 if str_lines_modified:
                     str_lines_modified += " - "
-                str_lines_modified += "Switch: " + ", ".join(
-                    lines_switched)
+                str_lines_modified += "Switch: " + ", ".join(lines_switched)
 
         lines_modified = [*lines_reconnected, *lines_disconnected, *lines_switched]
 
@@ -491,41 +614,58 @@ class EpisodeAnalytics:
             n_subs_modified += action_dict["set_bus_vect"]["nb_modif_subs"]
             subs_modified = [
                 *subs_modified,
-                *[action.name_sub[int(sub_id)] for sub_id in
-                  action_dict["set_bus_vect"]["modif_subs_id"]]
+                *[
+                    action.name_sub[int(sub_id)]
+                    for sub_id in action_dict["set_bus_vect"]["modif_subs_id"]
+                ],
             ]
         if "change_bus_vect" in action_dict:
             n_subs_modified += action_dict["change_bus_vect"]["nb_modif_subs"]
             subs_modified = [
                 *subs_modified,
-                *[action.name_sub[int(sub_id)] for sub_id in
-                  action_dict["change_bus_vect"]["modif_subs_id"]]
+                *[
+                    action.name_sub[int(sub_id)]
+                    for sub_id in action_dict["change_bus_vect"]["modif_subs_id"]
+                ],
             ]
 
         subs_modified_set = set(subs_modified)
         str_subs_modified = " - ".join(subs_modified_set)
         return n_subs_modified, str_subs_modified, subs_modified
 
-    def get_gens_modifications(self, action, observation,
-                               gens_modified_previous_time_step,
-                               actual_dispatch_previous_ts):
+    def get_gens_modifications(
+        self,
+        action,
+        observation,
+        gens_modified_previous_time_step,
+        actual_dispatch_previous_ts,
+    ):
         action_dict = action.as_dict()
         n_gens_modified = 0
         gens_modified_ids = []
         gens_modified_names = []
-        if 'redispatch' in action_dict:
-            n_gens_modified = (action_dict['redispatch'] != 0).sum()
-            gens_modified_ids = np.where(action_dict['redispatch'] != 0)[0]
+        if "redispatch" in action_dict:
+            n_gens_modified = (action_dict["redispatch"] != 0).sum()
+            gens_modified_ids = np.where(action_dict["redispatch"] != 0)[0]
             gens_modified_names = action.name_gen[gens_modified_ids]
 
         str_gens_modified = " - ".join(gens_modified_names)
 
-        volume_redispatched = round(np.absolute(
-            observation.actual_dispatch[gens_modified_previous_time_step] -
-            actual_dispatch_previous_ts[gens_modified_previous_time_step]
-        ).sum(), 2)
+        volume_redispatched = round(
+            np.absolute(
+                observation.actual_dispatch[gens_modified_previous_time_step]
+                - actual_dispatch_previous_ts[gens_modified_previous_time_step]
+            ).sum(),
+            2,
+        )
 
-        return n_gens_modified, str_gens_modified, gens_modified_names, gens_modified_ids, volume_redispatched
+        return (
+            n_gens_modified,
+            str_gens_modified,
+            gens_modified_names,
+            gens_modified_ids,
+            volume_redispatched,
+        )
 
     def get_subs_and_lines_impacted(self, action):
         line_impact, sub_impact = action.get_topological_impact()
@@ -534,7 +674,9 @@ class EpisodeAnalytics:
         return sub_names, line_names
 
     def format_subs_and_lines_impacted(self, sub_names, line_names):
-        return self.format_elements_impacted(sub_names), self.format_elements_impacted(line_names)
+        return self.format_elements_impacted(sub_names), self.format_elements_impacted(
+            line_names
+        )
 
     def format_elements_impacted(self, elements):
         if not len(elements):
@@ -544,7 +686,7 @@ class EpisodeAnalytics:
         return elements_formatted
 
 
-class Test():
+class Test:
     def __init__(self):
         self.foo = 2
         self.bar = 3
@@ -554,5 +696,8 @@ if __name__ == "__main__":
     test = Test()
     path_agent = "nodisc_badagent"
     episode = EpisodeData.from_disk(
-        "D:/Projects/RTE - Grid2Viz/20200127_data_scripts/20200127_agents_log/" + path_agent, "3_with_hazards")
+        "D:/Projects/RTE - Grid2Viz/20200127_data_scripts/20200127_agents_log/"
+        + path_agent,
+        "3_with_hazards",
+    )
     print(dir(EpisodeAnalytics(episode)))

@@ -2,8 +2,10 @@ from .env_actions import env_actions
 
 
 def total_duration_maintenance(episode):
-    timestep_duration = (episode.timestamps[1] - episode.timestamps[0])
-    nb_maintenance = env_actions(episode, which="maintenances", kind="dur", aggr=False).sum()
+    timestep_duration = episode.timestamps[1] - episode.timestamps[0]
+    nb_maintenance = env_actions(
+        episode, which="maintenances", kind="dur", aggr=False
+    ).sum()
     return (timestep_duration * nb_maintenance).total_seconds() / 60.0
 
 
