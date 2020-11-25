@@ -37,7 +37,7 @@ def add_substation_color_matplot(subs, plot_helper, fig):
     return fig
 
 
-def add_substation_color_plotly(subs, plot_helper, fig):
+def add_substation_color_plotly(subs, plot_helper, fig,color="gold"):
     radius_size = int(plot_helper._sub_radius * 0.8)
 
     for id_sub in subs:
@@ -46,7 +46,7 @@ def add_substation_color_plotly(subs, plot_helper, fig):
 
         marker_dict = dict(
             size=radius_size,
-            color="gold",
+            color=color,
             showscale=False,
             opacity=0.5,
         )
@@ -98,11 +98,14 @@ def make_network_matplotlib(episode):
 # we want a non responsive graph for now in agent_study
 # so we have to define it differently from the global graph in make_network that we don't use here
 def make_network_agent_study(episode, timestep):
+    #subs_on_bus_2 = np.repeat(False, episode_data.observations[0].n_sub)
     graph = PlotPlotly(
         grid_layout=episode.observation_space.grid_layout,
         observation_space=episode.observation_space,
         responsive=False,
     )
+    graph._sub_radius=30#instead of 25 by default
+    graph._bus_radius = 10  # instead of 4 by default
 
     fig = graph.plot_obs(episode.observations[timestep])
 
@@ -116,6 +119,12 @@ def make_network_agent_study(episode, timestep):
         for str in episode.action_data_table.subs_modified[timestep]
     ]
     fig = add_substation_color_plotly(sub_id_modified, graph, fig)
+
+    #coloring subs not in reference topologie
+    nb_bus_subs=[episode.observations[timestep].state_of(substation_id=i)['nb_bus'] for i in
+     range(episode.observations[timestep].n_sub)]
+    sub_2buses=[i for i in range(episode.observations[timestep].n_sub) if nb_bus_subs[i]>=2]
+    fig = add_substation_color_plotly(sub_2buses, graph, fig,color="green")#also other color for subs not in ref topo
     return fig
 
 

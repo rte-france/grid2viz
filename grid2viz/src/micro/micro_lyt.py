@@ -107,7 +107,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                                         children=[
                                             html.H6(
                                                 className="text-center",
-                                                children="Grid State evolution overtime & highlighted subs with action ",
+                                                children="Grid State evolution overtime & highlighted subs with action (yellow) - with 2 nodes (green) ",
                                             ),
                                             dcc.Graph(
                                                 id="interactive_graph",
