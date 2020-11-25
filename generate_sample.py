@@ -7,53 +7,61 @@ from grid2op.Parameters import Parameters
 
 dataset = "rte_case14_realistic"
 
-#use lightsim2grid to go a lot faster if available
+# use lightsim2grid to go a lot faster if available
 try:
     from lightsim2grid.LightSimBackend import LightSimBackend
+
     backend = LightSimBackend()
 except:
     from grid2op.Backend import PandaPowerBackend
+
     backend = PandaPowerBackend()
-    print("You might need to install the LightSimBackend (provisory name) to gain massive speed up")
+    print(
+        "You might need to install the LightSimBackend (provisory name) to gain massive speed up"
+    )
 
 from grid2op.Parameters import Parameters
 import os
 
 dataset = "rte_case14_realistic"
 
-#use lightsim2grid to go a lot faster if available
+# use lightsim2grid to go a lot faster if available
 try:
     from lightsim2grid.LightSimBackend import LightSimBackend
+
     backend = LightSimBackend()
 except:
     from grid2op.Backend import PandaPowerBackend
-    backend = PandaPowerBackend()
-    print("You might need to install the LightSimBackend (provisory name) to gain massive speed up")
 
-print('MultiTopology')
+    backend = PandaPowerBackend()
+    print(
+        "You might need to install the LightSimBackend (provisory name) to gain massive speed up"
+    )
+
+print("MultiTopology")
 params = Parameters()
 params.init_from_dict({"NO_OVERFLOW_DISCONNECTION": True})
-params.MAX_SUB_CHANGED = 999 #to have unlimited sub actions at a timestep
-params.MAX_LINE_STATUS_CHANGED = 999 #to have unlimited line actions at a timestep
+params.MAX_SUB_CHANGED = 999  # to have unlimited sub actions at a timestep
+params.MAX_LINE_STATUS_CHANGED = 999  # to have unlimited line actions at a timestep
 
 
-path_save="grid2viz/data/agents/multiTopology-baseline"
-os.makedirs(path_save,exist_ok=True)
-with make(dataset,param=params,backend=backend) as env:
-  agent = MultipleTopologyAgent(env.action_space, env.observation_space)
-  runner = Runner(**env.get_params_for_runner(),
-                  agentClass=None,
-                  agentInstance=agent)
-  #need to be seeded for reproducibility as this takes random redispatching actions
-  runner.run(nb_episode=1,
-             path_save="grid2viz/data/agents/multiTopology-baseline",
-             nb_process=1,
-             max_iter=30,
-             env_seeds=[0],
-             agent_seeds=[0],
-             pbar=True)
-  env.close()
-    
+path_save = "grid2viz/data/agents/multiTopology-baseline"
+os.makedirs(path_save, exist_ok=True)
+with make(dataset, param=params, backend=backend) as env:
+    agent = MultipleTopologyAgent(env.action_space, env.observation_space)
+    runner = Runner(**env.get_params_for_runner(), agentClass=None, agentInstance=agent)
+    # need to be seeded for reproducibility as this takes random redispatching actions
+    runner.run(
+        nb_episode=1,
+        path_save="grid2viz/data/agents/multiTopology-baseline",
+        nb_process=1,
+        max_iter=30,
+        env_seeds=[0],
+        agent_seeds=[0],
+        pbar=True,
+    )
+    env.close()
+
 #
 # print('redispatching')
 # param = Parameters()
@@ -100,5 +108,3 @@ with make(dataset,param=params,backend=backend) as env:
 #              max_iter=2000,
 #              pbar=True)
 #   env.close()
-
-
