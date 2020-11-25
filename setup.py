@@ -39,7 +39,8 @@ pkgs = {
         "Werkzeug>=1.0.0",
     ],
     "extras": {
-        "docs": ["numpydoc", "sphinx", "sphinx_rtd_theme", "sphinxcontrib_trio"]
+        "docs": ["numpydoc", "sphinx", "sphinx_rtd_theme", "sphinxcontrib_trio"],
+        "contrib": ["black"],
     },
 }
 
