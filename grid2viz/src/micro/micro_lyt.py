@@ -11,7 +11,6 @@ import plotly.graph_objects as go
 
 from grid2viz.src.manager import grid2viz_home_directory
 from grid2viz.src.manager import make_episode, make_network_agent_study, best_agents
-from grid2viz.src.utils import common_graph
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
@@ -256,18 +255,6 @@ def slider_params(user_selected_timestamp, episode):
     return SliderParams(min_, max_, marks, value)
 
 
-def compute_window(user_selected_timestamp, study_agent, scenario):
-    if user_selected_timestamp is not None:
-        n_clicks_left = 0
-        n_clicks_right = 0
-        new_episode = make_episode(study_agent, scenario)
-        center_indx = center_index(user_selected_timestamp, new_episode)
-
-        return common_graph.compute_windows_range(
-            new_episode, center_indx, n_clicks_left, n_clicks_right
-        )
-
-
 def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     best_episode = make_episode(best_agents[scenario]["agent"], scenario)
     new_episode = make_episode(study_agent, scenario)
@@ -281,7 +268,6 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
     body = "Select a time step in the navbar dropdown and analyze what happened " \
            "at that time to understand the agent behavior."
     return html.Div(id="micro_page", children=[
-        dcc.Store(id="window", data=compute_window(user_selected_timestamp, study_agent, scenario)),
         indicator_line(),
         flux_inspector_line(network_graph, slider_params(user_selected_timestamp, new_episode)),
         context_inspector_line(best_episode, new_episode),

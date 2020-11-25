@@ -17,9 +17,9 @@ def register_callbacks_micro(app):
     @app.callback(
         [Output("slider", "min"), Output("slider", "max"), Output("slider", "value"), Output("slider", "marks")],
         [Input("window", "data")],
-        [State("slider", "value"), State("agent_study", "data"), State("scenario", "data")]
+        [State("slider", "value"), State("user_timestamps", "value"), State("agent_study", "data"), State("scenario", "data")]
     )
-    def update_slider(window, value, study_agent, scenario):
+    def update_slider(window, value, selected_timestamp, study_agent, scenario):
         if window is None:
             raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
@@ -31,7 +31,9 @@ def register_callbacks_micro(app):
             dt.datetime.strptime(window[1], "%Y-%m-%dT%H:%M:%S")
         )
         if value not in range(min_, max_):
-            value = min_
+            value = new_episode.timestamps.index(
+                dt.datetime.strptime(selected_timestamp, "%Y-%m-%d %H:%M")
+            )
 
         marks = dict(enumerate(map(lambda x: x.time(), new_episode.timestamps)))
 
@@ -51,29 +53,6 @@ def register_callbacks_micro(app):
     def relayout_store_overview(*args):
         return relayout_callback(*args)
 
-    @app.callback(
-        Output("window", "data"),
-        [Input("enlarge_left", "n_clicks"),
-         Input("enlarge_right", "n_clicks"),
-         Input("user_timestamps", "value")],
-        [State('agent_study', 'data'), State("scenario", "data")]
-    )
-    def compute_window(n_clicks_left, n_clicks_right, user_selected_timestamp,
-                       study_agent, scenario):
-        if user_selected_timestamp is None:
-            raise PreventUpdate
-        if n_clicks_left is None:
-            n_clicks_left = 0
-        if n_clicks_right is None:
-            n_clicks_right = 0
-        new_episode = make_episode(study_agent, scenario)
-        center_indx = new_episode.timestamps.index(
-            dt.datetime.strptime(user_selected_timestamp, '%Y-%m-%d %H:%M')
-        )
-        return common_graph.compute_windows_range(
-            new_episode, center_indx, n_clicks_left, n_clicks_right
-        )
-
     # indicator line
     @app.callback(
         [Output("rewards_ts", "figure"),
@@ -82,17 +61,16 @@ def register_callbacks_micro(app):
         ],
         [Input("relayoutStoreMicro", "data"),
          Input("window", "data"),
-         Input("user_timestamps", "value")],
+         State("agent_study", "data"),],
         [State("rewards_ts", "figure"),
          State("cumulated_rewards_ts", "figure"),
          State("actions_ts", "figure"),
-         State("agent_study", "data"),
          State("agent_ref", "data"),
          State("scenario", "data")]
     )
-    def load_ts(relayout_data_store, window, selected_timestamp,
-                rew_figure, cumrew_figure, actions_figure,
-                study_agent, agent_ref, scenario):
+    def load_ts(relayout_data_store, window,
+                study_agent, rew_figure, cumrew_figure, actions_figure,
+                agent_ref, scenario):
 
         figures = [rew_figure, cumrew_figure, actions_figure]
 
@@ -120,9 +98,11 @@ def register_callbacks_micro(app):
         figures = [rew_figure, cumrew_figure, actions_figure]
 
         if window is not None:
+            start_datetime = dt.datetime.strptime(window[0], "%Y-%m-%dT%H:%M:%S")
+            end_datetime = dt.datetime.strptime(window[-1], "%Y-%m-%dT%H:%M:%S")
             for figure in figures:
                 figure["layout"].update(
-                    xaxis=dict(range=window, autorange=False)
+                    xaxis=dict(range=[start_datetime, end_datetime], autorange=False)
                 )
 
         return figures
@@ -133,7 +113,7 @@ def register_callbacks_micro(app):
          Output('line_side_choices', 'value')],
         [Input('voltage_flow_choice', 'value'),
          Input('flow_radio', 'value')],
-        [State('agent_study', 'data'),
+        [State("agent_study", "data"),
          State("scenario", "data")]
     )
     def load_voltage_flow_line_choice(category, flow_choice, study_agent, scenario):
@@ -188,7 +168,7 @@ def register_callbacks_micro(app):
          Input('relayoutStoreMicro', 'data'),
          Input("window", "data")],
         [State('voltage_flow_graph', 'figure'),
-         State('agent_study', 'data'),
+         State("agent_study", "data"),
          State("scenario", "data")]
     )
     def load_flow_voltage_graph(selected_objects, choice, relayout_data_store, window, figure, study_agent, scenario):
@@ -324,7 +304,7 @@ def register_callbacks_micro(app):
         [State("env_charts_ts", "figure"),
          State("environment_choices_buttons", "value"),
          State("scenario", "data"),
-         State('agent_study', 'data')]
+         State("agent_study", "data")]
     )
     def load_context_data(equipments, relayout_data_store, window, figure, kind, scenario, agent_study):
         if relayout_data_store is not None and relayout_data_store["relayout_data"]:
@@ -355,12 +335,11 @@ def register_callbacks_micro(app):
          Input("window", "data")],
         [State("overflow_ts", "figure"),
          State("usage_rate_ts", "figure"),
-         State('agent_study', 'data'),
-         State('agent_ref', 'data'),
+         State("agent_study", "data"),
          State("scenario", "data")]
     )
     def update_agent_ref_graph(relayout_data_store, window,
-                               figure_overflow, figure_usage, study_agent, agent_ref, scenario):
+                               figure_overflow, figure_usage, study_agent, scenario):
         if relayout_data_store is not None and relayout_data_store["relayout_data"]:
             relayout_data = relayout_data_store["relayout_data"]
             layout_usage = figure_usage["layout"]

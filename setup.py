@@ -4,6 +4,7 @@ from setuptools import setup
 pkgs = {
     "required": [
         "Click>=7.0",
+        "colorama>=0.4.4",
         "cycler>=0.10.0",
         "dash>=1.13.2",
         "dash-bootstrap-components>=0.9.2",

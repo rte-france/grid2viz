@@ -34,11 +34,6 @@ def modal(id_suffix: str = "", is_open: bool = True,
                 [
                     dbc.ModalHeader(header),
                     dbc.ModalBody(children=[
-                        body,
-                        dbc.Card(dbc.CardImg(id=id_image))
-                    ]
-                    ),
-                    dbc.ModalFooter(children=[
                         html.Div(id=id_dont_show_again_div, children=[
                             dbc.Checkbox(
                                 id=id_dont_show_again, className="form-check-input"
@@ -47,6 +42,12 @@ def modal(id_suffix: str = "", is_open: bool = True,
                                       className="form-check-label"),
                         ], className="ml-auto"),
                         dbc.Button("Close", id=id_close_btn, className="ml-auto"),
+                        body,
+                        dbc.Card(dbc.CardImg(id=id_image))
+                    ]
+                    ),
+                    dbc.ModalFooter(children=[
+
                     ]),
                 ],
                 id=id_modal, is_open=is_open, size="xl"

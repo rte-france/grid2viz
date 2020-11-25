@@ -133,7 +133,7 @@ def register_callbacks_episodes(app):
                     ])
                 )
                 cards_count += 1
-        print('Initial loading time = {:.1f} seconds'.format(time.time() - start_time))
+        print('Initial loading time for the best agent of all scenarios = {:.1f} seconds'.format(time.time() - start_time))
         return cards_list
 
     @app.callback(

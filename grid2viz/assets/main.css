@@ -83,6 +83,14 @@ body {
     padding-right: 40%;
 }
 
+.custom-select-sm {
+    height: calc(1em + .25rem + 2px);
+    padding-top: .0rem;
+    padding-bottom: .0rem;
+    padding-left: .0rem;
+    font-size: .7rem;
+}
+
 /*
 .flex-center {
     display: flex;

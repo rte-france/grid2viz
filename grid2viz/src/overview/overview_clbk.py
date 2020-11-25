@@ -112,7 +112,7 @@ def register_callbacks_overview(app):
          Output("inspection_table", "data")],
         [Input("select_loads_for_tb", "value"),
          Input("select_prods_for_tb", "value"),
-         Input('agent_ref', 'data'),
+         Input("agent_ref", "data"),
          Input('date_range', 'start_date'),
          Input('date_range', 'end_date'),
          ],
@@ -191,23 +191,23 @@ def register_callbacks_overview(app):
         best_agent_ep = make_episode(best_agents[scenario]['agent'], scenario)
         return best_agent_ep.total_maintenance_duration
 
-    @app.callback(
-        Output("agent_ref", "data"),
-        [Input("input_agent_selector", "value")],
-        [State("scenario", "data")]
-    )
-    def update_selected_ref_agent(ref_agent, scenario):
-        """
-            Change the agent of reference for the given scenario.
-
-            Triggered when user select a new agent with the agent selector on layout.
-        """
-        make_episode(ref_agent, scenario)
-        return ref_agent
+    # @app.callback(
+    #     Output("agent_ref", "data"),
+    #     [Input("input_agent_selector", "value")],
+    #     [State("scenario", "data")]
+    # )
+    # def update_selected_ref_agent(ref_agent, scenario):
+    #     """
+    #         Change the agent of reference for the given scenario.
+    #
+    #         Triggered when user select a new agent with the agent selector on layout.
+    #     """
+    #     make_episode(ref_agent, scenario)
+    #     return ref_agent
 
     @app.callback(
         [Output("overflow_graph", "figure"), Output("usage_rate_graph", "figure")],
-        [Input('agent_ref', 'data'),
+        [Input("agent_ref", "data"),
          Input('scenario', 'data'),
          Input("relayoutStoreOverview", "data")],
         [State("overflow_graph", "figure"), State("usage_rate_graph", "figure")]
@@ -253,7 +253,7 @@ def register_callbacks_overview(app):
 
     @app.callback(
         [Output("date_range", "start_date"), Output("date_range", "end_date")],
-        [Input('agent_ref', 'data')],
+        [Input("agent_ref", "data")],
         [State('scenario', 'data')]
     )
     def update_date_range(agent_ref, scenario):

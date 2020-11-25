@@ -30,10 +30,22 @@ navbar = dbc.Navbar(
                   html.Span("", className="badge badge-light", id="scen_lbl")],
                  className="reminder float-left"),
         html.Div([html.Span("Ref Agent:", className="badge badge-secondary"),
-                  html.Span("", className="badge badge-light", id="ref_ag_lbl")],
+                  html.Span(
+                      children=[dbc.Select(
+                          id="select_ref_agent", bs_size='sm', disabled=True,
+                          placeholder="Ref Agent"
+                      )],
+                      className="badge"
+                  )],
                  className="reminder float-left"),
         html.Div([html.Span("Studied Agent:", className="badge badge-secondary"),
-                  html.Span("", className="badge badge-light", id="study_ag_lbl")],
+                  html.Span(
+                      children=[dbc.Select(
+                          id="select_study_agent", bs_size='sm', disabled=True,
+                          placeholder="Study Agent"
+                      )],
+                      className="badge"
+                  )],
                  className="reminder float-left"),
         html.Div([
             html.Div(
@@ -92,6 +104,7 @@ def make_layout(app):
         dcc.Store(id="agent_ref", storage_type='memory'),
         dcc.Store(id="agent_study", storage_type='memory'),
         dcc.Store(id="user_timestamps_store"),
+        dcc.Store(id="window"),
         dcc.Store(id="page"),
         dcc.Store(id="relayoutStoreMicro"),
         dcc.Store(id="reset_timeseries_table_macro", data=True),

@@ -39,14 +39,7 @@ def indicator_line(scenario, study_agent, ref_agent):
         html.H4("Indicators"),
         html.Div(className="card-body row", children=[
             html.Div(className="col-2", children=[
-                html.H5("Agent to study Selection"),
-                dcc.Dropdown(
-                    id='agent_log_selector',
-                    options=[{'label': agent, 'value': agent}
-                             for agent in agents],
-                    value=study_agent,
-                    placeholder="Agent log"
-                ),
+                html.H5("Study Agent Summary"),
                 html.Div(className="m-2", children=[
                     html.P(id="indicator_score_output",
                            className="border-bottom h3 mb-0 text-right",

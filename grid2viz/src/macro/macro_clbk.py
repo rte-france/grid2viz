@@ -29,22 +29,22 @@ def register_callbacks_macro(app):
          Output("usage_rate_graph_study", "figure"),
          Output("action_timeserie", "figure"),
          ],
-        [Input('agent_study', 'data'),
+        [Input("agent_study", "modified_timestamp"),
+         Input("agent_ref", "data"),
          Input('relayoutStoreMacro', 'data')],
         [State("rewards_timeserie", "figure"),
          State("cumulated_rewards_timeserie", "figure"),
          State("overflow_graph_study", "figure"),
          State("usage_rate_graph_study", "figure"),
          State("action_timeserie", "figure"),
-         State("agent_ref", "data"),
          State("scenario", "data"),
-         State("agent_study", "modified_timestamp"),
+         State("agent_study", "data"),
          State("relayoutStoreMacro", "modified_timestamp")]
     )
     def update_synchronized_figures(
-            study_agent, relayout_data_store, rew_figure,
+            agent_study_ts, ref_agent, relayout_data_store, rew_figure,
             cumrew_figure, overflow_figure, usage_rate_figure, actions_figure,
-            ref_agent, scenario, agent_study_ts, relayoutStoreMacro_ts):
+            scenario, study_agent, relayoutStoreMacro_ts):
 
         figures = [
             rew_figure, cumrew_figure, overflow_figure, usage_rate_figure,
@@ -92,7 +92,7 @@ def register_callbacks_macro(app):
 
     @app.callback(
         Output("agent_study_pie_chart", "figure"),
-        [Input('agent_study', 'data')],
+        [Input("agent_study", "data")],
         [State("agent_study_pie_chart", "figure"),
          State("scenario", "data")]
     )
@@ -113,25 +113,27 @@ def register_callbacks_macro(app):
             values=[nb_actions["action_line"], nb_actions["action_subs"], nb_actions["action_redisp"]]
         )]
 
-    @app.callback(
-        Output("network_actions", "figure"),
-        [Input("agent_study", "data")],
-        [State("scenario", "data")]
-    )
-    def update_network_graph(study_agent, scenario):
-        episode = make_episode(study_agent, scenario)
-
-        return make_network_agent_overview(episode)
+    # @app.callback(
+    #     Output("network_actions", "figure"),
+    #     [Input("agent_study", "data")],
+    #     [State("scenario", "data")]
+    # )
+    # def update_network_graph(study_agent, scenario):
+    #     episode = make_episode(study_agent, scenario)
+    #
+    #     return make_network_agent_overview(episode)
 
     @app.callback(
         Output("timeseries_table", "data"),
         [Input("rewards_timeserie", "clickData"),
-         Input("agent_log_selector", "value")],
+         Input("select_study_agent", "value")],
         [State("timeseries_table", "data"),
          State("agent_study", "data")]
     )
     def add_timestamp(click_data, new_agent, data, agent_stored):
-        if new_agent != agent_stored or click_data is None:
+        if new_agent != agent_stored:
+            return []
+        if click_data is None:
             if data is not None:
                 return data
             else:
@@ -172,7 +174,7 @@ def register_callbacks_macro(app):
         [Output("indicator_score_output", "children"),
          Output("indicator_nb_overflow", "children"),
          Output("indicator_nb_action", "children")],
-        [Input('agent_study', 'data'),
+        [Input("agent_study", "data"),
          Input("scenario", "data")]
     )
     def update_nbs(study_agent, scenario):
@@ -194,17 +196,17 @@ def register_callbacks_macro(app):
         return int(agent.action_data_table[['action_line', 'action_subs']].sum(
             axis=1).sum())
 
-    @app.callback(
-        Output("agent_study", "data"),
-        [Input('agent_log_selector', 'value')],
-        [State("agent_study", "data"),
-         State("scenario", "data")],
-    )
-    def update_study_agent(study_agent, stored_agent, scenario):
-        if study_agent == stored_agent:
-            raise PreventUpdate
-        make_episode(study_agent, scenario)
-        return study_agent
+    # @app.callback(
+    #     Output("agent_study", "data"),
+    #     [Input('agent_log_selector', 'value')],
+    #     [State("agent_study", "data"),
+    #      State("scenario", "data")],
+    # )
+    # def update_study_agent(study_agent, stored_agent, scenario):
+    #     if study_agent == stored_agent:
+    #         raise PreventUpdate
+    #     make_episode(study_agent, scenario)
+    #     return study_agent
 
 
 
@@ -228,7 +230,7 @@ def register_callbacks_macro(app):
     @app.callback(
         [Output("inspector_datable", "columns"),
          Output("inspector_datable", "data")],
-        [Input('agent_study', 'data'),
+        [Input("agent_study", "data"),
          Input("scenario", "data")]
     )
     def update_agent_log_action_table(study_agent, scenario):
@@ -245,15 +247,15 @@ def register_callbacks_macro(app):
         [Output("distribution_substation_action_chart", "figure"),
          Output("distribution_line_action_chart", "figure"),
          Output("distribution_redisp_action_chart", "figure")],
-        [Input('agent_study', 'data')],
+        [Input("agent_study", "data"),
+         Input("agent_ref", "data")],
         [State("distribution_substation_action_chart", "figure"),
          State("distribution_line_action_chart", "figure"),
          State("distribution_redisp_action_chart", "figure"),
-         State("scenario", "data"),
-         State("agent_ref", "data")]
+         State("scenario", "data")]
     )
-    def update_agent_log_action_graphs(study_agent, figure_sub, figure_switch_line,
-                                       figure_redisp, scenario, ref_agent):
+    def update_agent_log_action_graphs(study_agent, ref_agent, figure_sub, figure_switch_line,
+                                       figure_redisp, scenario):
         new_episode = make_episode(study_agent, scenario)
         ref_episode = make_episode(ref_agent, scenario)
         y_max = None
@@ -299,7 +301,7 @@ def register_callbacks_macro(app):
     @app.callback(
         Output("tooltip_table", "children"),
         [Input("inspector_datable", "active_cell")],
-        [State('agent_study', 'data'),
+        [State("agent_study", "data"),
          State("scenario", "data"),
          State("inspector_datable", "data")]
     )

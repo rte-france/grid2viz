@@ -5,6 +5,7 @@ import os
 import time
 from pathlib import Path
 
+from colorama import Fore, Style
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
@@ -217,10 +218,11 @@ def make_episode_without_decorate(agent, episode_name):
     elif is_in_fs_cache(episode_name, agent):
         beg = time.time()
         path = get_fs_cached_file(episode_name, agent)
+        print(f"Loading from filesystem cache agent {agent} on scenario {episode_name}...")
         with open(path, "rb") as f:
             episode_analytics = dill.load(f)
         end = time.time()
-        print(f"end loading scenario file: {(end - beg):.1f} s")
+        print(f"Agent {agent} on scenario {episode_name} loaded from filesystem cache in: {(end - beg):.1f} s")
         return episode_analytics
     else:
         episode_data = retrieve_episode_from_disk(episode_name, agent)
@@ -256,21 +258,26 @@ def save_in_fs_cache(episode_name, agent, episode):
 def get_from_fs_cache(episode_name, agent):
     beg = time.time()
     path = get_fs_cached_file(episode_name, agent)
+    print(f"Loading from filesystem cache agent {agent} on scenario {episode_name}...")
     episode_data = retrieve_episode_from_disk(episode_name, agent)
     with open(path, "rb") as f:
         episode_analytics = dill.load(f)
 
     episode_analytics.decorate(episode_data)
     end = time.time()
-    print(f"end loading scenario file: {(end - beg):.1f} s")
+    print(f"Agent {agent} on scenario {episode_name} loaded from filesystem cache in: {(end - beg):.1f} s")
     return episode_analytics
 
 
 def compute_episode(episode_name, agent):
+    print(f"Loading from logs agent {agent} on scenario {episode_name}...")
+    beg = time.time()
     episode_data = retrieve_episode_from_disk(episode_name, agent)
     episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
     save_in_fs_cache(episode_name, agent, episode_analytics)
     episode_analytics.decorate(episode_data)
+    end = time.time()
+    print(f"Agent {agent} on scenario {episode_name} loaded from logs in: {(end - beg):.1f} s")
     return episode_analytics
 
 
@@ -359,11 +366,11 @@ Initialisation routine
 ''' Parsing of config file'''
 path_cfg = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
 parser = configparser.ConfigParser()
-print("the config file used is located at: {}".format(path_cfg))
+print(Fore.BLUE + Style.BRIGHT + "The config file used is located at: {}".format(path_cfg))
 parser.read(path_cfg)
 
 agents_dir = parser.get("DEFAULT", "agents_dir")
-print("Agents data used is located at: {}".format(agents_dir))
+print(Fore.BLUE + "Agents data used is located at: {}".format(agents_dir))
 cache_dir = os.path.join(agents_dir, "_cache")
 '''Parsing of agent folder tree'''
 agents = sorted([file for file in os.listdir(agents_dir)

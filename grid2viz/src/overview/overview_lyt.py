@@ -127,12 +127,12 @@ def summary_line(episode, ref_agent, scenario):
 
             html.Div(children=[
                 html.H5("Reference agent Metrics"),
-                dcc.Dropdown(
-                    id="input_agent_selector", placeholder="select a ref agent",
-                    options=[{'label': agent, 'value': agent}
-                             for agent in agent_scenario[scenario]],
-                    value=ref_agent
-                ),
+                # dcc.Dropdown(
+                #     id="input_agent_selector", placeholder="select a ref agent",
+                #     options=[{'label': agent, 'value': agent}
+                #              for agent in agent_scenario[scenario]],
+                #     value=ref_agent
+                # ),
                 html.Div(children=[
                     html.Div(children=[
                         html.H5("Usage rate", className='text-center'),
