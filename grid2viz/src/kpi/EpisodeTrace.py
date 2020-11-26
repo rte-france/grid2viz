@@ -22,7 +22,18 @@ dic_light_colors_prod_types["solar"] = "palegoldenrod"
 
 def get_total_overflow_trace(episode_analytics, episode_data):
     df = get_total_overflow_ts(episode_analytics, episode_data)
-    return [go.Scatter(x=df["time"], y=df["value"], name="Nb of overflows")]
+    # line_in_overflow=
+    return [
+        go.Scatter(
+            x=df["time"],
+            y=df["value"],
+            text=[
+                "lines " + str(episode_data.line_names[liste]) if len(liste) > 0 else ""
+                for liste in df["line_ids"]
+            ],  # could be improve with names maybe, here only ids
+            name="Nb of overflows",
+        )
+    ]
 
 
 def get_total_overflow_ts(episode_analytics, episode_data):
@@ -108,22 +119,44 @@ def get_maintenance_trace(episode, equipments=None):
     if ts_maintenances_by_line.empty:
         return []
 
-    if "total" in equipments:
-        ts_maintenances_by_line = ts_maintenances_by_line.assign(
-            total=episode.maintenances.groupby("timestamp", as_index=True)[
-                "value"
-            ].sum()
-        )
-
-    if equipments is not None:
-        ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
-
-    return [
+    # if equipments is not None:
+    #   ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
+    linesEquipment = [
+        line for line in equipments if line in ts_maintenances_by_line.columns
+    ]
+    traces = [
         go.Scatter(
             x=ts_maintenances_by_line.index, y=ts_maintenances_by_line[line], name=line
         )
-        for line in ts_maintenances_by_line.columns
+        for line in linesEquipment
     ]
+
+    if "total" in equipments:
+        total_maintenance = ts_maintenances_by_line.sum(axis=1)
+        names_maintenace = [
+            "lines"
+            + str(
+                list(
+                    episode.line_names[
+                        ts_maintenances_by_line[episode.line_names].iloc[i].astype(bool)
+                    ]
+                )
+            )
+            if total_maintenance[i] >= 1
+            else ""
+            for i in range(len(total_maintenance))
+        ]
+
+        traces.append(
+            go.Scatter(
+                x=ts_maintenances_by_line.index,
+                y=total_maintenance,
+                text=names_maintenace,
+                name="total",
+            )
+        )
+
+    return traces
 
 
 def get_all_prod_trace(episode, prod_types, selection):
@@ -364,6 +397,6 @@ def get_attacks_trace(episode, equipments=None):
             x=df["timestamp"],
             y=df["attack"].astype(int),
             name=episode.agent + "_attacks",
-            text=df["id_lines"],
+            text="lines " + df["id_lines"],
         )
     ]
