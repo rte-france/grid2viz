@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 from grid2viz.src.utils.graph_utils import layout_no_data, layout_def

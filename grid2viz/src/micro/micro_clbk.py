@@ -1,13 +1,16 @@
 import datetime as dt
+from pathlib import Path
 
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-# from grid2viz.app import app
-from grid2viz.src.manager import make_episode, make_network
-from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
+from grid2viz.src.manager import grid2viz_home_directory
+from grid2viz.src.manager import make_episode, make_network_agent_study
 from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
 
 
 def register_callbacks_micro(app):
@@ -21,11 +24,12 @@ def register_callbacks_micro(app):
         [Input("window", "data")],
         [
             State("slider", "value"),
+            State("user_timestamps", "value"),
             State("agent_study", "data"),
             State("scenario", "data"),
         ],
     )
-    def update_slider(window, value, study_agent, scenario):
+    def update_slider(window, value, selected_timestamp, study_agent, scenario):
         if window is None:
             raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
@@ -37,7 +41,9 @@ def register_callbacks_micro(app):
             dt.datetime.strptime(window[1], "%Y-%m-%dT%H:%M:%S")
         )
         if value not in range(min_, max_):
-            value = min_
+            value = new_episode.timestamps.index(
+                dt.datetime.strptime(selected_timestamp, "%Y-%m-%d %H:%M")
+            )
 
         marks = dict(enumerate(map(lambda x: x.time(), new_episode.timestamps)))
 
@@ -59,124 +65,72 @@ def register_callbacks_micro(app):
     def relayout_store_overview(*args):
         return relayout_callback(*args)
 
-    @app.callback(
-        Output("window", "data"),
-        [
-            Input("enlarge_left", "n_clicks"),
-            Input("enlarge_right", "n_clicks"),
-            Input("user_timestamps", "value"),
-        ],
-        [State("agent_study", "data"), State("scenario", "data")],
-    )
-    def compute_window(
-        n_clicks_left, n_clicks_right, user_selected_timestamp, study_agent, scenario
-    ):
-        if user_selected_timestamp is None:
-            raise PreventUpdate
-        if n_clicks_left is None:
-            n_clicks_left = 0
-        if n_clicks_right is None:
-            n_clicks_right = 0
-        new_episode = make_episode(study_agent, scenario)
-        center_indx = new_episode.timestamps.index(
-            dt.datetime.strptime(user_selected_timestamp, "%Y-%m-%d %H:%M")
-        )
-        return common_graph.compute_windows_range(
-            new_episode, center_indx, n_clicks_left, n_clicks_right
-        )
-
     # indicator line
     @app.callback(
         [
             Output("rewards_ts", "figure"),
             Output("cumulated_rewards_ts", "figure"),
+            Output("actions_ts", "figure"),
         ],
         [
             Input("relayoutStoreMicro", "data"),
             Input("window", "data"),
-            Input("user_timestamps", "value"),
+            State("agent_study", "data"),
         ],
         [
             State("rewards_ts", "figure"),
             State("cumulated_rewards_ts", "figure"),
-            State("agent_study", "data"),
+            State("actions_ts", "figure"),
             State("agent_ref", "data"),
             State("scenario", "data"),
         ],
     )
-    def load_reward_ts(
+    def load_ts(
         relayout_data_store,
         window,
-        selected_timestamp,
+        study_agent,
         rew_figure,
         cumrew_figure,
-        study_agent,
+        actions_figure,
         agent_ref,
         scenario,
     ):
 
-        rew_layout = rew_figure["layout"]
-        cumrew_layout = cumrew_figure["layout"]
+        figures = [rew_figure, cumrew_figure, actions_figure]
+
         condition = (
             relayout_data_store is not None and relayout_data_store["relayout_data"]
         )
         if condition:
             relayout_data = relayout_data_store["relayout_data"]
-            rew_new_axis_layout = get_axis_relayout(rew_figure, relayout_data)
-            cumrew_new_axis_layout = get_axis_relayout(cumrew_figure, relayout_data)
-            if rew_new_axis_layout is not None or cumrew_new_axis_layout is not None:
-                if rew_new_axis_layout is not None:
-                    rew_layout.update(rew_new_axis_layout)
-                if cumrew_new_axis_layout is not None:
-                    cumrew_layout.update(cumrew_new_axis_layout)
-                return rew_figure, cumrew_figure
+            relayouted = False
+            for figure in figures:
+                axis_layout = get_axis_relayout(figure, relayout_data)
+                if axis_layout is not None:
+                    figure["layout"].update(axis_layout)
+                    relayouted = True
+            if relayouted:
+                return figures
 
         rew_figure, cumrew_figure = common_graph.make_rewards_ts(
-            study_agent, agent_ref, scenario, rew_layout, cumrew_layout
+            study_agent, agent_ref, scenario, rew_figure, cumrew_figure
         )
 
-        if window is not None:
-            rew_figure["layout"].update(xaxis=dict(range=window, autorange=False))
-            cumrew_figure["layout"].update(xaxis=dict(range=window, autorange=False))
+        actions_figure = common_graph.make_action_ts(
+            study_agent, agent_ref, scenario, actions_figure["layout"]
+        )
 
-        return rew_figure, cumrew_figure
-
-    @app.callback(
-        Output("actions_ts", "figure"),
-        [Input("relayoutStoreMicro", "data"), Input("window", "data")],
-        [
-            State("actions_ts", "figure"),
-            State("user_timestamps", "value"),
-            State("agent_study", "data"),
-            State("agent_ref", "data"),
-            State("scenario", "data"),
-        ],
-    )
-    def load_actions_ts(
-        relayout_data_store,
-        window,
-        figure,
-        selected_timestamp,
-        study_agent,
-        agent_ref,
-        scenario,
-    ):
-
-        layout = figure["layout"]
-        if relayout_data_store is not None and relayout_data_store["relayout_data"]:
-            relayout_data = relayout_data_store["relayout_data"]
-
-            new_axis_layout = get_axis_relayout(figure, relayout_data)
-            if new_axis_layout is not None:
-                layout.update(new_axis_layout)
-                return figure
-
-        figure = common_graph.make_action_ts(study_agent, agent_ref, scenario, layout)
+        figures = [rew_figure, cumrew_figure, actions_figure]
 
         if window is not None:
-            figure["layout"].update(xaxis=dict(range=window, autorange=False))
+            start_datetime = dt.datetime.strptime(window[0], "%Y-%m-%dT%H:%M:%S")
+            end_datetime = dt.datetime.strptime(window[-1], "%Y-%m-%dT%H:%M:%S")
+            for figure in figures:
+                figure["layout"].update(
+                    xaxis=dict(range=[start_datetime, end_datetime], autorange=False)
+                )
 
-        return figure
+        return figures
 
     # flux line callback
     @app.callback(
@@ -408,7 +362,6 @@ def register_callbacks_micro(app):
             State("overflow_ts", "figure"),
             State("usage_rate_ts", "figure"),
             State("agent_study", "data"),
-            State("agent_ref", "data"),
             State("scenario", "data"),
         ],
     )
@@ -418,7 +371,6 @@ def register_callbacks_micro(app):
         figure_overflow,
         figure_usage,
         study_agent,
-        agent_ref,
         scenario,
     ):
         if relayout_data_store is not None and relayout_data_store["relayout_data"]:
@@ -459,7 +411,27 @@ def register_callbacks_micro(app):
             act_as_str = str(act)
         else:
             act_as_str = "NO ACTION"
-        return (
-            make_network(new_episode).plot_obs(new_episode.observations[slider_value]),
-            act_as_str,
+        return make_network_agent_study(new_episode, timestep=slider_value), act_as_str
+
+    @app.callback(
+        [
+            Output("modal_micro", "is_open"),
+            Output("dont_show_again_div_micro", "className"),
+        ],
+        [Input("close_micro", "n_clicks"), Input("page_help", "n_clicks")],
+        [State("modal_micro", "is_open"), State("dont_show_again_micro", "checked")],
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("micro")
+        return toggle_modal_helper(
+            close_n_clicks,
+            open_n_clicks,
+            is_open,
+            dont_show_again,
+            dsa_filepath,
+            "page_help",
         )
+
+    @app.callback(Output("modal_image_micro", "src"), [Input("url", "pathname")])
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/agent_study.png")

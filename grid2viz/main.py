@@ -1,10 +1,11 @@
-import os
-import subprocess
-import signal
-import sys
-import time
-import pkg_resources
 import argparse
+import os
+
+## A bug can appear with MacOSX if matplotlib is not set to a non-interactive mode
+# issue: https://github.com/matplotlib/matplotlib/issues/14304/
+import matplotlib
+
+matplotlib.use("agg")
 
 CONFIG_FILE_CONTENT = """
 # This file have been automatically generated, please do not modify it. 
@@ -105,7 +106,7 @@ def make_cache():
     if not os.path.exists(cache_dir):
         print("Starting Multiprocessing for reading the best agent of each scenario")
 
-    ##TO DO: tous les agents n'ont pas forcément tourner sur exactement tous les mêmes scenarios
+    # TODO: tous les agents n'ont pas forcément tourner sur exactement tous les mêmes scenarios
     # Eviter une erreur si un agent n'a pas tourné sur un scenario
     agent_scenario_list = [
         (agent, scenario) for agent in agents for scenario in scenarios
@@ -115,8 +116,8 @@ def make_cache():
     if n_cores == 1:  # no multiprocess useful for debug if needed
         i = 0
         for agent_scenario in agent_scenario_list:
-            agents_data[i] = make_episode_without_decorate(
-                agent_scenario[0], agent_scenario[1]
+            agents_data.append(
+                make_episode_without_decorate(agent_scenario[0], agent_scenario[1])
             )
             i += 1
     else:

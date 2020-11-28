@@ -1,13 +1,15 @@
+from pathlib import Path
+
+import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-# from grid2viz.app import app
-import pandas as pd
-
-from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
-from grid2viz.src.utils import common_graph
 from grid2viz.src.kpi import observation_model, EpisodeTrace
-from grid2viz.src.manager import make_episode, best_agents
+from grid2viz.src.manager import make_episode, best_agents, grid2viz_home_directory
+from grid2viz.src.utils import common_graph
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
 
 
 def register_callbacks_overview(app):
@@ -92,7 +94,8 @@ def register_callbacks_overview(app):
         """
         episode = make_episode(best_agents[scenario]["agent"], scenario)
         return [
-            {"label": load, "value": load} for load in [*episode.load_names, "total"]
+            {"label": load, "value": load}
+            for load in [*episode.load_names, "total", "total_intercos"]
         ]
 
     @app.callback(
@@ -191,19 +194,19 @@ def register_callbacks_overview(app):
         best_agent_ep = make_episode(best_agents[scenario]["agent"], scenario)
         return best_agent_ep.total_maintenance_duration
 
-    @app.callback(
-        Output("agent_ref", "data"),
-        [Input("input_agent_selector", "value")],
-        [State("scenario", "data")],
-    )
-    def update_selected_ref_agent(ref_agent, scenario):
-        """
-        Change the agent of reference for the given scenario.
-
-        Triggered when user select a new agent with the agent selector on layout.
-        """
-        make_episode(ref_agent, scenario)
-        return ref_agent
+    # @app.callback(
+    #     Output("agent_ref", "data"),
+    #     [Input("input_agent_selector", "value")],
+    #     [State("scenario", "data")]
+    # )
+    # def update_selected_ref_agent(ref_agent, scenario):
+    #     """
+    #         Change the agent of reference for the given scenario.
+    #
+    #         Triggered when user select a new agent with the agent selector on layout.
+    #     """
+    #     make_episode(ref_agent, scenario)
+    #     return ref_agent
 
     @app.callback(
         [Output("overflow_graph", "figure"), Output("usage_rate_graph", "figure")],
@@ -265,3 +268,29 @@ def register_callbacks_overview(app):
             episode.production["timestamp"].dt.date.values[0],
             episode.production["timestamp"].dt.date.values[-1],
         )
+
+    @app.callback(
+        [
+            Output("modal_overview", "is_open"),
+            Output("dont_show_again_div_overview", "className"),
+        ],
+        [Input("close_overview", "n_clicks"), Input("page_help", "n_clicks")],
+        [
+            State("modal_overview", "is_open"),
+            State("dont_show_again_overview", "checked"),
+        ],
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
+        return toggle_modal_helper(
+            close_n_clicks,
+            open_n_clicks,
+            is_open,
+            dont_show_again,
+            dsa_filepath,
+            "page_help",
+        )
+
+    @app.callback(Output("modal_image_overview", "src"), [Input("url", "pathname")])
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/scenario_overview.png")

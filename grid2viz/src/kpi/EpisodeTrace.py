@@ -1,9 +1,9 @@
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+
 from . import observation_model
 from .env_actions import env_actions
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 
 # colors for production share sunburst pie
 dic_colors_prod_types = {
@@ -22,16 +22,31 @@ dic_light_colors_prod_types["solar"] = "palegoldenrod"
 
 def get_total_overflow_trace(episode_analytics, episode_data):
     df = get_total_overflow_ts(episode_analytics, episode_data)
-    return [go.Scatter(x=df["time"], y=df["value"], name="Nb of overflows")]
+    # line_in_overflow=
+    return [
+        go.Scatter(
+            x=df["time"],
+            y=df["value"],
+            text=[
+                "lines " + str(episode_data.line_names[liste]) if len(liste) > 0 else ""
+                for liste in df["line_ids"]
+            ],  # could be improve with names maybe, here only ids
+            name="Nb of overflows",
+        )
+    ]
 
 
 def get_total_overflow_ts(episode_analytics, episode_data):
-    df = pd.DataFrame(index=episode_analytics.timesteps, columns=["time", "value"])
+    df = pd.DataFrame(
+        index=episode_analytics.timesteps, columns=["time", "value", "line_ids"]
+    )
     for (time_step, obs) in enumerate(episode_data.observations):
         # TODO: observations length and timsteps length should match
         try:
             tstamp = episode_analytics.timestamps[time_step]
-            df.loc[time_step, :] = [tstamp, (obs.timestep_overflow > 0).sum()]
+            ov = obs.timestep_overflow
+            overflows = [i for i in range(len(ov)) if ov[i] == 1]
+            df.loc[time_step, :] = [tstamp, (ov > 0).sum(), overflows]
         except:
             pass
     return df
@@ -104,22 +119,44 @@ def get_maintenance_trace(episode, equipments=None):
     if ts_maintenances_by_line.empty:
         return []
 
-    if "total" in equipments:
-        ts_maintenances_by_line = ts_maintenances_by_line.assign(
-            total=episode.maintenances.groupby("timestamp", as_index=True)[
-                "value"
-            ].sum()
-        )
-
-    if equipments is not None:
-        ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
-
-    return [
+    # if equipments is not None:
+    #   ts_maintenances_by_line = ts_maintenances_by_line.loc[:, equipments]
+    linesEquipment = [
+        line for line in equipments if line in ts_maintenances_by_line.columns
+    ]
+    traces = [
         go.Scatter(
             x=ts_maintenances_by_line.index, y=ts_maintenances_by_line[line], name=line
         )
-        for line in ts_maintenances_by_line.columns
+        for line in linesEquipment
     ]
+
+    if "total" in equipments:
+        total_maintenance = ts_maintenances_by_line.sum(axis=1)
+        names_maintenace = [
+            "lines"
+            + str(
+                list(
+                    episode.line_names[
+                        ts_maintenances_by_line[episode.line_names].iloc[i].astype(bool)
+                    ]
+                )
+            )
+            if total_maintenance[i] >= 1
+            else ""
+            for i in range(len(total_maintenance))
+        ]
+
+        traces.append(
+            go.Scatter(
+                x=ts_maintenances_by_line.index,
+                y=total_maintenance,
+                text=names_maintenace,
+                name="total",
+            )
+        )
+
+    return traces
 
 
 def get_all_prod_trace(episode, prod_types, selection):
@@ -132,13 +169,8 @@ def get_all_prod_trace(episode, prod_types, selection):
     prod_type_names = prod_types.values()
     trace = []
     if "total" in selection:
-        trace.append(
-            go.Scatter(
-                x=prod_with_type["timestamp"].unique(),
-                y=prod_with_type.groupby("timestamp")["value"].sum(),
-                name="total",
-            )
-        )
+        total_series = prod_with_type.groupby("timestamp")["value"].sum()
+        trace.append(go.Scatter(x=total_series.index, y=total_series, name="total"))
     for name in prod_type_names:
         if name in selection:
             trace.append(
@@ -167,28 +199,117 @@ def get_load_trace_per_equipment(episode, equipements):
     load_equipments = observation_model.get_load(episode, equipements)
 
     if "total" in equipements:
+        # filter intercos
+        idx_no_interco = [
+            i
+            for i in range(len(all_equipements.equipment_name))
+            if "interco" not in all_equipements.equipment_name[i]
+        ]
+
         load_equipments = load_equipments.append(
             pd.DataFrame(
                 {
                     "equipement_id": [
-                        "nan" for i in all_equipements.groupby("timestep").size()
+                        "nan"
+                        for i in all_equipements.loc[idx_no_interco]
+                        .groupby("timestep")
+                        .size()
                     ],
                     "equipment_name": [
-                        "total" for i in all_equipements.groupby("timestep").size()
+                        "total"
+                        for i in all_equipements.loc[idx_no_interco]
+                        .groupby("timestep")
+                        .size()
                     ],
                     "timestamp": [
-                        timestamp for timestamp in all_equipements["timestamp"].unique()
+                        timestamp
+                        for timestamp in all_equipements.loc[idx_no_interco][
+                            "timestamp"
+                        ].unique()
                     ],
                     "timestep": [
-                        timestep for timestep in all_equipements["timestep"].unique()
+                        timestep
+                        for timestep in all_equipements.loc[idx_no_interco][
+                            "timestep"
+                        ].unique()
                     ],
                     "value": [
                         value
-                        for value in all_equipements.groupby("timestep")["value"].sum()
+                        for value in all_equipements.loc[idx_no_interco]
+                        .groupby("timestep")["value"]
+                        .sum()
                     ],
                 }
             )
         )
+    if "total_intercos" in equipements:
+        # filter intercos
+        idx_interco = [
+            i
+            for i in range(len(all_equipements.equipment_name))
+            if "interco" in all_equipements.equipment_name[i]
+        ]
+        if len(idx_interco) != 0:
+            load_equipments = load_equipments.append(
+                pd.DataFrame(
+                    {
+                        "equipement_id": [
+                            "nan"
+                            for i in all_equipements.loc[idx_interco]
+                            .groupby("timestep")
+                            .size()
+                        ],
+                        "equipment_name": [
+                            "total"
+                            for i in all_equipements.loc[idx_interco]
+                            .groupby("timestep")
+                            .size()
+                        ],
+                        "timestamp": [
+                            timestamp
+                            for timestamp in all_equipements.loc[idx_interco][
+                                "timestamp"
+                            ].unique()
+                        ],
+                        "timestep": [
+                            timestep
+                            for timestep in all_equipements.loc[idx_interco][
+                                "timestep"
+                            ].unique()
+                        ],
+                        "value": [
+                            value
+                            for value in all_equipements.loc[idx_interco]
+                            .groupby("timestep")["value"]
+                            .sum()
+                        ],
+                    }
+                )
+            )
+        else:
+            load_equipments = load_equipments.append(
+                pd.DataFrame(
+                    {
+                        "equipement_id": [
+                            "nan" for i in all_equipements.groupby("timestep").size()
+                        ],
+                        "equipment_name": [
+                            "total" for i in all_equipements.groupby("timestep").size()
+                        ],
+                        "timestamp": [
+                            timestamp
+                            for timestamp in all_equipements["timestamp"].unique()
+                        ],
+                        "timestep": [
+                            timestep
+                            for timestep in all_equipements["timestep"].unique()
+                        ],
+                        "value": [
+                            0 for timestep in all_equipements["timestep"].unique()
+                        ],
+                    }
+                )
+            )
 
     return get_df_trace_per_equipment(load_equipments)
 
@@ -269,12 +390,13 @@ def get_df_rewards_trace(episode):
     ]
 
 
-def get_attacks_trace(episode):
+def get_attacks_trace(episode, equipments=None):
     df = episode.attacks_data_table
     return [
         go.Scatter(
             x=df["timestamp"],
             y=df["attack"].astype(int),
             name=episode.agent + "_attacks",
+            text="lines " + df["id_lines"],
         )
     ]

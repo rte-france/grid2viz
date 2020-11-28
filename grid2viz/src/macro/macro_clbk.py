@@ -3,56 +3,80 @@
     and let choose and compute study agent information.
 """
 import datetime as dt
+from pathlib import Path
 
+import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import numpy as np
-import plotly.graph_objects as go
 
-from grid2viz.src.manager import make_episode, make_network
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
+from grid2viz.src.manager import (
+    make_episode,
+    make_network_agent_overview,
+    grid2viz_home_directory,
+)
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import (
     get_axis_relayout,
     relayout_callback,
-    layout_def,
-    layout_no_data,
     max_or_zero,
 )
-from grid2viz.src.kpi.maintenances import hist_duration_maintenances
-
-from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
 
 
 def register_callbacks_macro(app):
+
+    # Synchronized graphs
     @app.callback(
         [
             Output("rewards_timeserie", "figure"),
             Output("cumulated_rewards_timeserie", "figure"),
+            Output("overflow_graph_study", "figure"),
+            Output("usage_rate_graph_study", "figure"),
+            Output("action_timeserie", "figure"),
         ],
-        [Input("agent_study", "data"), Input("relayoutStoreMacro", "data")],
+        [
+            Input("agent_study", "modified_timestamp"),
+            Input("agent_ref", "data"),
+            Input("relayoutStoreMacro", "data"),
+        ],
         [
             State("rewards_timeserie", "figure"),
             State("cumulated_rewards_timeserie", "figure"),
-            State("agent_ref", "data"),
+            State("overflow_graph_study", "figure"),
+            State("usage_rate_graph_study", "figure"),
+            State("action_timeserie", "figure"),
             State("scenario", "data"),
-            State("agent_study", "modified_timestamp"),
+            State("agent_study", "data"),
             State("relayoutStoreMacro", "modified_timestamp"),
         ],
     )
-    def load_reward_data_scatter(
-        study_agent,
+    def update_synchronized_figures(
+        agent_study_ts,
+        ref_agent,
         relayout_data_store,
         rew_figure,
         cumrew_figure,
-        ref_agent,
+        overflow_figure,
+        usage_rate_figure,
+        actions_figure,
         scenario,
-        agent_study_ts,
+        study_agent,
         relayoutStoreMacro_ts,
     ):
-        """Compute and  create figure with instant and cumulated rewards of the study and ref agent"""
-        rew_layout = rew_figure["layout"]
-        cumrew_layout = cumrew_figure["layout"]
+
+        figures = [
+            rew_figure,
+            cumrew_figure,
+            overflow_figure,
+            usage_rate_figure,
+            actions_figure,
+        ]
+
+        episode = make_episode(study_agent, scenario)
+
         if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
             condition = (
                 relayout_data_store is not None
@@ -65,17 +89,38 @@ def register_callbacks_macro(app):
             )
         if condition:
             relayout_data = relayout_data_store["relayout_data"]
-            rew_new_axis_layout = get_axis_relayout(rew_figure, relayout_data)
-            cumrew_new_axis_layout = get_axis_relayout(cumrew_figure, relayout_data)
-            if rew_new_axis_layout is not None or cumrew_new_axis_layout is not None:
-                if rew_new_axis_layout is not None:
-                    rew_layout.update(rew_new_axis_layout)
-                if cumrew_new_axis_layout is not None:
-                    cumrew_layout.update(cumrew_new_axis_layout)
-                return rew_figure, cumrew_figure
+            relayouted = False
+            for figure in figures:
+                axis_layout = get_axis_relayout(figure, relayout_data)
+                if axis_layout is not None:
+                    figure["layout"].update(axis_layout)
+                    relayouted = True
+            if relayouted:
+                return figures
+        new_reward_fig, new_cumreward_fig = make_rewards_ts(
+            study_agent, ref_agent, scenario, rew_figure, cumrew_figure
+        )
 
-        return make_rewards_ts(
-            study_agent, ref_agent, scenario, rew_layout, cumrew_layout
+        overflow_figure["data"] = episode.total_overflow_trace.copy()
+        for event in ["maintenance", "hazard", "attacks"]:
+            func = getattr(EpisodeTrace, f"get_{event}_trace")
+            traces = func(episode, ["total"])
+            if len(traces) > 0:
+                traces[0].update({"name": event.capitalize()})
+                overflow_figure["data"].append(traces[0])
+
+        usage_rate_figure["data"] = episode.usage_rate_trace
+
+        new_action_fig = make_action_ts(
+            study_agent, ref_agent, scenario, actions_figure["layout"]
+        )
+
+        return (
+            new_reward_fig,
+            new_cumreward_fig,
+            overflow_figure,
+            usage_rate_figure,
+            new_action_fig,
         )
 
     @app.callback(
@@ -112,30 +157,25 @@ def register_callbacks_macro(app):
             )
         ]
 
-    @app.callback(
-        Output("network_actions", "figure"),
-        [Input("agent_study", "data")],
-        [State("scenario", "data")],
-    )
-    def update_network_graph(study_agent, scenario):
-        episode = make_episode(study_agent, scenario)
-        modified_lines = actions_model.get_modified_lines(episode)
-        line_values = [None] * episode.n_lines
-        for line in modified_lines.index:
-            line_values[np.where(episode.line_names == line)[0][0]] = line
-        network_graph = make_network(episode).plot_info(
-            observation=episode.observations[0],
-            line_values=line_values,
-        )
-        return network_graph
+    # @app.callback(
+    #     Output("network_actions", "figure"),
+    #     [Input("agent_study", "data")],
+    #     [State("scenario", "data")]
+    # )
+    # def update_network_graph(study_agent, scenario):
+    #     episode = make_episode(study_agent, scenario)
+    #
+    #     return make_network_agent_overview(episode)
 
     @app.callback(
         Output("timeseries_table", "data"),
-        [Input("rewards_timeserie", "clickData"), Input("agent_log_selector", "value")],
+        [Input("rewards_timeserie", "clickData"), Input("select_study_agent", "value")],
         [State("timeseries_table", "data"), State("agent_study", "data")],
     )
     def add_timestamp(click_data, new_agent, data, agent_stored):
-        if new_agent != agent_stored or click_data is None:
+        if new_agent != agent_stored:
+            return []
+        if click_data is None:
             if data is not None:
                 return data
             else:
@@ -203,119 +243,17 @@ def register_callbacks_macro(app):
             agent.action_data_table[["action_line", "action_subs"]].sum(axis=1).sum()
         )
 
-    @app.callback(
-        Output("agent_study", "data"),
-        [Input("agent_log_selector", "value")],
-        [State("agent_study", "data"), State("scenario", "data")],
-    )
-    def update_study_agent(study_agent, stored_agent, scenario):
-        if study_agent == stored_agent:
-            raise PreventUpdate
-        make_episode(study_agent, scenario)
-        return study_agent
-
-    @app.callback(
-        [
-            Output("overflow_graph_study", "figure"),
-            Output("usage_rate_graph_study", "figure"),
-        ],
-        [Input("agent_study", "data"), Input("relayoutStoreMacro", "data")],
-        [
-            State("overflow_graph_study", "figure"),
-            State("usage_rate_graph_study", "figure"),
-            State("scenario", "data"),
-            State("agent_study", "modified_timestamp"),
-            State("relayoutStoreMacro", "modified_timestamp"),
-        ],
-    )
-    def update_agent_log_graph(
-        study_agent,
-        relayout_data_store,
-        figure_overflow,
-        figure_usage,
-        scenario,
-        agent_study_ts,
-        relayoutStoreMacro_ts,
-    ):
-
-        if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
-            condition = (
-                relayout_data_store is not None
-                and relayout_data_store["relayout_data"]
-                and relayoutStoreMacro_ts > agent_study_ts
-            )
-        else:
-            condition = (
-                relayout_data_store is not None and relayout_data_store["relayout_data"]
-            )
-        if condition:
-            relayout_data = relayout_data_store["relayout_data"]
-            layout_usage = figure_usage["layout"]
-            new_axis_layout = get_axis_relayout(figure_usage, relayout_data)
-            if new_axis_layout is not None:
-                layout_usage.update(new_axis_layout)
-                figure_overflow["layout"].update(new_axis_layout)
-                return figure_overflow, figure_usage
-        new_episode = make_episode(study_agent, scenario)
-        figure_overflow["data"] = new_episode.total_overflow_trace.copy()
-        maintenance_traces = EpisodeTrace.get_maintenance_trace(new_episode, ["total"])
-        if len(maintenance_traces) != 0:
-            maintenance_traces[0].update({"name": "Nb of maintenances"})
-            figure_overflow["data"].append(maintenance_traces[0])
-
-        hazard_traces = EpisodeTrace.get_hazard_trace(new_episode, ["total"]).copy()
-        if len(hazard_traces) != 0:
-            hazard_traces[0].update({"name": "Nb of hazards"})
-            figure_overflow["data"].append(hazard_traces[0])
-
-        attacks_trace = EpisodeTrace.get_attacks_trace(new_episode).copy()
-        if len(attacks_trace) != 0:
-            attacks_trace[0].update({"name": "Attacks"})
-            figure_overflow["data"].append(attacks_trace[0])
-
-        figure_usage["data"] = new_episode.usage_rate_trace
-
-        return figure_overflow, figure_usage
-
-    @app.callback(
-        Output("action_timeserie", "figure"),
-        [Input("agent_study", "data"), Input("relayoutStoreMacro", "data")],
-        [
-            State("action_timeserie", "figure"),
-            State("agent_ref", "data"),
-            State("scenario", "data"),
-            State("agent_study", "modified_timestamp"),
-            State("relayoutStoreMacro", "modified_timestamp"),
-        ],
-    )
-    def update_actions_graph(
-        study_agent,
-        relayout_data_store,
-        figure,
-        agent_ref,
-        scenario,
-        agent_study_ts,
-        relayoutStoreMacro_ts,
-    ):
-        if agent_study_ts is not None and relayoutStoreMacro_ts is not None:
-            condition = (
-                relayout_data_store is not None
-                and relayout_data_store["relayout_data"]
-                and relayoutStoreMacro_ts > agent_study_ts
-            )
-        else:
-            condition = (
-                relayout_data_store is not None and relayout_data_store["relayout_data"]
-            )
-        if condition:
-            relayout_data = relayout_data_store["relayout_data"]
-            layout = figure["layout"]
-            new_axis_layout = get_axis_relayout(figure, relayout_data)
-            if new_axis_layout is not None:
-                layout.update(new_axis_layout)
-                return figure
-
-        return make_action_ts(study_agent, agent_ref, scenario, figure["layout"])
+    # @app.callback(
+    #     Output("agent_study", "data"),
+    #     [Input('agent_log_selector', 'value')],
+    #     [State("agent_study", "data"),
+    #      State("scenario", "data")],
+    # )
+    # def update_study_agent(study_agent, stored_agent, scenario):
+    #     if study_agent == stored_agent:
+    #         raise PreventUpdate
+    #     make_episode(study_agent, scenario)
+    #     return study_agent
 
     action_table_name_converter = dict(
         timestep="Timestep",
@@ -355,17 +293,16 @@ def register_callbacks_macro(app):
             Output("distribution_line_action_chart", "figure"),
             Output("distribution_redisp_action_chart", "figure"),
         ],
-        [Input("agent_study", "data")],
+        [Input("agent_study", "data"), Input("agent_ref", "data")],
         [
             State("distribution_substation_action_chart", "figure"),
             State("distribution_line_action_chart", "figure"),
             State("distribution_redisp_action_chart", "figure"),
             State("scenario", "data"),
-            State("agent_ref", "data"),
         ],
     )
     def update_agent_log_action_graphs(
-        study_agent, figure_sub, figure_switch_line, figure_redisp, scenario, ref_agent
+        study_agent, ref_agent, figure_sub, figure_switch_line, figure_redisp, scenario
     ):
         new_episode = make_episode(study_agent, scenario)
         ref_episode = make_episode(ref_agent, scenario)
@@ -463,3 +400,26 @@ def register_callbacks_macro(app):
         row_id = active_cell["row_id"]
         act = new_episode.actions[row_id]
         return str(act)
+
+    @app.callback(
+        [
+            Output("modal_macro", "is_open"),
+            Output("dont_show_again_div_macro", "className"),
+        ],
+        [Input("close_macro", "n_clicks"), Input("page_help", "n_clicks")],
+        [State("modal_macro", "is_open"), State("dont_show_again_macro", "checked")],
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("macro")
+        return toggle_modal_helper(
+            close_n_clicks,
+            open_n_clicks,
+            is_open,
+            dont_show_again,
+            dsa_filepath,
+            "page_help",
+        )
+
+    @app.callback(Output("modal_image_macro", "src"), [Input("url", "pathname")])
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/agent_overview.png")

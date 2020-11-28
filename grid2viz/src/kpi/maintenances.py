@@ -1,5 +1,3 @@
-import numpy as np
-
 from .env_actions import env_actions
 
 

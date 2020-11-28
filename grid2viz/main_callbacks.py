@@ -12,13 +12,35 @@ The "as ..." are also mandatory, other nothing is done.
 from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.micro import micro_lyt as micro
-from grid2viz.src.simulation import simulation_lyt as simulation
-from grid2viz.src.episodes import episodes_lyt
+from grid2viz.src.episodes import episodes_lyt as episodes
 
 """
 End Warning
 """
 from grid2viz.src import manager
+from grid2viz.src.utils import common_graph
+
+
+def center_index(user_selected_timestamp, episode):
+    if user_selected_timestamp is not None:
+        center_indx = episode.timestamps.index(
+            dt.datetime.strptime(user_selected_timestamp, "%Y-%m-%d %H:%M")
+        )
+    else:
+        center_indx = 0
+    return center_indx
+
+
+def compute_window(user_selected_timestamp, study_agent, scenario):
+    if user_selected_timestamp is not None:
+        n_clicks_left = 0
+        n_clicks_right = 0
+        new_episode = manager.make_episode(study_agent, scenario)
+        center_indx = center_index(user_selected_timestamp, new_episode)
+
+        return common_graph.compute_windows_range(
+            new_episode, center_indx, n_clicks_left, n_clicks_right
+        )
 
 
 def register_callbacks_main(app):
@@ -30,7 +52,6 @@ def register_callbacks_main(app):
             Output("nav_scen_over", "active"),
             Output("nav_agent_over", "active"),
             Output("nav_agent_study", "active"),
-            Output("nav_simulation", "active"),
             Output("reset_timeseries_table_macro", "data"),
         ],
         [Input("url", "pathname")],
@@ -73,10 +94,9 @@ def register_callbacks_main(app):
 
         if pathName_split == "episodes" or pathName_split == "" or not pathName_split:
             return (
-                episodes_lyt,
+                episodes.layout(),
                 "episodes",
                 True,
-                False,
                 False,
                 False,
                 False,
@@ -88,7 +108,6 @@ def register_callbacks_main(app):
                 "overview",
                 False,
                 True,
-                False,
                 False,
                 False,
                 reset_ts_table_macro,
@@ -106,34 +125,20 @@ def register_callbacks_main(app):
                 True,
                 False,
                 False,
-                False,
             )
         elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
                 raise PreventUpdate
-            return (
+            layout = (
                 micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario),
                 "micro",
                 False,
                 False,
                 False,
                 True,
-                False,
                 reset_ts_table_macro,
             )
-        elif pathname == "/simulation":
-            if ref_agent is None or study_agent is None:
-                raise PreventUpdate
-            return (
-                simulation.layout(scenario, study_agent),
-                "simulation",
-                False,
-                False,
-                False,
-                False,
-                True,
-                reset_ts_table_macro,
-            )
+            return layout
         else:
             return 404, ""
 
@@ -143,7 +148,9 @@ def register_callbacks_main(app):
             scenario = ""
         return scenario
 
-    @app.callback(Output("ref_ag_lbl", "children"), [Input("agent_ref", "data")])
+    @app.callback(
+        Output("ref_ag_lbl", "children"), [Input("select_ref_agent", "value")]
+    )
     def update_ref_agent_label(agent):
         if agent is None:
             agent = ""
@@ -171,6 +178,8 @@ def register_callbacks_main(app):
         [State("scenario", "data")],
     )
     def update_user_timestamps_options(data, agent, scenario):
+        if data is None:
+            raise PreventUpdate
         episode = manager.make_episode(agent, scenario)
         nb_timesteps_played = episode.meta["nb_timestep_played"]
         return [
@@ -210,3 +219,95 @@ def register_callbacks_main(app):
     )
     def reset_n_cliks_right(value):
         return 0
+
+    @app.callback(
+        [
+            Output("select_ref_agent", "options"),
+            Output("select_ref_agent", "disabled"),
+            Output("select_ref_agent", "value"),
+        ],
+        [Input("scenario", "data"), Input("url", "pathname")],
+    )
+    def update_ref_agent_select_options(scenario, pathname):
+        if scenario is None:
+            raise PreventUpdate
+        options = [
+            {"label": agent, "value": agent}
+            for agent in manager.agent_scenario[scenario]
+        ]
+        value = manager.agent_scenario[scenario][0]
+        manager.make_episode(value, scenario)
+        disabled = False
+        pathname_split = pathname.split("/")
+        pathname_split = pathname_split[len(pathname_split) - 1]
+        if pathname_split in ["episodes", "micro"]:
+            disabled = True
+        return options, disabled, value
+
+    @app.callback(
+        [
+            Output("select_study_agent", "options"),
+            Output("select_study_agent", "disabled"),
+            Output("select_study_agent", "value"),
+        ],
+        [Input("scenario", "data"), Input("url", "pathname")],
+    )
+    def update_ref_agent_select_options(scenario, pathname):
+        if scenario is None:
+            raise PreventUpdate
+        options = [
+            {"label": agent, "value": agent}
+            for agent in manager.agent_scenario[scenario]
+        ]
+        value = manager.best_agents[scenario]["agent"]
+        manager.make_episode(value, scenario)
+        disabled = False
+        pathname_split = pathname.split("/")
+        pathname_split = pathname_split[len(pathname_split) - 1]
+        if pathname_split in ["micro", "episodes", "overview"]:
+            disabled = True
+        return options, disabled, value
+
+    @app.callback(
+        Output("agent_study", "data"),
+        [Input("select_study_agent", "value")],
+        [State("scenario", "data")],
+    )
+    def update_agent_study_store(agent, scenario):
+        manager.make_episode(agent, scenario)
+        return agent
+
+    @app.callback(
+        Output("agent_ref", "data"),
+        [Input("select_ref_agent", "value")],
+        [State("scenario", "data")],
+    )
+    def update_agent_study_store(agent, scenario):
+        manager.make_episode(agent, scenario)
+        return agent
+
+    @app.callback(
+        Output("window", "data"),
+        [
+            Input("enlarge_left", "n_clicks"),
+            Input("enlarge_right", "n_clicks"),
+            Input("user_timestamps", "value"),
+        ],
+        [State("agent_study", "data"), State("scenario", "data")],
+    )
+    def compute_window(
+        n_clicks_left, n_clicks_right, user_selected_timestamp, study_agent, scenario
+    ):
+        if user_selected_timestamp is None:
+            raise PreventUpdate
+        if n_clicks_left is None:
+            n_clicks_left = 0
+        if n_clicks_right is None:
+            n_clicks_right = 0
+        new_episode = manager.make_episode(study_agent, scenario)
+        center_indx = new_episode.timestamps.index(
+            dt.datetime.strptime(user_selected_timestamp, "%Y-%m-%d %H:%M")
+        )
+        return common_graph.compute_windows_range(
+            new_episode, center_indx, n_clicks_left, n_clicks_right
+        )

@@ -1,9 +1,17 @@
+from functools import partial
 import os
-from pathos.multiprocessing import ProcessPool
+from pathlib import Path
 import time
 
-from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.graph_objects as go
 from dash import callback_context
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
+from pathos.multiprocessing import ProcessPool
+
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.manager import (
     scenarios,
@@ -15,12 +23,10 @@ from grid2viz.src.manager import (
     retrieve_episode_from_disk,
     save_in_ram_cache,
     cache_dir,
+    grid2viz_home_directory,
 )
-import dash_html_components as html
-import dash_core_components as dcc
-import dash_bootstrap_components as dbc
-from dash.exceptions import PreventUpdate
-import plotly.graph_objects as go
+from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 
 
 def register_callbacks_episodes(app):
@@ -84,6 +90,7 @@ def register_callbacks_episodes(app):
                 consumption = best_agent_episode.profile_traces
                 cards_list.append(
                     dbc.Col(
+                        id=f"card_{scenario}",
                         lg=4,
                         width=12,
                         children=[
@@ -227,7 +234,11 @@ def register_callbacks_episodes(app):
                     )
                 )
                 cards_count += 1
-        print("Initial loading time = {:.1f} seconds".format(time.time() - start_time))
+        print(
+            "Initial loading time for the best agent of all scenarios = {:.1f} seconds".format(
+                time.time() - start_time
+            )
+        )
         return cards_list
 
     @app.callback(
@@ -261,3 +272,62 @@ def register_callbacks_episodes(app):
         scenario = input_key
 
         return scenario, "/overview"
+
+    @app.callback(
+        [
+            Output("modal_episodes", "is_open"),
+            Output("dont_show_again_div_episodes", "className"),
+        ],
+        [Input("close_episodes", "n_clicks"), Input("page_help", "n_clicks")],
+        [
+            State("modal_episodes", "is_open"),
+            State("dont_show_again_episodes", "checked"),
+        ],
+    )
+    def toggle_modal(close_n_clicks, open_n_clicks, is_open, dont_show_again):
+        dsa_filepath = Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("episodes")
+        return toggle_modal_helper(
+            close_n_clicks,
+            open_n_clicks,
+            is_open,
+            dont_show_again,
+            dsa_filepath,
+            "page_help",
+        )
+
+    @app.callback(
+        Output("collapse", "is_open"),
+        [Input("collapse-button", "n_clicks")],
+        [State("collapse", "is_open")],
+    )
+    def toggle_collapse(n, is_open):
+        if n:
+            return not is_open
+        return is_open
+
+    @app.callback(Output("modal_image_episodes", "src"), [Input("url", "pathname")])
+    def show_image(pathname):
+        return app.get_asset_url("screenshots/scenario_selection.png")
+
+    @app.callback(
+        Output("scenario_filter_div", "className"), [Input("collapse", "is_open")]
+    )
+    def toggle_scenario_filter(is_open):
+        if is_open:
+            return ""
+        else:
+            return "hidden"
+
+    def filter_scenarios(selected_scenarios, scenario):
+        if selected_scenarios is None:
+            raise PreventUpdate
+        if scenario in selected_scenarios:
+            return ""
+        else:
+            return "hidden"
+
+    for scenario in scenarios:
+        app.callback(
+            Output(f"card_{scenario}", "className"),
+            [Input("scenarios_filter", "value")],
+        )(partial(filter_scenarios, scenario=scenario))

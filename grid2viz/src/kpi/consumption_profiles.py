@@ -6,9 +6,19 @@ from .observation_model import quantile10, quantile25, quantile75, quantile90
 
 def consumption_profiles(episode, freq="30T"):
 
+    # filter intercos
+    idx_no_interco = [
+        i
+        for i in range(len(episode.load.equipment_name))
+        if "interco" not in episode.load.equipment_name[i]
+    ]
+
     load = (
         pd.pivot_table(
-            episode.load, index="timestamp", columns=["equipment_name"], values="value"
+            episode.load.loc[idx_no_interco],
+            index="timestamp",
+            columns=["equipment_name"],
+            values="value",
         )
         .sum(axis=1)
         .resample(freq)

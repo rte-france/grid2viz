@@ -4,20 +4,24 @@ This tab handles the generic information about the environment and the selection
 """
 import base64
 import io
-import matplotlib.pyplot as plt
+from pathlib import Path
 
+import dash_antd_components as dac
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_antd_components as dac
 import dash_table as dt
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 from grid2viz.src.manager import (
     agent_scenario,
     make_episode,
     best_agents,
-    make_network_matplotlib,
+    grid2viz_home_directory,
+    make_network_scenario_overview,
 )
+from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
+from grid2viz.src.utils.layout_helpers import modal, should_help_open
 
 layout_def = {
     "legend": {"orientation": "h"},
@@ -34,7 +38,6 @@ layout_pie = {
 
 
 def indicators_line(encoded_image):
-
     return html.Div(
         id="indicator_line",
         children=[
@@ -127,7 +130,7 @@ def indicators_line(encoded_image):
                     html.Div(
                         [
                             html.H5(
-                                "Max load and prod values on Power grid",
+                                "Max prod & laod values and dashed lines in maintenance on Power grid",
                                 style={"margin-top": "2%"},
                             ),
                             html.Img(
@@ -170,7 +173,7 @@ def summary_line(episode, ref_agent, scenario):
                                     {"label": prod_name, "value": prod_name}
                                     for prod_name in episode.prod_names
                                 ],
-                                value="solar",  # episode.prod_names[3],#[episode.prod_names[0],episode.prod_names[1]],#[prod_name for prod_name in episode.prod_names if prod_name in ['wind','solar']],#episode.prod_names[0]
+                                value="solar",
                                 mode="multiple",
                                 showArrow=True,
                             ),
@@ -186,15 +189,12 @@ def summary_line(episode, ref_agent, scenario):
                     html.Div(
                         children=[
                             html.H5("Reference agent Metrics"),
-                            dcc.Dropdown(
-                                id="input_agent_selector",
-                                placeholder="select a ref agent",
-                                options=[
-                                    {"label": agent, "value": agent}
-                                    for agent in agent_scenario[scenario]
-                                ],
-                                value=ref_agent,
-                            ),
+                            # dcc.Dropdown(
+                            #     id="input_agent_selector", placeholder="select a ref agent",
+                            #     options=[{'label': agent, 'value': agent}
+                            #              for agent in agent_scenario[scenario]],
+                            #     value=ref_agent
+                            # ),
                             html.Div(
                                 children=[
                                     html.Div(
@@ -308,25 +308,8 @@ def layout(scenario, ref_agent):
         return
     if ref_agent is None:
         ref_agent = agent_scenario[scenario][0]
-    max_loads = (
-        episode.load[["value", "equipement_id"]]
-        .groupby("equipement_id")
-        .max()
-        .sort_index()
-    )
-    max_gens = (
-        episode.production[["value", "equipement_id"]]
-        .groupby("equipement_id")
-        .max()
-        .sort_index()
-    )
-    network_graph = make_network_matplotlib(episode).plot_info(
-        observation=episode.observations[0],
-        load_values=max_loads.values.flatten(),
-        load_unit="MW",
-        gen_values=max_gens.values.flatten(),
-        gen_unit="MW",
-    )
+
+    network_graph = make_network_scenario_overview(episode)
 
     # /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained
     # It calls a deprecated function of matplotlib.
@@ -339,6 +322,15 @@ def layout(scenario, ref_agent):
     encoded_image = base64.b64encode(buf.read())
     buf.close()
 
+    open_help = should_help_open(
+        Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
+    )
+    header = "Take a deeper look at the Scenario"
+    body = (
+        "Look at the grid, inspect indicators as well as chronics"
+        "Select a reference agent in the dropdown menu to get a sense of flows and overflows over the scenario"
+        "When done, move to Agent Overview section. The reference agent will be used there as baseline to compare with"
+    )
     return html.Div(
         id="overview_page",
         children=[
@@ -346,5 +338,6 @@ def layout(scenario, ref_agent):
             indicators_line(encoded_image.decode()),
             summary_line(episode, ref_agent, scenario),
             ref_agent_line,
+            modal(id_suffix="overview", is_open=open_help, header=header, body=body),
         ],
     )

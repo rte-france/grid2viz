@@ -1,14 +1,13 @@
 """
     Utility functions for creation of graph and graph component used several times.
 """
-from copy import copy
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from plotly import graph_objects as go
+
 from grid2viz.src.kpi import EpisodeTrace, observation_model
 from grid2viz.src.kpi.actions_model import get_actions_sum
-
 from grid2viz.src.manager import make_episode
 
 
@@ -48,7 +47,7 @@ def ts_graph_avail_assets(ts_kind, episode):
     else:
         options = [
             {"label": load_name, "value": load_name}
-            for load_name in ["total", *episode.load_names]
+            for load_name in ["total", "total_intercos", *episode.load_names]
         ]
         value = "total"  # episode.load_names[0]
 
@@ -237,6 +236,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     ] = study_episode.action_data_table.loc[
         (actions_ts["Nb Actions"] > 0).values, "distance"
     ].values
+    study_text = ["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     action_trace = go.Scatter(
         x=action_events_df.index,
         y=action_events_df["action_events"],
@@ -244,7 +244,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         mode="markers",
         marker_color="#FFEB3B",
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(study_episode.actions),
+        text=study_text,
     )
 
     ref_action_events_df = pd.DataFrame(
@@ -255,6 +255,9 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     ] = ref_episode.action_data_table.loc[
         (ref_agent_actions_ts["Nb Actions"] > 0).values, "distance"
     ].values
+
+    ref_text = ["<br>-".join(str(act).split("-")) for act in ref_episode.actions]
+    ref_text = ref_text[:study_agent_length]
     ref_action_trace = go.Scatter(
         x=ref_action_events_df.index[:study_agent_length],
         y=ref_action_events_df["action_events"][:study_agent_length],
@@ -262,7 +265,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         mode="markers",
         marker_color="#FF5000",
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(ref_episode.actions),
+        text=ref_text,
     )
 
     distance_trace = go.Scatter(
@@ -292,7 +295,9 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     return figure
 
 
-def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout):
+def make_rewards_ts(
+    study_agent, ref_agent, scenario, reward_figure, cumulative_reward_figure
+):
     """
     Make kpi with rewards and cumulated reward for both reference agent and study agent.
 
@@ -318,6 +323,7 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
     action_events_df.loc[
         (actions_ts["Nb Actions"] > 0).values, "action_events"
     ] = df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
+    text = ["<br>-".join(str(act).split("-")) for act in study_episode.actions]
     action_trace = go.Scatter(
         x=action_events_df.index,
         y=action_events_df["action_events"],
@@ -325,36 +331,36 @@ def make_rewards_ts(study_agent, ref_agent, scenario, rew_layout, cumrew_layout)
         mode="markers",
         marker_color="#FFEB3B",
         marker={"symbol": "hexagon", "size": 10},
-        text=action_tooltip(study_episode.actions),
+        text=text,
     )
+
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     (
         studied_agent_reward_trace,
         studied_agent_reward_cum_trace,
     ) = study_episode.reward_trace
-
-    # Make sure the timeframe is the study agent one
-    # Copy is needed to avoid modifying the objects in place
-    ref_reward_trace_copy = copy(ref_reward_trace)
-    ref_reward_cum_trace_copy = copy(ref_reward_cum_trace)
-    ref_reward_trace_copy.x = studied_agent_reward_trace.x
-    ref_reward_trace_copy.y = ref_reward_trace.y[: len(studied_agent_reward_trace.y)]
-    ref_reward_cum_trace_copy.x = ref_reward_cum_trace.x
-    ref_reward_cum_trace_copy.y = ref_reward_cum_trace.y[
-        : len(studied_agent_reward_cum_trace.y)
+    reward_figure["data"] = [ref_reward_trace, studied_agent_reward_trace, action_trace]
+    cumulative_reward_figure["data"] = [
+        ref_reward_cum_trace,
+        studied_agent_reward_cum_trace,
     ]
 
-    rew_layout.update(
-        xaxis=dict(range=[ref_reward_trace_copy.x[0], ref_reward_trace_copy.x[-1]])
-    )
+    for figure in [reward_figure, cumulative_reward_figure]:
+        # Base on the hypothesis that the study agent trace is in position one
+        # TODO: clean this up. We should not rely on the position of the study
+        # agent in the traces.
+        figure["layout"].update(
+            {
+                "xaxis": {
+                    "range": [
+                        reward_figure["data"][1].x[0],
+                        reward_figure["data"][1].x[-1],
+                    ],
+                }
+            }
+        )
 
-    return {
-        "data": [ref_reward_trace_copy, studied_agent_reward_trace, action_trace],
-        "layout": rew_layout,
-    }, {
-        "data": [ref_reward_cum_trace_copy, studied_agent_reward_cum_trace],
-        "layout": cumrew_layout,
-    }
+    return reward_figure, cumulative_reward_figure
 
 
 def compute_windows_range(episode, center_idx, n_clicks_left, n_clicks_right):

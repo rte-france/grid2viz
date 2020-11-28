@@ -4,6 +4,7 @@ from setuptools import setup
 pkgs = {
     "required": [
         "Click>=7.0",
+        "colorama>=0.4.4",
         "cycler>=0.10.0",
         "dash>=1.13.2",
         "dash-bootstrap-components>=0.9.2",
@@ -12,7 +13,7 @@ pkgs = {
         "dill>=0.3.2",
         "Flask-Compress>=1.4.0",
         "future>=0.18.2",
-        "Grid2Op @ https://api.github.com/repos/BDonnot/Grid2Op/tarball",
+        "Grid2Op==1.3.1",
         "imageio>=2.8.0",
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
@@ -38,13 +39,14 @@ pkgs = {
         "Werkzeug>=1.0.0",
     ],
     "extras": {
-        "docs": ["numpydoc", "sphinx", "sphinx_rtd_theme", "sphinxcontrib_trio"]
+        "docs": ["numpydoc", "sphinx", "sphinx_rtd_theme", "sphinxcontrib_trio"],
+        "contrib": ["black"],
     },
 }
 
 setup(
     name="Grid2Viz",
-    version="0.1.1rc",
+    version="1.0.0rc",
     description="Grid2Op Visualization companion app",
     classifiers=[
         "Development Status :: 4 - Beta",

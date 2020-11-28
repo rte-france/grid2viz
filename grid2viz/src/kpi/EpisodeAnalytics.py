@@ -1,13 +1,18 @@
 import datetime as dt
 import time
 
-from .env_actions import env_actions
-from grid2op.Episode import EpisodeData
 import numpy as np
 import pandas as pd
+from grid2op.Episode import EpisodeData
 from tqdm import tqdm
 
 from . import EpisodeTrace, maintenances, consumption_profiles
+from .env_actions import env_actions
+
+# TODO: configure the reward key you want to visualize in agent overview.
+# Either as an argument or a dropdown list in the app from which we can choose.
+# The reward dataframe should get bigger with all keys available anyway
+other_reward_key = "grid_operation_cost"
 
 
 class ActionImpacts:
@@ -294,18 +299,36 @@ class EpisodeAnalytics:
 
         computed_rewards["timestep"] = self.timestamps
         computed_rewards["rewards"] = episode_data.rewards[:size]
+
+        # TODO: we should give a choice to select different rewards among other rewards
+        if episode_data.other_rewards:
+            if other_reward_key:
+                if other_reward_key in episode_data.other_rewards[0].keys():
+                    computed_rewards["rewards"] = [
+                        other_reward[other_reward_key]
+                        for other_reward in episode_data.other_rewards
+                    ]
+                    computed_rewards["rewards"] = computed_rewards["rewards"][:size]
         computed_rewards["cum_rewards"] = computed_rewards["rewards"].cumsum(axis=0)
 
         attacks_data_table = pd.DataFrame(
-            index=range(size), columns=["timestep", "timestamp", "attack"]
+            index=range(size), columns=["timestep", "timestamp", "attack", "id_lines"]
         )
         attacks_data_table["timestep"] = self.timesteps
         attacks_data_table["timestamp"] = self.timestamps
         for time_step, attack in enumerate(episode_data.attacks):
-            n_lines_modified, *_ = self.get_lines_modifications(attack)
+            (
+                n_lines_modified,
+                str_lines_modified,
+                lines_modified,
+            ) = self.get_lines_modifications(attack)
             n_subs_modified, *_ = self.get_subs_modifications(attack)
             is_attacked = n_lines_modified > 0 or n_subs_modified > 0
             attacks_data_table.loc[time_step, "attack"] = is_attacked
+            if len(lines_modified) == 0:
+                attacks_data_table.loc[time_step, "id_lines"] = ""
+            else:
+                attacks_data_table.loc[time_step, "id_lines"] = lines_modified[0]
 
         return (
             load_data,
@@ -335,7 +358,7 @@ class EpisodeAnalytics:
             effect = act.effect_on(substation_id=sub)
             if np.any(effect["change_bus"] is True):
                 return self.name_sub[sub]
-            if np.any(effect["set_bus"] is 1) or np.any(effect["set_bus"] is -1):
+            if np.any(effect["set_bus"] == 1) or np.any(effect["set_bus"] == -1):
                 return self.name_sub[sub]
         return None
 
@@ -483,8 +506,6 @@ class EpisodeAnalytics:
             if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
         ]:
             setattr(self, attribute, getattr(episode_data, attribute))
-        # add the reboot method
-        setattr(self, "reboot", getattr(episode_data, "reboot"))
 
     def compute_action_impacts(
         self,

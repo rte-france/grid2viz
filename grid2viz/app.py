@@ -3,10 +3,8 @@ This file handles the html entry point of the application through dash component
 It will generate the layout of a given page and handle the routing
 """
 
-from dash import Dash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import Dash
 
 # We need to create app before importing the rest of the project as it uses @app decorators
 font_awesome = [
@@ -25,14 +23,12 @@ Get Imports to create layout and callbacks
 from grid2viz.main_callbacks import register_callbacks_main
 from grid2viz.layout import make_layout as layout
 
-
 from grid2viz.src.episodes.episodes_clbk import register_callbacks_episodes
 from grid2viz.src.overview.overview_clbk import (
     register_callbacks_overview,
 )  # as overview_clbk
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
-from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
 
 """
 End Warning
