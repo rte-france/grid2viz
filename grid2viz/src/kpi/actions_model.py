@@ -25,6 +25,7 @@ def get_action_redispatch(new_epsiode):
     count = get_modified_gens(new_epsiode)
     return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
 
+
 def get_modified_gens(new_episode):
     data = get_action_table_data(new_episode)
     # Below to flatten the series of lists "lines_modified"
@@ -61,6 +62,10 @@ def update_layout(predicate, msg):
 
 
 def get_actions_sum(new_episode):
-    return new_episode.action_data_table.set_index("timestamp")[[
-        'action_line', 'action_subs', 'action_redisp'
-    ]].sum(axis=1).to_frame(name="Nb Actions")
+    return (
+        new_episode.action_data_table.set_index("timestamp")[
+            ["action_line", "action_subs", "action_redisp"]
+        ]
+        .sum(axis=1)
+        .to_frame(name="Nb Actions")
+    )

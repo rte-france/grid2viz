@@ -15,17 +15,18 @@ graph_matplotlib = None
 
 def make_network(episode):
     """
-        Create a Plotly network graph with the layout configuration and the selected episode.
+    Create a Plotly network graph with the layout configuration and the selected episode.
 
-        :param episode: An episode containing targeted data for the graph.
-        :return: Network graph
+    :param episode: An episode containing targeted data for the graph.
+    :return: Network graph
     """
     global graph
     if graph is None:
         graph = PlotPlotly(
             grid_layout=episode.observation_space.grid_layout,
             observation_space=episode.observation_space,
-            responsive=True)
+            responsive=True,
+        )
     return graph
 
 
@@ -35,7 +36,10 @@ def make_network_matplotlib(episode):
         graph_matplotlib = PlotMatplot(
             grid_layout=episode.observation_space.grid_layout,
             observation_space=episode.observation_space,
-            line_name=False, gen_name=False, load_name=False)
+            line_name=False,
+            gen_name=False,
+            load_name=False,
+        )
     return graph_matplotlib
 
 
@@ -44,12 +48,12 @@ store = {}
 
 def make_episode(agent, episode_name):
     """
-        Load episode from cache. If not already in, compute episode data
-        and save it in cache.
+    Load episode from cache. If not already in, compute episode data
+    and save it in cache.
 
-        :param agent: Agent Name
-        :param episode_name: Name of the studied episode
-        :return: Episode with computed data
+    :param agent: Agent Name
+    :param episode_name: Name of the studied episode
+    :return: Episode with computed data
     """
     if is_in_ram_cache(episode_name, agent):
         return get_from_ram_cache(episode_name, agent)
@@ -65,12 +69,12 @@ def make_episode(agent, episode_name):
 
 def make_episode_without_decorate(agent, episode_name):
     """
-        Load episode from cache without decorating with the EpisodeData attributes
-        This is needed to use multiprocessing which pickles/unpickles the results.
+    Load episode from cache without decorating with the EpisodeData attributes
+    This is needed to use multiprocessing which pickles/unpickles the results.
 
-        :param agent: Agent Name
-        :param episode_name: Name of the studied episode
-        :return: Episode with computed data (without EpisodeData attributes), EpisodeData instance
+    :param agent: Agent Name
+    :param episode_name: Name of the studied episode
+    :return: Episode with computed data (without EpisodeData attributes), EpisodeData instance
     """
     if is_in_ram_cache(episode_name, agent):
         return get_from_ram_cache(episode_name, agent)
@@ -84,7 +88,7 @@ def make_episode_without_decorate(agent, episode_name):
         return episode_analytics
     else:
         episode_data = retrieve_episode_from_disk(episode_name, agent)
-        if(episode_data is not None):
+        if episode_data is not None:
             episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
             save_in_fs_cache(episode_name, agent, episode_analytics)
             return episode_analytics
@@ -138,9 +142,7 @@ def retrieve_episode_from_disk(episode_name, agent):
     path = os.path.join(agents_dir, agent)
     episode_path = os.path.abspath(os.path.join(path, episode_name))
     if os.path.isdir(episode_path):
-        episode_data = EpisodeData.from_disk(
-            path, episode_name
-        )
+        episode_data = EpisodeData.from_disk(path, episode_name)
         return episode_data
     else:
         return None
@@ -175,19 +177,32 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
                 episode_meta = json.load(fp=f)
                 meta_json[scenario_name] = episode_meta
                 if scenario_name not in best_agents:
-                    best_agents[scenario_name] = {"value": -1, "agent": None, "out_of": 0}
-                if best_agents[scenario_name]["value"] < episode_meta["nb_timestep_played"]:
-                    best_agents[scenario_name]["value"] = episode_meta["nb_timestep_played"]
+                    best_agents[scenario_name] = {
+                        "value": -1,
+                        "agent": None,
+                        "out_of": 0,
+                    }
+                if (
+                    best_agents[scenario_name]["value"]
+                    < episode_meta["nb_timestep_played"]
+                ):
+                    best_agents[scenario_name]["value"] = episode_meta[
+                        "nb_timestep_played"
+                    ]
                     best_agents[scenario_name]["agent"] = agent
-                    best_agents[scenario_name]['cum_reward'] = episode_meta['cumulative_reward']
-            best_agents[scenario_name]["out_of"] = best_agents[scenario_name]["out_of"] + 1
+                    best_agents[scenario_name]["cum_reward"] = episode_meta[
+                        "cumulative_reward"
+                    ]
+            best_agents[scenario_name]["out_of"] = (
+                best_agents[scenario_name]["out_of"] + 1
+            )
     return meta_json, best_agents
 
 
 """
 Initialisation routine
 """
-''' Parsing of config file'''
+""" Parsing of config file"""
 path_cfg = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
 parser = configparser.ConfigParser()
 print("the config file used is located at: {}".format(path_cfg))
@@ -196,9 +211,14 @@ parser.read(path_cfg)
 agents_dir = parser.get("DEFAULT", "agents_dir")
 print("Agents data used is located at: {}".format(agents_dir))
 cache_dir = os.path.join(agents_dir, "_cache")
-'''Parsing of agent folder tree'''
-agents = sorted([file for file in os.listdir(agents_dir)
-                 if os.path.isdir(os.path.join(agents_dir, file)) and not file.startswith("_")])
+"""Parsing of agent folder tree"""
+agents = sorted(
+    [
+        file
+        for file in os.listdir(agents_dir)
+        if os.path.isdir(os.path.join(agents_dir, file)) and not file.startswith("_")
+    ]
+)
 meta_json, best_agents = check_all_tree_and_get_meta_and_best(agents_dir, agents)
 scenarios = []
 scenarios_agent = {}
@@ -208,8 +228,11 @@ n_cores = int(parser.get("DEFAULT", "n_cores"))
 
 for agent in agents:
     scen_path = os.path.join(agents_dir, agent)
-    scens = [file for file in os.listdir(
-        scen_path) if os.path.isdir(os.path.join(scen_path, file))]
+    scens = [
+        file
+        for file in os.listdir(scen_path)
+        if os.path.isdir(os.path.join(scen_path, file))
+    ]
     scenarios_agent[agent] = scens
     for scen in scens:
         if scen not in agent_scenario:

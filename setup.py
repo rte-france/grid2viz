@@ -17,10 +17,10 @@ pkgs = {
         "itsdangerous>=1.1.0",
         "Jinja2>=2.11.1",
         "jupyter_dash>=0.3.1",
-	    "jupyter_server_proxy",
+        "jupyter_server_proxy",
         "kiwisolver>=1.1.0",
         "MarkupSafe>=1.1.1",
-	    "nbgitpuller>=0.9.0",
+        "nbgitpuller>=0.9.0",
         "networkx>=2.4",
         "packaging>=20.1",
         "pandapower>=2.2.1",
@@ -35,43 +35,36 @@ pkgs = {
         "scipy>=1.4.1",
         "seaborn>=0.10.0",
         "six>=1.14.0",
-        "Werkzeug>=1.0.0"
+        "Werkzeug>=1.0.0",
     ],
     "extras": {
-        "docs": [
-            "numpydoc",
-            "sphinx",
-            "sphinx_rtd_theme",
-            "sphinxcontrib_trio"
-        ]
-    }
+        "docs": ["numpydoc", "sphinx", "sphinx_rtd_theme", "sphinxcontrib_trio"]
+    },
 }
 
-setup(name='Grid2Viz',
-      version='0.1.1rc',
-      description='Grid2Op Visualization companion app',
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7',
-          "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-          "Intended Audience :: Developers",
-          "Intended Audience :: Education",
-          "Intended Audience :: Science/Research",
-          "Natural Language :: English"
-      ],
-      keywords='ML powergrid optmization RL power-systems',
-      author='Mario Jothy',
-      author_email=' mario.jothy@artelys.com',
-      url="https://github.com/mjothy/grid2viz",
-      license='MPL',
-      packages=setuptools.find_packages(),
-      include_package_data=True,
-      install_requires=pkgs["required"],
-      extras_require=pkgs["extras"],
-      zip_safe=False,
-      entry_points= {
-          'console_scripts': [
-              'grid2viz=grid2viz.main:main'
-          ]
-      })
+setup(
+    name="Grid2Viz",
+    version="0.1.1rc",
+    description="Grid2Op Visualization companion app",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        "Natural Language :: English",
+    ],
+    keywords="ML powergrid optmization RL power-systems",
+    author="Mario Jothy",
+    author_email=" mario.jothy@artelys.com",
+    url="https://github.com/mjothy/grid2viz",
+    license="MPL",
+    packages=setuptools.find_packages(),
+    include_package_data=True,
+    install_requires=pkgs["required"],
+    extras_require=pkgs["extras"],
+    zip_safe=False,
+    entry_points={"console_scripts": ["grid2viz=grid2viz.main:main"]},
+)

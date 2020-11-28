@@ -27,7 +27,10 @@ class RelayoutX(object):
     def __init__(self, relayout_data=None):
 
         if "xaxis.range[0]" in relayout_data:
-            self.xmin, self.xmax = relayout_data["xaxis.range[0]"], relayout_data["xaxis.range[1]"]
+            self.xmin, self.xmax = (
+                relayout_data["xaxis.range[0]"],
+                relayout_data["xaxis.range[1]"],
+            )
         else:
             self.xmin, self.xmax = None, None
 
@@ -47,8 +50,7 @@ def relayout_callback(*args):
     if any(arg is None for arg in args[:-1]):
         raise PreventUpdate
     if args[-1] is None:
-        relayout_data_store = dict(
-            relayout_history=[], relayout_data=None, reset_nb=0)
+        relayout_data_store = dict(relayout_history=[], relayout_data=None, reset_nb=0)
     else:
         relayout_data_store = args[-1]
 
@@ -59,11 +61,15 @@ def relayout_callback(*args):
     new_reset_nb = 0
     relayouts_indx = []
     relayout_history_x = [
-        RelayoutX(rlyt) for rlyt in relayout_data_store["relayout_history"]]
+        RelayoutX(rlyt) for rlyt in relayout_data_store["relayout_history"]
+    ]
     relayouts_x = [RelayoutX(arg) for arg in args[:-1]]
     for i, arg in enumerate(args[:-1]):
-        if (("xaxis.range[0]" in arg or "xaxis.autorange" in arg) and
-                (relayouts_x[i] not in relayout_history_x) and ("autosize" not in arg)):
+        if (
+            ("xaxis.range[0]" in arg or "xaxis.autorange" in arg)
+            and (relayouts_x[i] not in relayout_history_x)
+            and ("autosize" not in arg)
+        ):
             if "xaxis.autorange" in arg and arg["xaxis.autorange"]:
                 new_reset_nb = new_reset_nb + 1
             else:
@@ -96,12 +102,7 @@ def get_axis_relayout(figure, relayout_data):
     else:
         xaxis = template_layout["xaxis"]
     if "range" not in xaxis and "x" in figure["data"][0]:
-        xaxis.update(
-            range=[
-                min(figure["data"][0]["x"]),
-                max(figure["data"][0]["x"])
-            ]
-        )
+        xaxis.update(range=[min(figure["data"][0]["x"]), max(figure["data"][0]["x"])])
     res = {}
     if "xaxis.range[0]" in relayout_data:
         xmin, xmax = relayout_data["xaxis.range[0]"], relayout_data["xaxis.range[1]"]
@@ -114,22 +115,19 @@ def get_axis_relayout(figure, relayout_data):
 
 
 layout_def = {
-    'legend': {'orientation': 'h'},
-    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
-    'xaxis': {'visible': True},
-    'yaxis': {'visible': True},
-    'annotations': [],
-    "plot_bgcolor": '#E5ECF6'
+    "legend": {"orientation": "h"},
+    "margin": {"l": 0, "r": 0, "t": 0, "b": 0},
+    "xaxis": {"visible": True},
+    "yaxis": {"visible": True},
+    "annotations": [],
+    "plot_bgcolor": "#E5ECF6",
 }
+
 
 def layout_no_data(msg):
     return {
-        "xaxis": {
-            "visible": False
-        },
-        "yaxis": {
-            "visible": False
-        },
+        "xaxis": {"visible": False},
+        "yaxis": {"visible": False},
         "plot_bgcolor": "rgba(0, 0, 0, 0)",
         "annotations": [
             {
@@ -137,10 +135,7 @@ def layout_no_data(msg):
                 "xref": "paper",
                 "yref": "paper",
                 "showarrow": False,
-                "font": {
-                    "size": 28
-                }
+                "font": {"size": 28},
             }
-        ]
+        ],
     }
-
