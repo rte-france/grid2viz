@@ -220,6 +220,8 @@ def register_callbacks_overview(app):
     def update_agent_ref_graph(
         ref_agent, scenario, relayout_data_store, figure_overflow, figure_usage
     ):
+        if ref_agent is None or scenario is None:
+            raise PreventUpdate
         if relayout_data_store is not None and relayout_data_store["relayout_data"]:
             relayout_data = relayout_data_store["relayout_data"]
             layout_usage = figure_usage["layout"]
@@ -263,6 +265,8 @@ def register_callbacks_overview(app):
     )
     def update_date_range(agent_ref, scenario):
         """Change the date range for the date picker in inspector line"""
+        if agent_ref is None or scenario is None:
+            raise PreventUpdate
         episode = make_episode(agent_ref, scenario)
         return (
             episode.production["timestamp"].dt.date.values[0],
