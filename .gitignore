@@ -1,3 +1,13 @@
+grid2viz/data/agents_dev
+grid2viz/data/agents_multi_topo
+grid2viz/data/agents_test_env_1.2.3
+
+grid2viz/main_VR.py
+
+#cache
+data/agents/_cache/
+**_cache
+**config.ini
 
 .vscode
 
@@ -112,10 +122,7 @@ venv_grid2viz/
 .idea
 *.iml
 
-#cache
-data/agents/_cache/
-**_cache
-**config.ini
+
 
 #docs
 docs/_build

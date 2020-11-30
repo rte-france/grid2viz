@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grid2viz"
-version = "1.0.0-alpha.4"
+version = "1.0.0-alpha.5"
 description = "Grid2Op Visualization companion app."
 readme = "README.md"
 authors = [
@@ -21,8 +21,7 @@ classifiers = [
     "Natural Language :: English",
 ]
 packages = [
-    { include = "grid2viz" },
-    { include = "tests" },
+    { include = "grid2viz" }
 ]
 
 [tool.poetry.scripts]
