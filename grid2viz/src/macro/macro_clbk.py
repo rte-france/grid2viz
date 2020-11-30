@@ -3,17 +3,17 @@
     and let choose and compute study agent information.
 """
 import datetime as dt
-from pathlib import Path
+from operator import itemgetter
 
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from pathlib import Path
 
 from grid2viz.src.kpi import EpisodeTrace
 from grid2viz.src.kpi import actions_model
 from grid2viz.src.manager import (
     make_episode,
-    make_network_agent_overview,
     grid2viz_home_directory,
 )
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
@@ -188,7 +188,7 @@ def register_callbacks_macro(app):
         new_data = {"Timestamps": time_stamp_str}
         if new_data not in data:
             data.append(new_data)
-        return data
+        return sorted(data, key=itemgetter("Timestamps"))
 
     @app.callback(
         Output("user_timestamps_store", "data"), [Input("timeseries_table", "data")]
