@@ -15,6 +15,8 @@ from grid2op.MakeEnv import make
 from grid2op.Parameters import Parameters
 from grid2op.PlotGrid import PlotPlotly
 
+from grid2viz.src.utils.serialization import NoIndent, MyEncoder
+
 # We need to create app before importing the rest of the project as it uses @app decorators
 font_awesome = [
     {
@@ -457,6 +459,7 @@ def compare_line(network_graph):
         Output("actions", "data"),
         Output("action_info", "children"),
         Output("graph_div", "children"),
+        Output("textarea", "value"),
     ],
     [Input("simulate_action", "n_clicks"), Input("reset_action", "n_clicks")],
     [
@@ -514,7 +517,7 @@ def update_action(
             observation=episode.observations[0]
         )
         graph_div = dcc.Graph(figure=network_graph)
-        return None, "", graph_div
+        return None, "", graph_div, None
 
     if simulate_n_clicks is None:
         raise PreventUpdate
@@ -523,7 +526,7 @@ def update_action(
         if objet_tab == "tab-0":
             # Lines
             (line_ids,) = np.where(episode_data.line_names == selected_line)
-            line_id = line_ids[0]
+            line_id = int(line_ids[0])
             side = "ex" if "ex" in ex_or_lines else "or"
             bus_number_lines = -1  # Disconnect
             if bus_lines == "Bus1":
@@ -585,11 +588,31 @@ def update_action(
                 else:
                     # Change
                     action_dict = {"change_bus": {"generators_id": [gen_id]}}
+        if actions is None:
+            actions = [action_dict]
+        else:
+            actions.append(action_dict)
     else:
         # Dict
         if action_dict is None:
             raise PreventUpdate
-        action_dict = json.loads(action_dict.replace("(", "[").replace(")", "]"))
+        try:
+            action_dict = json.loads(action_dict.replace("(", "[").replace(")", "]"))
+        except json.decoder.JSONDecodeError as ex:
+            import traceback
+
+            graph_div_child = html.Div(
+                children=traceback.format_exc(), className="more-info-table"
+            )
+            return actions, "", graph_div_child, action_dict
+        if "action_list" in action_dict:
+            actions_for_textarea = action_dict["action_list"]
+        else:
+            actions_for_textarea = [action_dict]
+        if actions is None:
+            actions = actions_for_textarea
+        else:
+            actions.extend(actions_for_textarea)
 
     # Temporary implementation for testing purposes
     p = Parameters()
@@ -622,10 +645,7 @@ def update_action(
     current_time_step = 0
     obs, reward, *_ = episode_reboot.go_to(1)
     act = PlayableAction()
-    if actions is None:
-        actions = [action_dict]
-    else:
-        actions.append(action_dict)
+
     for action in actions:
         act.update(action)
     obs, *_ = obs.simulate(action=act, time_step=0)
@@ -642,11 +662,37 @@ def update_action(
 
     try:
         json.dumps(actions)
-    except Exception:
+    except Exception as ex:
         print("actions")
         print(actions)
+    if method_tab == "tab-0":
+        return (
+            actions,
+            str(act),
+            graph_div_child,
+            json.dumps(
+                (dict(action_list=[NoIndent(action) for action in actions])),
+                indent=2,
+                sort_keys=True,
+                cls=MyEncoder,
+            ),
+        )
+    else:
+        actions_for_textarea = dict(
+            action_list=[*[NoIndent(action) for action in actions[:-1]], actions[-1]]
+        )
 
-    return actions, str(act), graph_div_child
+        return (
+            actions,
+            str(act),
+            graph_div_child,
+            json.dumps(
+                (dict(action_list=[NoIndent(action) for action in actions])),
+                indent=2,
+                sort_keys=True,
+                cls=MyEncoder,
+            ),
+        )
 
 
 @app.callback(
