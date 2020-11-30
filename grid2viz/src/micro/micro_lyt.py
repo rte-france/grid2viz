@@ -87,6 +87,33 @@ def indicator_line():
     )
 
 
+def card_for_network_graphs(network_graph):
+    return dbc.Card(
+        [
+            dbc.CardHeader(
+                dbc.Tabs(
+                    [
+                        dbc.Tab(label="Study Agent", tab_id="tab-0"),
+                        dbc.Tab(label="Reference Agent", tab_id="tab-1"),
+                    ],
+                    id="card-tabs",
+                    card=True,
+                    active_tab="tab-0",
+                )
+            ),
+            dbc.CardBody(
+                id="card-content",
+                children=[
+                    dcc.Graph(
+                        id="interactive_graph",
+                        figure=network_graph,
+                    )
+                ],
+            ),
+        ]
+    )
+
+
 def flux_inspector_line(network_graph=None, slider_params=None):
     return html.Div(
         id="flux_inspector_line_id",
@@ -109,10 +136,7 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                                                 className="text-center",
                                                 children="Grid State evolution overtime & highlighted subs with action (yellow) - with 2 nodes (green) ",
                                             ),
-                                            dcc.Graph(
-                                                id="interactive_graph",
-                                                figure=network_graph,
-                                            ),
+                                            card_for_network_graphs(network_graph),
                                             dcc.Slider(
                                                 id="slider",
                                                 min=slider_params.min,
@@ -369,7 +393,8 @@ def layout(user_selected_timestamp, study_agent, ref_agent, scenario):
         children=[
             indicator_line(),
             flux_inspector_line(
-                network_graph, slider_params(user_selected_timestamp, new_episode)
+                network_graph,
+                slider_params(user_selected_timestamp, new_episode),
             ),
             context_inspector_line(best_episode, new_episode),
             all_info_line,

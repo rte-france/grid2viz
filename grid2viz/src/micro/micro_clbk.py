@@ -1,16 +1,22 @@
 import datetime as dt
-from pathlib import Path
 
+import dash_core_components as dcc
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from grid2op.Exceptions import Grid2OpException
+from pathlib import Path
 
 from grid2viz.src.manager import grid2viz_home_directory
 from grid2viz.src.manager import make_episode, make_network_agent_study
 from grid2viz.src.utils import common_graph
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
-from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
+from grid2viz.src.utils.graph_utils import (
+    relayout_callback,
+    get_axis_relayout,
+    layout_no_data,
+)
 
 
 def register_callbacks_micro(app):
@@ -398,20 +404,44 @@ def register_callbacks_micro(app):
 
     @app.callback(
         [
-            Output("interactive_graph", "figure"),
+            Output("card-content", "children"),
             Output("tooltip_table_micro", "children"),
         ],
-        [Input("slider", "value")],
-        [State("agent_study", "data"), State("scenario", "data")],
+        [Input("slider", "value"), Input("card-tabs", "active_tab")],
+        [
+            State("agent_study", "data"),
+            State("scenario", "data"),
+            State("agent_ref", "data"),
+        ],
     )
-    def update_interactive_graph(slider_value, study_agent, scenario):
-        new_episode = make_episode(study_agent, scenario)
-        act = new_episode.actions[slider_value]
+    def update_interactive_graph(
+        slider_value, active_tab, agent_study, scenario, agent_ref
+    ):
+        episode = make_episode(
+            agent_study if active_tab == "tab-0" else agent_ref, scenario
+        )
+
+        try:
+            act = episode.actions[slider_value]
+        except Grid2OpException as ex:
+            return (
+                dcc.Graph(
+                    figure=go.Figure(
+                        layout=layout_no_data(
+                            "The agent is game over at this time step."
+                        )
+                    )
+                ),
+                "",
+            )
         if any(act.get_types()):
             act_as_str = str(act)
         else:
             act_as_str = "NO ACTION"
-        return make_network_agent_study(new_episode, timestep=slider_value), act_as_str
+        return (
+            dcc.Graph(figure=make_network_agent_study(episode, timestep=slider_value)),
+            act_as_str,
+        )
 
     @app.callback(
         [
