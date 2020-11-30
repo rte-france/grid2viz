@@ -29,6 +29,7 @@ from grid2viz.src.overview.overview_clbk import (
 )  # as overview_clbk
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
+from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
 
 """
 End Warning
