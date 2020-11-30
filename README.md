@@ -1,11 +1,12 @@
+
+# Grid2Viz: The Grid2Op Visualization companion app
+
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
 You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking this button. The dataset used in this demo can be found in the [Grid2viz dataset](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness).
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)<!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
 **WARNING:** we recommend you to use Firefox or Chrome as a web navigator rather than Internet Explorer or Edge.
-
-
-# Grid2Viz
+---
 
 Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
 
