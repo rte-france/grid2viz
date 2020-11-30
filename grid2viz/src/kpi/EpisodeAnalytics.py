@@ -506,6 +506,8 @@ class EpisodeAnalytics:
             if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
         ]:
             setattr(self, attribute, getattr(episode_data, attribute))
+        # add the reboot method
+        setattr(self, "reboot", getattr(episode_data, "reboot"))
 
     def compute_action_impacts(
         self,
