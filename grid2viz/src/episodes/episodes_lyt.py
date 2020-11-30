@@ -31,62 +31,70 @@ def create_heatmap_figure(df):
 
     heatmap_figure = ff.create_annotated_heatmap(  # go.Figure(data=go.Heatmap(
         z=clustered_survival_df.values,  # survival_df.values,#z=pd.concat([survival_df, survival_df]))),
-        x=clustered_survival_df.columns.tolist(), y=clustered_survival_df.index.tolist(),
-        colorscale='RdYlGn',
+        x=clustered_survival_df.columns.tolist(),
+        y=clustered_survival_df.index.tolist(),
+        colorscale="RdYlGn",
         zmid=50,
-        annotation_text=z_text.values
+        annotation_text=z_text.values,
     )
-    heatmap_figure.update_layout({'yaxis': {'type': 'category'},
-                                  'xaxis': {'type': 'category'}})
+    heatmap_figure.update_layout(
+        {"yaxis": {"type": "category"}, "xaxis": {"type": "category"}}
+    )
     return heatmap_figure
 
 
 def generate_heatmap_components(df):
-    heatmap_div = html.Div(children=[
-        html.H5("Percentage of Agents' survival time over a scenario"),
-        dcc.Graph(
-            id="heatmap",
-            figure=create_heatmap_figure(df),
-        ),
-    ], className="col-xl-12 align-self-center heatmap")
+    heatmap_div = html.Div(
+        children=[
+            html.H5("Percentage of Agents' survival time over a scenario"),
+            dcc.Graph(
+                id="heatmap",
+                figure=create_heatmap_figure(df),
+            ),
+        ],
+        className="col-xl-12 align-self-center heatmap",
+    )
 
-    return html.Div(className="lineBlockSlim card", children=[
-        dbc.Collapse(
-            heatmap_div,
-            id="collapse"
-        ),
-        scenarios_filter(sorted(list(scenarios))),
-    ])
+    return html.Div(
+        className="lineBlockSlim card",
+        children=[
+            dbc.Collapse(heatmap_div, id="collapse"),
+            scenarios_filter(sorted(list(scenarios))),
+        ],
+    )
 
 
 def scenarios_filter(scenarios):
     return html.Div(
-        id="scenario_filter_div", children=[
+        id="scenario_filter_div",
+        children=[
             html.H5("Select the scenarios you want to see below."),
             dac.Select(
                 id="scenarios_filter",
                 options=[
-                    {'label': scenario, 'value': scenario}
-                    for scenario in scenarios
+                    {"label": scenario, "value": scenario} for scenario in scenarios
                 ],
                 value=scenarios,
-                mode='multiple'
-            )
-        ]
+                mode="multiple",
+            ),
+        ],
     )
 
 
 def comparison_button():
-    return html.Div(className="row comparison-btn", children=[
-        dbc.Button(
-            "Open scenarios comparison & filtering",
-            id="collapse-button",
-            color="info",
-            size="lg",
-            outline=True,
-            block=True
-        )
-    ])
+    return html.Div(
+        className="row comparison-btn",
+        children=[
+            dbc.Button(
+                "Open scenarios comparison & filtering",
+                id="collapse-button",
+                color="info",
+                size="lg",
+                outline=True,
+                block=True,
+            )
+        ],
+    )
 
 
 def layout():
@@ -94,14 +102,17 @@ def layout():
         Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("episodes")
     )
     header = "Take a look at the Scenarios"
-    body = " Choose a specific scenario to analyze by clicking its Open button.  " \
-           "Get more detailed information when choosing your scenario by clicking on the comparison & filtering button"
+    body = (
+        " Choose a specific scenario to analyze by clicking its Open button.  "
+        "Get more detailed information when choosing your scenario by clicking on the comparison & filtering button"
+    )
     return html.Div(
         id="scenario_page",
-        children=[dcc.Store(id="relayoutStoreScenario"),
-                  comparison_button(),
-                  generate_heatmap_components(survival_df),
-                  dbc.Row(id='cards_container', className="m-1"),
-                  modal(id_suffix="episodes", is_open=open_help,
-                        header=header, body=body)]
+        children=[
+            dcc.Store(id="relayoutStoreScenario"),
+            comparison_button(),
+            generate_heatmap_components(survival_df),
+            dbc.Row(id="cards_container", className="m-1"),
+            modal(id_suffix="episodes", is_open=open_help, header=header, body=body),
+        ],
     )

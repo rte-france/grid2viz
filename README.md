@@ -1,11 +1,12 @@
+
+# Grid2Viz: The Grid2Op Visualization companion app
+
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
 You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking this button. The dataset used in this demo can be found in the [Grid2viz dataset](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness).
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)<!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
 **WARNING:** we recommend you to use Firefox or Chrome as a web navigator rather than Internet Explorer or Edge.
-
-
-# Grid2Viz
+---
 
 Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
 
@@ -15,7 +16,7 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [4 Getting Started](#getting-started)
 *   [5 Caching](#caching)
 *   [6 Interface](#interface)
-*   [7 Interface](#troubleshooting)
+*   [7 Trouble shooting](#troubleshooting)
 
 ## Documentation
 go to: https://grid2viz.readthedocs.io/en/latest/
@@ -30,12 +31,10 @@ pip3 install -U virtualenv
 python3 -m virtualenv venv_grid2viz
 ```
 
-#### Step 2: Install from source
+#### Step 2: Install from pypi
 ```commandline
 source venv_grid2viz/bin/activate
-git clone https://github.com/mjothy/Grid2Viz.git
-cd Grid2Viz/
-pip install -U .
+pip install -U grid2viz
 ```
 
 ## Run Grid2Viz
@@ -114,14 +113,14 @@ knows to compute everything again with the updated data. To do so, you just need
 #### Scenario Selection
 This page display up to 15 scenarios with for each one a brief summary using the best agent's performances.
 
-![scenario selection](grid2viz/assets/screenshots/scenario_selection.png "Scenario Selection")
+![scenario selection](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/screenshots/scenario_selection.png "Scenario Selection")
 
 
 #### Scenario Overview
 On this page are displayed the best agent's kpi to see his performances. It's also here that you can select an agent that will
 be used as reference agent in the other pages to compare to the studied agents.
 
-![scenario overview](grid2viz/assets/screenshots/scenario_overview.png "Scenario Overview")
+![scenario overview](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/screenshots/scenario_overview.png "Scenario Overview")
 
 #### Agent Overview
 Here's displayed your reference agent's performances. You can select an agent to study to compare it with your reference via the
@@ -130,14 +129,14 @@ dropdown on the page. The study agent selected will be used as study agent on th
 In the *"instant and cumulated reward"* graph you can point timestep that will be use in the next page to study
 action in a specific timestep area.
 
-![agent overview](grid2viz/assets/screenshots/agent_overview.png "Agent Overview")
+![agent overview](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/screenshots/agent_overview.png "Agent Overview")
 
 
 #### Agent Study
 The Agent Study page will display kpi of your reference agent compared to your study agent on your selected timestep area.
 You will also see a summary of the previous page's kpi.
 
-![agent study](grid2viz/assets/screenshots/agent_study.png "Agent Study")
+![agent study](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/screenshots/agent_study.png "Agent Study")
 
 ## Run the tests
 

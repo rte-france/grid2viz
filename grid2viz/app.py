@@ -9,28 +9,31 @@ from dash import Dash
 # We need to create app before importing the rest of the project as it uses @app decorators
 font_awesome = [
     {
-        'href': 'https://use.fontawesome.com/releases/v5.8.1/css/all.css',
-        'rel': 'stylesheet',
-        'integrity': 'sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf',
-        'crossorigin': 'anonymous'
+        "href": "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
+        "rel": "stylesheet",
+        "integrity": "sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf",
+        "crossorigin": "anonymous",
     }
 ]
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, *font_awesome])
 
-'''
+"""
 Get Imports to create layout and callbacks 
-'''
+"""
 from grid2viz.main_callbacks import register_callbacks_main
 from grid2viz.layout import make_layout as layout
 
 from grid2viz.src.episodes.episodes_clbk import register_callbacks_episodes
-from grid2viz.src.overview.overview_clbk import register_callbacks_overview  # as overview_clbk
+from grid2viz.src.overview.overview_clbk import (
+    register_callbacks_overview,
+)  # as overview_clbk
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
+from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
 
-'''
+"""
 End Warning
-'''
+"""
 
 app.config.suppress_callback_exceptions = True
 
@@ -46,6 +49,7 @@ register_callbacks_episodes(app)
 register_callbacks_overview(app)
 register_callbacks_macro(app)
 register_callbacks_micro(app)
+register_callbacks_simulation(app)
 
 
 def app_run(port=8050, debug=False):
