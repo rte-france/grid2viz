@@ -43,7 +43,8 @@ network_graph_factory = PlotPlotly(
     responsive=True,
 )
 
-network_graph = network_graph_factory.plot_obs(observation=episode.observations[0])
+t = 0
+network_graph = network_graph_factory.plot_obs(observation=episode.observations[t])
 
 
 def lines_tab_layout(episode):
@@ -284,8 +285,8 @@ def choose_assist_line(episode, network_graph):
                                 ]
                             ),
                             dbc.Button(
-                                "Simulate",
-                                id="simulate_action",
+                                "Add",
+                                id="add_action",
                                 color="danger",
                                 className="mt-3 mb-3",
                             ),
@@ -316,133 +317,179 @@ def compare_line(network_graph):
                     html.Div(
                         className="col-9",
                         children=[
-                            dac.Radio(
-                                options=[
-                                    {"label": "New State t+1", "value": "new"},
-                                    {"label": "Old State t+1", "value": "old"},
-                                    {"label": "Delta", "value": "compare"},
+                            html.Div(
+                                className="row",
+                                children=[
+                                    dbc.Button(
+                                        "Simulate",
+                                        id="simulate_action",
+                                        color="primary",
+                                        className="btn-block mx-3",
+                                    ),
                                 ],
-                                value="new",
-                                id="compare_states_radio",
-                                buttonStyle="solid",
                             ),
-                            dcc.Graph(id="network_graph_compare", figure=network_graph),
+                            html.Div(
+                                children=[
+                                    dbc.Card(
+                                        [
+                                            dbc.CardHeader(
+                                                dbc.Tabs(
+                                                    children=[
+                                                        dbc.Tab(
+                                                            label="New State t+1",
+                                                            tab_id="tab_new_network_state",
+                                                        ),
+                                                        dbc.Tab(
+                                                            label="Old State t+1",
+                                                            tab_id="tab_old_network_state",
+                                                        ),
+                                                    ]
+                                                ),
+                                            ),
+                                            dbc.CardBody(
+                                                id="card_body_network",
+                                                children=[
+                                                    dcc.Graph(
+                                                        id="network_state",
+                                                        figure=network_graph,
+                                                    ),
+                                                ],
+                                            ),
+                                        ]
+                                    )
+                                ],
+                            ),
                         ],
                     ),
                     html.Div(
                         className="col-3",
                         children=[
-                            html.H5("Agent's KPIs"),
                             html.Div(
-                                className="mb-4",
+                                className="row",
                                 children=[
-                                    html.P(
-                                        id="agent_reward",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
+                                    html.Div(
+                                        className="col-6",
+                                        children=[
+                                            html.H5("Agent's KPIs"),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="agent_reward",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="Agent's reward",
+                                                    ),
+                                                ],
+                                            ),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="agent_rho",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="Agent's max rho",
+                                                    ),
+                                                ],
+                                            ),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="agent_overflows",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="Agent's overflows",
+                                                    ),
+                                                ],
+                                            ),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="agent_losses",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="Agent's losses",
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
                                     ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="Agent's reward",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="agent_rho",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="Agent's max rho",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="agent_overflows",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="Agent's overflows",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="agent_losses",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="Agent's losses",
-                                    ),
-                                ],
-                            ),
-                            html.H5("New Action's KPIs"),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="new_action_reward",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="New Action reward",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="new_action_rho",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="New Action max rho",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="new_action_overflows",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="New Action overflows",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                className="mb-4",
-                                children=[
-                                    html.P(
-                                        id="new_action_losses",
-                                        className="border-bottom h3 mb-0 text-right",
-                                        children="0",
-                                    ),
-                                    html.P(
-                                        className="text-muted",
-                                        children="New Action losses",
+                                    html.Div(
+                                        className="col-6",
+                                        children=[
+                                            html.H5("New Action's KPIs"),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="new_action_reward",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="New Action reward",
+                                                    ),
+                                                ],
+                                            ),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="new_action_rho",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="New Action max rho",
+                                                    ),
+                                                ],
+                                            ),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="new_action_overflows",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="New Action overflows",
+                                                    ),
+                                                ],
+                                            ),
+                                            html.Div(
+                                                className="mb-4",
+                                                children=[
+                                                    html.P(
+                                                        id="new_action_losses",
+                                                        className="border-bottom h3 mb-0 text-right",
+                                                        children="0",
+                                                    ),
+                                                    html.P(
+                                                        className="text-muted",
+                                                        children="New Action losses",
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
                                     ),
                                 ],
                             ),
@@ -460,8 +507,9 @@ def compare_line(network_graph):
         Output("action_info", "children"),
         Output("graph_div", "children"),
         Output("textarea", "value"),
+        # Output("network_graph_new", "data"),
     ],
-    [Input("simulate_action", "n_clicks"), Input("reset_action", "n_clicks")],
+    [Input("add_action", "n_clicks"), Input("reset_action", "n_clicks")],
     [
         State("actions", "data"),
         State("textarea", "value"),
@@ -481,10 +529,12 @@ def compare_line(network_graph):
         State("radio_topology_type_gens", "value"),
         State("radio_bus_gens", "value"),
         State("input_redispatch", "value"),
+        State("network_graph_t", "data"),
+        # State("network_graph_new", "data"),
     ],
 )
 def update_action(
-    simulate_n_clicks,
+    add_n_clicks,
     reset_n_clicks,
     actions,
     action_dict,
@@ -504,6 +554,8 @@ def update_action(
     topology_type_gens,
     bus_gens,
     redisp_volume,
+    network_graph_t,
+    # network_graph_new,
 ):
     ctx = callback_context
 
@@ -513,13 +565,10 @@ def update_action(
         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if button_id == "reset_action":
-        network_graph = network_graph_factory.plot_obs(
-            observation=episode.observations[0]
-        )
-        graph_div = dcc.Graph(figure=network_graph)
-        return None, "", graph_div, None
+        graph_div = dcc.Graph(figure=network_graph_t)
+        return None, "", graph_div, None  # , network_graph_t
 
-    if simulate_n_clicks is None:
+    if add_n_clicks is None:
         raise PreventUpdate
     if method_tab == "tab-0":
         # Dropdown
@@ -604,7 +653,7 @@ def update_action(
             graph_div_child = html.Div(
                 children=traceback.format_exc(), className="more-info-table"
             )
-            return actions, "", graph_div_child, action_dict
+            return actions, "", graph_div_child, action_dict  # , network_graph_new
         if "action_list" in action_dict:
             actions_for_textarea = action_dict["action_list"]
         else:
@@ -650,9 +699,8 @@ def update_action(
         act.update(action)
     obs, *_ = obs.simulate(action=act, time_step=0)
     try:
-        graph_div_child = dcc.Graph(
-            figure=network_graph_factory.plot_obs(observation=obs)
-        )
+        graph_div_child = dcc.Graph(figure=network_graph_t)
+        new_network_graph = network_graph_factory.plot_obs(observation=obs)
     except ValueError:
         import traceback
 
@@ -676,6 +724,7 @@ def update_action(
                 sort_keys=True,
                 cls=MyEncoder,
             ),
+            # new_network_graph,
         )
     else:
         actions_for_textarea = dict(
@@ -692,6 +741,7 @@ def update_action(
                 sort_keys=True,
                 cls=MyEncoder,
             ),
+            # new_network_graph,
         )
 
 
@@ -748,10 +798,79 @@ def toggle_radio_gens(radio_action_type_gens, radio_topology_type_gens):
             return "hidden", "mt-1", "hidden"
 
 
+@app.callback(
+    Output("card_body_network", "children"),
+    [Input("simulate_action", "n_clicks")],
+    [State("actions", "data")],
+)
+def simulate(simulate_n_clicks, actions):
+
+    if simulate_n_clicks is None or actions is None:
+        raise PreventUpdate
+    # Temporary implementation for testing purposes
+    p = Parameters()
+    p.NO_OVERFLOW_DISCONNECTION = False
+    env = make(
+        r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
+        test=True,
+        param=p,
+    )
+    env.seed(0)
+
+    params_for_runner = env.get_params_for_runner()
+    params_to_fetch = ["init_grid_path"]
+    params_for_reboot = {
+        key: value for key, value in params_for_runner.items() if key in params_to_fetch
+    }
+    params_for_reboot["parameters"] = p
+
+    episode_reboot = EpisodeReboot.EpisodeReboot()
+    agent_path = (
+        r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
+    )
+    episode_reboot.load(
+        env.backend,
+        data=episode,
+        agent_path=agent_path,
+        name=episode.episode_name,
+        env_kwargs=params_for_reboot,
+    )
+    current_time_step = 0
+    obs, reward, *_ = episode_reboot.go_to(1)
+    act = PlayableAction()
+
+    for action in actions:
+        act.update(action)
+    obs, *_ = obs.simulate(action=act, time_step=0)
+    try:
+        graph_div_child = dcc.Graph(
+            figure=network_graph_factory.plot_obs(observation=obs)
+        )
+    except ValueError:
+        import traceback
+
+        graph_div_child = html.Div(
+            children=traceback.format_exc(), className="more-info-table"
+        )
+    return graph_div_child
+
+
 app.layout = html.Div(
     id="simulation_page",
     children=[
         dcc.Store(id="actions", storage_type="memory"),
+        dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),
+        dcc.Store(
+            id="network_graph_t+1",
+            storage_type="memory",
+            data=network_graph_factory.plot_obs(
+                observation=episode.observations[t + 1]
+            ),
+        ),
+        dcc.Store(
+            id="network_graph_new",
+            storage_type="memory",
+        ),
         choose_assist_line(episode, network_graph),
         compare_line(network_graph),
     ],
