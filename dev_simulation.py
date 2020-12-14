@@ -334,6 +334,7 @@ def compare_line(network_graph):
                                         [
                                             dbc.CardHeader(
                                                 dbc.Tabs(
+                                                    id="tabs_network",
                                                     children=[
                                                         dbc.Tab(
                                                             label="New State t+1",
@@ -343,7 +344,8 @@ def compare_line(network_graph):
                                                             label="Old State t+1",
                                                             tab_id="tab_old_network_state",
                                                         ),
-                                                    ]
+                                                    ],
+                                                    active_tab="tab_new_network_state",
                                                 ),
                                             ),
                                             dbc.CardBody(
@@ -507,7 +509,7 @@ def compare_line(network_graph):
         Output("action_info", "children"),
         Output("graph_div", "children"),
         Output("textarea", "value"),
-        # Output("network_graph_new", "data"),
+        Output("network_graph_new", "data"),
     ],
     [Input("add_action", "n_clicks"), Input("reset_action", "n_clicks")],
     [
@@ -530,7 +532,8 @@ def compare_line(network_graph):
         State("radio_bus_gens", "value"),
         State("input_redispatch", "value"),
         State("network_graph_t", "data"),
-        # State("network_graph_new", "data"),
+        State("network_graph_t+1", "data"),
+        State("network_graph_new", "data"),
     ],
 )
 def update_action(
@@ -555,7 +558,8 @@ def update_action(
     bus_gens,
     redisp_volume,
     network_graph_t,
-    # network_graph_new,
+    network_graph_t_next,
+    network_graph_new,
 ):
     ctx = callback_context
 
@@ -566,7 +570,7 @@ def update_action(
 
     if button_id == "reset_action":
         graph_div = dcc.Graph(figure=network_graph_t)
-        return None, "", graph_div, None  # , network_graph_t
+        return None, "", graph_div, None, network_graph_t_next
 
     if add_n_clicks is None:
         raise PreventUpdate
@@ -653,7 +657,7 @@ def update_action(
             graph_div_child = html.Div(
                 children=traceback.format_exc(), className="more-info-table"
             )
-            return actions, "", graph_div_child, action_dict  # , network_graph_new
+            return actions, "", graph_div_child, action_dict, network_graph_t_next
         if "action_list" in action_dict:
             actions_for_textarea = action_dict["action_list"]
         else:
@@ -707,6 +711,7 @@ def update_action(
         graph_div_child = html.Div(
             children=traceback.format_exc(), className="more-info-table"
         )
+        new_network_graph = network_graph_t_next
 
     try:
         json.dumps(actions)
@@ -724,7 +729,7 @@ def update_action(
                 sort_keys=True,
                 cls=MyEncoder,
             ),
-            # new_network_graph,
+            new_network_graph,
         )
     else:
         actions_for_textarea = dict(
@@ -741,7 +746,7 @@ def update_action(
                 sort_keys=True,
                 cls=MyEncoder,
             ),
-            # new_network_graph,
+            new_network_graph,
         )
 
 
@@ -800,59 +805,24 @@ def toggle_radio_gens(radio_action_type_gens, radio_topology_type_gens):
 
 @app.callback(
     Output("card_body_network", "children"),
-    [Input("simulate_action", "n_clicks")],
-    [State("actions", "data")],
+    [Input("simulate_action", "n_clicks"), Input("tabs_network", "active_tab")],
+    [
+        State("actions", "data"),
+        State("network_graph_new", "data"),
+        State("network_graph_t+1", "data"),
+    ],
 )
-def simulate(simulate_n_clicks, actions):
+def simulate(
+    simulate_n_clicks, active_tab, actions, network_graph_new, network_graph_t_next
+):
 
     if simulate_n_clicks is None or actions is None:
         raise PreventUpdate
-    # Temporary implementation for testing purposes
-    p = Parameters()
-    p.NO_OVERFLOW_DISCONNECTION = False
-    env = make(
-        r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
-        test=True,
-        param=p,
-    )
-    env.seed(0)
-
-    params_for_runner = env.get_params_for_runner()
-    params_to_fetch = ["init_grid_path"]
-    params_for_reboot = {
-        key: value for key, value in params_for_runner.items() if key in params_to_fetch
-    }
-    params_for_reboot["parameters"] = p
-
-    episode_reboot = EpisodeReboot.EpisodeReboot()
-    agent_path = (
-        r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
-    )
-    episode_reboot.load(
-        env.backend,
-        data=episode,
-        agent_path=agent_path,
-        name=episode.episode_name,
-        env_kwargs=params_for_reboot,
-    )
-    current_time_step = 0
-    obs, reward, *_ = episode_reboot.go_to(1)
-    act = PlayableAction()
-
-    for action in actions:
-        act.update(action)
-    obs, *_ = obs.simulate(action=act, time_step=0)
-    try:
-        graph_div_child = dcc.Graph(
-            figure=network_graph_factory.plot_obs(observation=obs)
-        )
-    except ValueError:
-        import traceback
-
-        graph_div_child = html.Div(
-            children=traceback.format_exc(), className="more-info-table"
-        )
-    return graph_div_child
+    if active_tab == "tab_new_network_state":
+        return dcc.Graph(figure=network_graph_new)
+    else:
+        # tab_old_network_state
+        return dcc.Graph(figure=network_graph_t_next)
 
 
 app.layout = html.Div(
