@@ -1,9 +1,15 @@
 import json
 
+from alphaDeesp.expert_operator import expert_operator
+from alphaDeesp.core.grid2op.Grid2opSimulation import (
+    Grid2opSimulation,
+    score_changes_between_two_observations,
+)
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+from dash_table import DataTable
 import dill
 import numpy as np
 from dash import Dash, callback_context
@@ -14,8 +20,10 @@ from grid2op.Episode import EpisodeData, EpisodeReboot
 from grid2op.MakeEnv import make
 from grid2op.Parameters import Parameters
 from grid2op.PlotGrid import PlotPlotly
+import plotly.graph_objects as go
 
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
+from grid2viz.src.simulation.simulation_assist import BaseAssistant
 
 # We need to create app before importing the rest of the project as it uses @app decorators
 font_awesome = [
@@ -43,8 +51,200 @@ network_graph_factory = PlotPlotly(
     responsive=True,
 )
 
-t = 0
+t = 1
 network_graph = network_graph_factory.plot_obs(observation=episode.observations[t])
+
+
+def get_ranked_overloads(observation_space, observation):
+    timestepsOverflowAllowed = (
+        3  # observation_space.parameters.NB_TIMESTEP_OVERFLOW_ALLOWED
+    )
+
+    sort_rho = -np.sort(
+        -observation.rho
+    )  # sort in descending order for positive values
+    sort_indices = np.argsort(-observation.rho)
+    ltc_list = [sort_indices[i] for i in range(len(sort_rho)) if sort_rho[i] >= 1]
+
+    # now reprioritize ltc if critical or not
+    ltc_critical = [
+        l
+        for l in ltc_list
+        if (observation.timestep_overflow[l] == timestepsOverflowAllowed)
+    ]
+    ltc_not_critical = [
+        l
+        for l in ltc_list
+        if (observation.timestep_overflow[l] != timestepsOverflowAllowed)
+    ]
+
+    ltc_list = ltc_critical + ltc_not_critical
+    if len(ltc_list) == 0:
+        ltc_list = [sort_indices[0]]
+    return ltc_list
+
+
+expert_config = {
+    "totalnumberofsimulatedtopos": 25,
+    "numberofsimulatedtopospernode": 5,
+    "maxUnusedLines": 2,
+    "ratioToReconsiderFlowDirection": 0.75,
+    "ratioToKeepLoop": 0.25,
+    "ThersholdMinPowerOfLoop": 0.1,
+    "ThresholdReportOfLine": 0.2,
+}
+
+reward_type = "MinMargin_reward"
+
+p = Parameters()
+p.NO_OVERFLOW_DISCONNECTION = False
+env = make(
+    r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
+    test=True,
+    param=p,
+)
+env.seed(0)
+
+params_for_runner = env.get_params_for_runner()
+params_to_fetch = ["init_grid_path"]
+params_for_reboot = {
+    key: value for key, value in params_for_runner.items() if key in params_to_fetch
+}
+params_for_reboot["parameters"] = p
+
+episode_reboot = EpisodeReboot.EpisodeReboot()
+agent_path = (
+    r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
+)
+episode_reboot.load(
+    env.backend,
+    data=episode,
+    agent_path=agent_path,
+    name=episode.episode_name,
+    env_kwargs=params_for_reboot,
+)
+
+obs, reward, *_ = episode_reboot.go_to(t)
+
+simulator = Grid2opSimulation(
+    obs,
+    env.action_space,
+    env.observation_space,
+    param_options=expert_config,
+    debug=False,
+    ltc=[get_ranked_overloads(env.observation_space, obs)[0]],
+    reward_type=reward_type,
+)
+
+ranked_combinations, expert_system_results, actions = expert_operator(
+    simulator, plot=False, debug=False
+)
+
+
+class Assist(BaseAssistant):
+    def __init__(self):
+        super().__init__()
+
+    def simulate(self):
+        pass
+
+    def layout(self):
+        return html.Div(
+            [
+                dcc.Store(id="assistant_store", data="Toto"),
+                dbc.Button(
+                    id="assist-button", children=["Evaluate with the Expert system"]
+                ),
+                html.Div(id="expert-results"),
+                html.P(
+                    id="assist-action-info",
+                    className="more-info-table",
+                    children="Select an action in the table above.",
+                ),
+            ]
+        )
+
+    def register_callbacks(self, app):
+        @app.callback(
+            Output("expert-results", "children"),
+            [Input("assist-button", "n_clicks")],
+        )
+        def evaluate_expert_system(n_clicks):
+            if n_clicks is None:
+                raise PreventUpdate
+            return DataTable(
+                id="table",
+                columns=[{"name": i, "id": i} for i in expert_system_results.columns],
+                data=expert_system_results.to_dict("records"),
+                style_table={"overflowX": "auto"},
+                row_selectable="single",
+                style_cell={
+                    "overflow": "hidden",
+                    "textOverflow": "ellipsis",
+                    "maxWidth": 0,
+                },
+                tooltip_data=[
+                    {
+                        column: {"value": str(value), "type": "markdown"}
+                        for column, value in row.items()
+                    }
+                    for row in expert_system_results.to_dict("rows")
+                ],
+            )
+
+        @app.callback(
+            [
+                Output("assistant_store", "data"),
+                Output("assist-action-info", "children"),
+            ],
+            [Input("table", "selected_rows")],
+        )
+        def select_action(selected_rows):
+            if selected_rows is None:
+                raise PreventUpdate
+            selected_row = selected_rows[0]
+            action = actions[selected_row]
+            # Temporary implementation for testing purposes
+            p = Parameters()
+            p.NO_OVERFLOW_DISCONNECTION = False
+            env = make(
+                r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
+                test=True,
+                param=p,
+            )
+            env.seed(0)
+
+            params_for_runner = env.get_params_for_runner()
+            params_to_fetch = ["init_grid_path"]
+            params_for_reboot = {
+                key: value
+                for key, value in params_for_runner.items()
+                if key in params_to_fetch
+            }
+            params_for_reboot["parameters"] = p
+
+            episode_reboot = EpisodeReboot.EpisodeReboot()
+            agent_path = r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
+            episode_reboot.load(
+                env.backend,
+                data=episode,
+                agent_path=agent_path,
+                name=episode.episode_name,
+                env_kwargs=params_for_reboot,
+            )
+            obs, reward, *_ = episode_reboot.go_to(t)
+            obs, *_ = obs.simulate(action=action, time_step=0)
+            try:
+                new_network_graph = network_graph_factory.plot_obs(observation=obs)
+            except ValueError:
+                import traceback
+
+                new_network_graph = traceback.format_exc()
+
+            return new_network_graph, str(action)
+
+
+assistant = Assist()
 
 
 def lines_tab_layout(episode):
@@ -224,6 +424,7 @@ def choose_assist_line(episode, network_graph):
                         className="col-5",
                         children=[
                             dbc.Tabs(
+                                id="tabs_choose_assist",
                                 children=[
                                     dbc.Tab(
                                         label="Choose",
@@ -280,9 +481,9 @@ def choose_assist_line(episode, network_graph):
                                     dbc.Tab(
                                         label="Assist",
                                         labelClassName="fas fa-robot",
-                                        children=["content"],
+                                        children=[assistant.decorated_layout()],
                                     ),
-                                ]
+                                ],
                             ),
                             dbc.Button(
                                 "Add",
@@ -296,7 +497,11 @@ def choose_assist_line(episode, network_graph):
                                 color="secondary",
                                 className="m-3",
                             ),
-                            html.P(id="action_info", className="more-info-table"),
+                            html.P(
+                                id="action_info",
+                                className="more-info-table",
+                                children="Compose some actions to study",
+                            ),
                         ],
                     ),
                 ],
@@ -570,7 +775,13 @@ def update_action(
 
     if button_id == "reset_action":
         graph_div = dcc.Graph(figure=network_graph_t)
-        return None, "", graph_div, None, network_graph_t_next
+        return (
+            None,
+            "Compose some actions to study",
+            graph_div,
+            None,
+            network_graph_t_next,
+        )
 
     if add_n_clicks is None:
         raise PreventUpdate
@@ -696,7 +907,7 @@ def update_action(
         env_kwargs=params_for_reboot,
     )
     current_time_step = 0
-    obs, reward, *_ = episode_reboot.go_to(1)
+    obs, reward, *_ = episode_reboot.go_to(t)
     act = PlayableAction()
 
     for action in actions:
@@ -810,12 +1021,21 @@ def toggle_radio_gens(radio_action_type_gens, radio_topology_type_gens):
         State("actions", "data"),
         State("network_graph_new", "data"),
         State("network_graph_t+1", "data"),
+        State("tabs_choose_assist", "active_tab"),
+        State("assistant_store", "data"),
     ],
 )
 def simulate(
-    simulate_n_clicks, active_tab, actions, network_graph_new, network_graph_t_next
+    simulate_n_clicks,
+    active_tab,
+    actions,
+    network_graph_new,
+    network_graph_t_next,
+    active_tab_choose_assist,
+    assistant_store,
 ):
-
+    if active_tab_choose_assist == "tab-1":
+        return dcc.Graph(figure=go.Figure(assistant_store))
     if simulate_n_clicks is None or actions is None:
         raise PreventUpdate
     if active_tab == "tab_new_network_state":
@@ -845,6 +1065,9 @@ app.layout = html.Div(
         compare_line(network_graph),
     ],
 )
+
+
+assistant.register_callbacks(app)
 
 if __name__ == "__main__":
     app.run_server(port=8008)
