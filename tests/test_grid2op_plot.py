@@ -3,16 +3,16 @@ import pathlib
 import unittest
 
 # We need to make this below so that the manager.py finds the config.ini
-os.environ['GRID2VIZ_ROOT'] = os.path.join(
-            pathlib.Path(__file__).parent.absolute(), 'data')
+os.environ["GRID2VIZ_ROOT"] = os.path.join(
+    pathlib.Path(__file__).parent.absolute(), "data"
+)
 
-agents_path = os.path.join(
-            pathlib.Path(__file__).parent.absolute(), 'data', 'agents')
+agents_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "data", "agents")
 
-config_str = f'[DEFAULT]\nagents_dir={agents_path}\nn_cores=2'
-config_file_path = os.path.join(os.environ['GRID2VIZ_ROOT'], 'config.ini')
+config_str = f"[DEFAULT]\nagents_dir={agents_path}\nn_cores=2"
+config_file_path = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
 
-with open(config_file_path, 'w') as f:
+with open(config_file_path, "w") as f:
     f.write(config_str)
 
 from grid2op.Backend import PandaPowerBackend
@@ -31,8 +31,8 @@ class TestGenerateAgent(unittest.TestCase):
         self.param = Parameters()
 
         self.agents_path = agents_path
-        self.agent_name = 'redispatching-baseline'
-        self.scenario_name = '000'
+        self.agent_name = "redispatching-baseline"
+        self.scenario_name = "000"
 
     def test_plot(self):
         self.episode_data = EpisodeData.from_disk(
@@ -43,6 +43,6 @@ class TestGenerateAgent(unittest.TestCase):
         )
         self.episode_analytics.decorate(self.episode_data)
 
-        make_network(self.episode_analytics).plot_obs(self.episode_analytics.observations[0])
-
-
+        make_network(self.episode_analytics).plot_obs(
+            self.episode_analytics.observations[0]
+        )
