@@ -249,7 +249,7 @@ assistant = Assist()
 
 def lines_tab_layout(episode):
     return [
-        html.P("Choose a line to act on:", className="mt-1"),
+        html.P("Choose a line to act on:", className="my-2"),
         dac.Select(
             id="select_lines_simulation",
             options=[
@@ -259,7 +259,7 @@ def lines_tab_layout(episode):
             mode="default",
             value=episode.line_names[0],
         ),
-        html.P("Choose an action type:", className="mt-1"),
+        html.P("Choose an action type:", className="my-2"),
         dac.Radio(
             options=[
                 {"label": "Set", "value": "Set"},
@@ -269,7 +269,7 @@ def lines_tab_layout(episode):
             id="radio_topology_type_lines",
             buttonStyle="solid",
         ),
-        html.P("Choose a target type:", className="mt-1"),
+        html.P("Choose a target type:", className="my-2"),
         dac.Radio(
             options=[
                 {"label": "Status", "value": "Status"},
@@ -322,7 +322,7 @@ def loads_tab_layout(episode):
             mode="default",
             value=episode.load_names[0],
         ),
-        html.P("Choose an action type:"),
+        html.P("Choose an action type:", className="my-2"),
         dac.Radio(
             options=[
                 {"label": "Set", "value": "Set"},
@@ -332,7 +332,7 @@ def loads_tab_layout(episode):
             id="radio_topology_type_loads",
             buttonStyle="solid",
         ),
-        html.P("Choose an action:", className="mt-1"),
+        html.P("Choose an action:", className="my-2"),
         dac.Radio(
             options=[
                 {"label": "Disconnect", "value": "Disconnect"},
@@ -359,7 +359,7 @@ def gens_tab_layout(episode):
             mode="default",
             value=episode.prod_names[0],
         ),
-        html.P("Choose an action type:"),
+        html.P("Choose an action type:", className="my-2"),
         dac.Radio(
             options=[
                 {"label": "Redispatch", "value": "Redispatch"},
@@ -396,6 +396,68 @@ def gens_tab_layout(episode):
     ]
 
 
+def choose_tab_content(episode):
+    return [
+        dbc.Tabs(
+            id="tab_method",
+            className="nav-fill",
+            children=[
+                dbc.Tab(
+                    label="Dropdowns",
+                    children=[
+                        dbc.Tabs(
+                            id="tab_object",
+                            className="nav-fill",
+                            children=[
+                                dbc.Tab(
+                                    label="Lines",
+                                    children=lines_tab_layout(episode),
+                                ),
+                                dbc.Tab(
+                                    label="Loads",
+                                    children=loads_tab_layout(episode),
+                                ),
+                                dbc.Tab(
+                                    label="Gens",
+                                    children=gens_tab_layout(episode),
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                dbc.Tab(
+                    label="Dict",
+                    children=[
+                        html.P("Enter the action dictionary:"),
+                        dbc.Textarea(
+                            id="textarea",
+                            className="mb-3",
+                            placeholder='{"set_line_status": []}',
+                        ),
+                    ],
+                ),
+            ],
+        ),
+        dbc.Button(
+            "Add",
+            id="add_action",
+            color="danger",
+            className="mt-3 mb-3",
+        ),
+        dbc.Button(
+            "Reset",
+            id="reset_action",
+            color="secondary",
+            className="m-3",
+        ),
+        html.P(
+            id="action_info",
+            className="more-info-table",
+            children="Compose some actions to study",
+        ),
+    ]
+
+
 def choose_assist_line(episode, network_graph):
     return html.Div(
         id="choose_assist_line",
@@ -421,86 +483,31 @@ def choose_assist_line(episode, network_graph):
                         ],
                     ),
                     html.Div(
-                        className="col-5",
+                        className="col-5 chooseAssist",
                         children=[
-                            dbc.Tabs(
-                                id="tabs_choose_assist",
-                                children=[
-                                    dbc.Tab(
-                                        label="Choose",
-                                        labelClassName="fas fa-user",
-                                        children=[
-                                            dbc.Tabs(
-                                                id="tab_method",
-                                                children=[
-                                                    dbc.Tab(
-                                                        label="Dropdowns",
-                                                        children=[
-                                                            dbc.Tabs(
-                                                                id="tab_object",
-                                                                children=[
-                                                                    dbc.Tab(
-                                                                        label="Lines",
-                                                                        children=lines_tab_layout(
-                                                                            episode
-                                                                        ),
-                                                                    ),
-                                                                    dbc.Tab(
-                                                                        label="Loads",
-                                                                        children=loads_tab_layout(
-                                                                            episode
-                                                                        ),
-                                                                    ),
-                                                                    dbc.Tab(
-                                                                        label="Gens",
-                                                                        children=gens_tab_layout(
-                                                                            episode
-                                                                        ),
-                                                                    ),
-                                                                ],
-                                                            )
-                                                        ],
-                                                    ),
-                                                    dbc.Tab(
-                                                        label="Dict",
-                                                        children=[
-                                                            html.P(
-                                                                "Enter the action dictionary:"
-                                                            ),
-                                                            dbc.Textarea(
-                                                                id="textarea",
-                                                                className="mb-3",
-                                                                placeholder='{"set_line_status": []}',
-                                                            ),
-                                                        ],
-                                                    ),
-                                                ],
-                                            ),
-                                        ],
+                            dbc.Card(
+                                [
+                                    dbc.CardHeader(
+                                        dbc.Tabs(
+                                            id="tabs-choose-assist-method",
+                                            card=True,
+                                            active_tab="tab-choose-method",
+                                            children=[
+                                                dbc.Tab(
+                                                    label="Choose",
+                                                    tab_id="tab-choose-method",
+                                                ),
+                                                dbc.Tab(
+                                                    label="Assist",
+                                                    tab_id="tab-assist-method",
+                                                ),
+                                            ],
+                                        )
                                     ),
-                                    dbc.Tab(
-                                        label="Assist",
-                                        labelClassName="fas fa-robot",
-                                        children=[assistant.decorated_layout()],
+                                    dbc.CardBody(
+                                        html.Div(id="tabs-choose-assist-method-content")
                                     ),
-                                ],
-                            ),
-                            dbc.Button(
-                                "Add",
-                                id="add_action",
-                                color="danger",
-                                className="mt-3 mb-3",
-                            ),
-                            dbc.Button(
-                                "Reset",
-                                id="reset_action",
-                                color="secondary",
-                                className="m-3",
-                            ),
-                            html.P(
-                                id="action_info",
-                                className="more-info-table",
-                                children="Compose some actions to study",
+                                ]
                             ),
                         ],
                     ),
@@ -556,10 +563,7 @@ def compare_line(network_graph):
                                             dbc.CardBody(
                                                 id="card_body_network",
                                                 children=[
-                                                    dcc.Graph(
-                                                        id="network_state",
-                                                        figure=network_graph,
-                                                    ),
+                                                    "Compose an action above and then simulate it."
                                                 ],
                                             ),
                                         ]
@@ -706,6 +710,19 @@ def compare_line(network_graph):
             ),
         ],
     )
+
+
+@app.callback(
+    Output("tabs-choose-assist-method-content", "children"),
+    [Input("tabs-choose-assist-method", "active_tab")],
+)
+def simulation_method_tab_content(active_tab):
+    if active_tab is None:
+        raise PreventUpdate
+    if active_tab == "tab-choose-method":
+        return choose_tab_content(episode)
+    elif active_tab == "tab-assist-method":
+        return assistant.decorated_layout()
 
 
 @app.callback(
@@ -1021,34 +1038,46 @@ def toggle_radio_gens(radio_action_type_gens, radio_topology_type_gens):
         State("actions", "data"),
         State("network_graph_new", "data"),
         State("network_graph_t+1", "data"),
-        State("tabs_choose_assist", "active_tab"),
-        State("assistant_store", "data"),
+        State("tabs-choose-assist-method", "active_tab"),
+        State("simulation-assistant-store", "data"),
     ],
 )
 def simulate(
     simulate_n_clicks,
-    active_tab,
+    active_tab_networks,
     actions,
     network_graph_new,
     network_graph_t_next,
     active_tab_choose_assist,
-    assistant_store,
+    simualtion_assistant_store,
 ):
-    if active_tab_choose_assist == "tab-1":
-        return dcc.Graph(figure=go.Figure(assistant_store))
-    if simulate_n_clicks is None or actions is None:
+    if simulate_n_clicks is None or (
+        actions is None and simualtion_assistant_store is None
+    ):
         raise PreventUpdate
-    if active_tab == "tab_new_network_state":
-        return dcc.Graph(figure=network_graph_new)
-    else:
-        # tab_old_network_state
+    if active_tab_networks == "tab_new_network_state":
+        if active_tab_choose_assist == "tab-assist-method":
+            return dcc.Graph(figure=go.Figure(simualtion_assistant_store))
+        else:
+            return dcc.Graph(figure=network_graph_new)
+    elif active_tab_networks == "tab_old_network_state":
         return dcc.Graph(figure=network_graph_t_next)
+
+
+@app.callback(
+    Output("simulation-assistant-store", "data"), [Input("assistant_store", "data")]
+)
+def transfer_assistant_store(data):
+    """Necessary so that the store can be reach evenn when the assistant_store is
+    not part of the view (e.g. when in choose mode)"""
+    return data
 
 
 app.layout = html.Div(
     id="simulation_page",
     children=[
         dcc.Store(id="actions", storage_type="memory"),
+        dcc.Store(id="simulation-assistant-store", storage_type="memory"),
         dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),
         dcc.Store(
             id="network_graph_t+1",
