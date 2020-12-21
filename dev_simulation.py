@@ -40,6 +40,10 @@ scenario = "000"
 agent = "do-nothing-baseline"
 agent_dir = "D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/" + agent
 path = r"D:\Projects\RTE-Grid2Viz\grid2viz\grid2viz\data\agents\_cache\000\do-nothing-baseline.dill"
+agent_path = (
+    r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
+)
+env_path = r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic"
 with open(path, "rb") as f:
     episode = dill.load(f)
 episode_data = EpisodeData.from_disk(agent_dir, scenario)
@@ -99,7 +103,7 @@ reward_type = "MinMargin_reward"
 p = Parameters()
 p.NO_OVERFLOW_DISCONNECTION = False
 env = make(
-    r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
+    env_path,
     test=True,
     param=p,
 )
@@ -113,9 +117,7 @@ params_for_reboot = {
 params_for_reboot["parameters"] = p
 
 episode_reboot = EpisodeReboot.EpisodeReboot()
-agent_path = (
-    r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
-)
+
 episode_reboot.load(
     env.backend,
     data=episode,
@@ -144,9 +146,6 @@ ranked_combinations, expert_system_results, actions = expert_operator(
 class Assist(BaseAssistant):
     def __init__(self):
         super().__init__()
-
-    def simulate(self):
-        pass
 
     def layout(self):
         return html.Div(
@@ -208,7 +207,7 @@ class Assist(BaseAssistant):
             p = Parameters()
             p.NO_OVERFLOW_DISCONNECTION = False
             env = make(
-                r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
+                env_path,
                 test=True,
                 param=p,
             )
@@ -224,7 +223,7 @@ class Assist(BaseAssistant):
             params_for_reboot["parameters"] = p
 
             episode_reboot = EpisodeReboot.EpisodeReboot()
-            agent_path = r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
+            agent_path = path
             episode_reboot.load(
                 env.backend,
                 data=episode,
@@ -469,6 +468,7 @@ def choose_assist_line(episode, network_graph):
                 children=[
                     html.Div(
                         className="col-7",
+                        id="",
                         children=[
                             html.H5("Network at time step t"),
                             html.Div(
@@ -713,8 +713,9 @@ def compare_line(network_graph):
 
 
 @app.callback(
-    Output("tabs-choose-assist-method-content", "children"),
-    [Input("tabs-choose-assist-method", "active_tab")],
+    [Output("tabs-choose-assist-method-content", "children"), Output("")][
+        Input("tabs-choose-assist-method", "active_tab")
+    ],
 )
 def simulation_method_tab_content(active_tab):
     if active_tab is None:
@@ -722,7 +723,7 @@ def simulation_method_tab_content(active_tab):
     if active_tab == "tab-choose-method":
         return choose_tab_content(episode)
     elif active_tab == "tab-assist-method":
-        return assistant.decorated_layout()
+        return assistant.checked_layout(choose_tab_content(episode))
 
 
 @app.callback(
@@ -899,7 +900,7 @@ def update_action(
     p = Parameters()
     p.NO_OVERFLOW_DISCONNECTION = False
     env = make(
-        r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
+        env_path,
         test=True,
         param=p,
     )
@@ -913,9 +914,7 @@ def update_action(
     params_for_reboot["parameters"] = p
 
     episode_reboot = EpisodeReboot.EpisodeReboot()
-    agent_path = (
-        r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
-    )
+    agent_path = path
     episode_reboot.load(
         env.backend,
         data=episode,

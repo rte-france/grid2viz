@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from itertools import chain
 import inspect
 
 from dash.dependencies import Output, Input, State
@@ -7,112 +8,90 @@ from dash.dependencies import Output, Input, State
 class BaseAssistant(ABC):
     def __init__(self):
         self._layout = None
-        pass
-
-    @abstractmethod
-    def simulate(self):
-        pass
 
     @abstractmethod
     def layout(self):
         pass
 
-    def check_layout(self):
-        layout = self.layout()
-        try:
-            if (
-                layout.children[0]._type != "Store"
-                or layout.children[0].id != "assistant_store"
-            ):
-                raise Exception(
-                    f"The first child of the Assistant layout should be a Store with id assistant_store, found {layout.children[0]}"
-                )
-        except:
-            raise Exception(
-                f"The first child of the Assistant layout should be a Store with id assistant_store, found {layout}"
-            )
-
     @abstractmethod
     def register_callbacks(self, app):
         pass
 
-    def decorate_callbacks(self, app):
-        self.register_callbacks(app)
-        # from dash import Dash
-        #
-        # app_inner = Dash()
-        # self.register_callbacks(app_inner)
-        # inital_callback_map = app_inner.callback_map
-        # for callback_name in inital_callback_map:
-        #     callback = app.callback_map.pop(callback_name)
-        #     outputs = self.parse_callback_name(callback_name, self.__class__.__name__)
-        #     inputs = self.parse_inputs(callback["inputs"], self.__class__.__name__)
-        #     callback["state"] = self.decorate_callback_state(
-        #         callback["state"], self.__class__.__name__
-        #     )
-        # args = inspect.getfullargspec(callback["callback"])[0]
-        #
-        # @app.callback(outputs, inputs)
-        # def assist(*args):
-        #     return callback["callback"](*args)
-
-        return
-
-    @staticmethod
-    def parse_inputs(inputs, prefix):
-        new_inputs = []
-        for input_dict in inputs:
-            component_id, component_property = input_dict["id"], input_dict["property"]
-            component_id = "-".join([prefix, component_id])
-            new_inputs = Input(
-                component_id=component_id, component_property=component_property
+    def check_layout(self, layout_to_check_against):
+        self._layout = self.layout()
+        try:
+            if (
+                self._layout.children[0]._type != "Store"
+                or self._layout.children[0].id != "assistant_store"
+            ):
+                raise Exception(
+                    f"The first child of the Assistant layout should be a Store with id assistant_store, found {self._layout.children[0]}"
+                )
+        except:
+            raise Exception(
+                f"The first child of the Assistant layout should be a Store with id assistant_store, found {self._layout}"
             )
-        return new_inputs
-
-    @staticmethod
-    def decorate_callback_state(state, prefix):
-        for state_dict in state:
-            state_dict["id"] = "-".join([prefix, state_dict["id"]])
-        return state
-
-    @staticmethod
-    def parse_callback_name(callback_name, prefix):
-        if not callback_name.startswith(".."):
-
-            new_callback_name = "-".join([prefix, callback_name])
-            component_id, component_property = new_callback_name.split(".")
-            output = Output(
-                component_id=component_id, component_property=component_property
-            )
-        return output
-
-    def decorate_layout(self):
-        initial_layout = self.layout()
-        self._layout = self.prefix_layout_element_id(
-            initial_layout, self.__class__.__name__
+        layouts_conflicts = self.layouts_conflicts(
+            self._layout, layout_to_check_against
         )
-        return
+        if layouts_conflicts:
+            raise Exception(
+                f"The {self.__class__.__name__} layout has ids conflict with the parent layout : {layouts_conflicts}"
+            )
 
-    def decorated_layout(self):
-        self.decorate_layout()
-        self.check_layout()
-        # return self._layout
-        return self.layout()
+    @staticmethod
+    def layouts_conflicts(layout1, layout2):
+        """
+        Check that two layouts do not share identical ids
+        Parameters
+        ----------
+        layout1
+        layout2
 
-    def prefix_layout_element_id():
-        def prefix_layout_element_id(layout, prefix):
-            if hasattr(layout, "id"):
-                layout.id = "-".join([prefix, layout.id])
+        Returns
+        -------
+
+        """
+        ids_layout1 = BaseAssistant.get_layout_ids(layout1)
+        ids_layout2 = BaseAssistant.get_layout_ids(layout2)
+
+        return set(ids_layout1) & set(ids_layout2)
+
+    def get_layout_ids():
+        def get_layout_ids(layout):
+            """
+            Traverse a dash layout to retrieve declared ids
+            Parameters
+            ----------
+            layout
+
+            Returns
+            -------
+
+            """
+
             if hasattr(layout, "children") and isinstance(layout.children, list):
-                children = [
-                    prefix_layout_element_id(child, prefix) for child in layout.children
-                ]
-                layout.children = children
-            return layout
+                children_ids = list(
+                    chain.from_iterable(
+                        [get_layout_ids(child) for child in layout.children]
+                    )
+                )
+                if hasattr(layout, "id"):
+                    return [layout.id, *children_ids]
+                else:
+                    return children_ids
+            else:
+                if hasattr(layout, "id"):
+                    return [layout.id]
+                return []
 
-        return prefix_layout_element_id
+        return get_layout_ids
 
-    prefix_layout_element_id = staticmethod(prefix_layout_element_id())
+    get_layout_ids = staticmethod(get_layout_ids())
+
+    def checked_layout(self, layout_to_check):
+        self.check_layout(layout_to_check)
+        return self._layout
 
 
 if __name__ == "__main__":
@@ -128,9 +107,6 @@ if __name__ == "__main__":
     class Assist(BaseAssistant):
         def __init__(self):
             super().__init__()
-
-        def simulate(self):
-            pass
 
         def layout(self):
             return html.Div(
@@ -161,8 +137,8 @@ if __name__ == "__main__":
                 return "Output: {}".format(input_value)
 
     assistant = Assist()
-
-    app.layout = assistant.decorated_layout()
-    assistant.decorate_callbacks(app)
+    layout = html.Div(id="my-output-")
+    app.layout = assistant.checked_layout(layout)
+    assistant.register_callbacks(app)
 
     app.run_server()
