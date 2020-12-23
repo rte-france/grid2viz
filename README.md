@@ -2,9 +2,10 @@
 # Grid2Viz: The Grid2Op Visualization companion app
 
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
-You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking this button. The dataset used in this demo can be found in the [Grid2viz dataset](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness) and present the **best agent results of NeurIPS 2020 L2RPN Competition - Robustness Track** .
+You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking this button. The [Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness) used here presents the **best agent results of NeurIPS 2020 L2RPN Competition - Robustness Track** .
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)<!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
+<!---[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)--><!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Robustness/HEAD)
 **WARNING:** we recommend you to use Firefox or Chrome as a web navigator rather than Internet Explorer or Edge.
 ---
 
@@ -55,6 +56,8 @@ optional arguments:
                         environment)
   --port PORT           The port to serve grid2viz on. (default to 8050)
   --debug               Enable debug mode for developers. (default to False)
+  --n_cores             Number of cores to generate cache or load cache faster (default to 1)
+  --cache               Create upfront all necessary cache for grid2viz, to avoid waiting for some cache generation online (default to False)
 ```
 
 For example:
