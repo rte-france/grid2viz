@@ -21,7 +21,7 @@ You can launch a demo in your web navigator by running the Grid2viz_demo noteboo
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Robustness/HEAD)
 One third IEEE118 region NeurIPS Robustness Track Demo
 ![adaptability-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_aug_07_adaptability_track.gif "IEEE118 Adaptability Track Demo")
-IEEE118 NeurIPS Adaptability Track Demo
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Adaptability/HEAD) IEEE118 NeurIPS Adaptability Track Demo
 
 ## Documentation
 go to: https://grid2viz.readthedocs.io/en/latest/
