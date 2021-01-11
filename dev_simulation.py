@@ -713,9 +713,8 @@ def compare_line(network_graph):
 
 
 @app.callback(
-    [Output("tabs-choose-assist-method-content", "children"), Output("")][
-        Input("tabs-choose-assist-method", "active_tab")
-    ],
+    Output("tabs-choose-assist-method-content", "children"),
+    [Input("tabs-choose-assist-method", "active_tab")],
 )
 def simulation_method_tab_content(active_tab):
     if active_tab is None:
