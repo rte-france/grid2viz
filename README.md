@@ -1,15 +1,9 @@
 
 # Grid2Viz: The Grid2Op Visualization companion app
 
-<!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
-You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking this button. The dataset used in this demo can be found in the [Grid2viz dataset](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness).
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)<!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
-**WARNING:** we recommend you to use Firefox or Chrome as a web navigator rather than Internet Explorer or Edge.
----
-
 Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
 
+*   [0 Demo Gallery](#demo-gallery)
 *   [1 Documentation](#documentation)
 *   [2 Installation](#installation)
 *   [3 Run the application](#run-grid2viz)
@@ -17,6 +11,17 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [5 Caching](#caching)
 *   [6 Interface](#interface)
 *   [7 Trouble shooting](#troubleshooting)
+
+## Demo Gallery
+<!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
+You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking the Binder button. The [Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness) used here presents the **best agent results of NeurIPS 2020 L2RPN Competition - Robustness Track** .
+
+![robustness-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_april_018_wk1_robustness_track.gif "One third IEEE118 region Robustness Track Demo")
+<!---[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)--><!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Robustness/HEAD)
+One third IEEE118 region NeurIPS Robustness Track Demo
+![adaptability-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_aug_07_adaptability_track.gif "IEEE118 Adaptability Track Demo")
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Adaptability/HEAD) IEEE118 NeurIPS Adaptability Track Demo
 
 ## Documentation
 go to: https://grid2viz.readthedocs.io/en/latest/
@@ -55,6 +60,8 @@ optional arguments:
                         environment)
   --port PORT           The port to serve grid2viz on. (default to 8050)
   --debug               Enable debug mode for developers. (default to False)
+  --n_cores             Number of cores to generate cache or load cache faster (default to 1)
+  --cache               Create upfront all necessary cache for grid2viz, to avoid waiting for some cache generation online (default to False)
 ```
 
 For example:
