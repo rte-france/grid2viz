@@ -43,6 +43,21 @@ def compute_window(user_selected_timestamp, study_agent, scenario):
         )
 
 
+def agent_select_update(
+    scenario, pathname, agents, agent_default_value, options, value, disabled_views
+):
+    if value is None:
+        options = [{"label": agent, "value": agent} for agent in agents]
+        value = agent_default_value
+        manager.make_episode(value, scenario)
+    disabled = False
+    pathname_split = pathname.split("/")
+    pathname_split = pathname_split[len(pathname_split) - 1]
+    if pathname_split in disabled_views:
+        disabled = True
+    return options, disabled, value
+
+
 def register_callbacks_main(app):
     @app.callback(
         [
@@ -227,22 +242,23 @@ def register_callbacks_main(app):
             Output("select_ref_agent", "value"),
         ],
         [Input("scenario", "data"), Input("url", "pathname")],
+        [
+            State("select_ref_agent", "options"),
+            State("select_ref_agent", "value"),
+        ],
     )
-    def update_ref_agent_select_options(scenario, pathname):
+    def update_ref_agent_select_options(scenario, pathname, options, value):
         if scenario is None:
             raise PreventUpdate
-        options = [
-            {"label": agent, "value": agent}
-            for agent in manager.agent_scenario[scenario]
-        ]
-        value = manager.agent_scenario[scenario][0]
-        manager.make_episode(value, scenario)
-        disabled = False
-        pathname_split = pathname.split("/")
-        pathname_split = pathname_split[len(pathname_split) - 1]
-        if pathname_split in ["episodes", "micro"]:
-            disabled = True
-        return options, disabled, value
+        return agent_select_update(
+            scenario,
+            pathname,
+            manager.agent_scenario[scenario],
+            manager.agent_scenario[scenario][0],
+            options,
+            value,
+            ["episodes", "micro"],
+        )
 
     @app.callback(
         [
@@ -251,22 +267,23 @@ def register_callbacks_main(app):
             Output("select_study_agent", "value"),
         ],
         [Input("scenario", "data"), Input("url", "pathname")],
+        [
+            State("select_study_agent", "options"),
+            State("select_study_agent", "value"),
+        ],
     )
-    def update_ref_agent_select_options(scenario, pathname):
+    def update_study_agent_select_options(scenario, pathname, options, value):
         if scenario is None:
             raise PreventUpdate
-        options = [
-            {"label": agent, "value": agent}
-            for agent in manager.agent_scenario[scenario]
-        ]
-        value = manager.best_agents[scenario]["agent"]
-        manager.make_episode(value, scenario)
-        disabled = False
-        pathname_split = pathname.split("/")
-        pathname_split = pathname_split[len(pathname_split) - 1]
-        if pathname_split in ["micro", "episodes", "overview"]:
-            disabled = True
-        return options, disabled, value
+        return agent_select_update(
+            scenario,
+            pathname,
+            manager.agent_scenario[scenario],
+            manager.best_agents[scenario]["agent"],
+            options,
+            value,
+            ["micro", "episodes", "overview"],
+        )
 
     @app.callback(
         Output("agent_study", "data"),
@@ -282,7 +299,7 @@ def register_callbacks_main(app):
         [Input("select_ref_agent", "value")],
         [State("scenario", "data")],
     )
-    def update_agent_study_store(agent, scenario):
+    def update_agent_ref_store(agent, scenario):
         manager.make_episode(agent, scenario)
         return agent
 

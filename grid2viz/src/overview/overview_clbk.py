@@ -1,3 +1,4 @@
+import datetime as dt
 from pathlib import Path
 
 import pandas as pd
@@ -10,6 +11,19 @@ from grid2viz.src.utils import common_graph
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import relayout_callback, get_axis_relayout
+
+
+def filter_table_datetime(
+    df, timestamp_col_name="timestamp", start_date=None, end_date=None
+):
+    """
+    Filter and return the table in the range [strat_date, end_date)
+    """
+    if start_date is not None:
+        df = df[df[timestamp_col_name] >= start_date]
+    if end_date is not None:
+        df = df[df[timestamp_col_name] < end_date]
+    return df
 
 
 def register_callbacks_overview(app):
@@ -153,10 +167,17 @@ def register_callbacks_overview(app):
                 right_index=True,
                 how="right",
             )
+        start_date_timestamp = None
+        end_date_timestamp = None
         if start_date is not None:
-            df = df[df["timestamp"] >= start_date]
+            start_date_timestamp = dt.datetime.strptime(start_date, "%Y-%m-%d")
         if end_date is not None:
-            df = df[df["timestamp"] <= end_date]
+            end_date_timestamp = dt.datetime.strptime(
+                end_date, "%Y-%m-%d"
+            ) + dt.timedelta(days=1)
+        df = filter_table_datetime(
+            df, start_date=start_date_timestamp, end_date=end_date_timestamp
+        )
         cols = [{"name": i, "id": i} for i in df.columns]
         return cols, df.to_dict("records")
 
