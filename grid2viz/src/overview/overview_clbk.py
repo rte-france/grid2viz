@@ -170,7 +170,7 @@ def register_callbacks_overview(app):
         start_date_timestamp = None
         end_date_timestamp = None
         if start_date is not None:
-            start_date_timestamp = dt.datetime.strptime(end_date, "%Y-%m-%d")
+            start_date_timestamp = dt.datetime.strptime(start_date, "%Y-%m-%d")
         if end_date is not None:
             end_date_timestamp = dt.datetime.strptime(
                 end_date, "%Y-%m-%d"
