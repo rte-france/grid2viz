@@ -467,23 +467,7 @@ def choose_assist_line(episode, network_graph):
                 className="card-body row",
                 children=[
                     html.Div(
-                        className="col-7",
-                        id="",
-                        children=[
-                            html.H5("Network at time step t"),
-                            html.Div(
-                                id="graph_div",
-                                children=[
-                                    dcc.Graph(
-                                        id="network_graph_choose",
-                                        figure=network_graph,
-                                    )
-                                ],
-                            ),
-                        ],
-                    ),
-                    html.Div(
-                        className="col-5 chooseAssist",
+                        className="col-7 chooseAssist",
                         children=[
                             dbc.Card(
                                 [
@@ -511,6 +495,22 @@ def choose_assist_line(episode, network_graph):
                             ),
                         ],
                     ),
+                    html.Div(
+                        className="col-5",
+                        id="",
+                        children=[
+                            html.H5("Network at time step t"),
+                            html.Div(
+                                id="graph_div",
+                                children=[
+                                    dcc.Graph(
+                                        id="network_graph_choose",
+                                        figure=network_graph,
+                                    )
+                                ],
+                            ),
+                        ],
+                    ),
                 ],
             ),
         ],
@@ -526,52 +526,6 @@ def compare_line(network_graph):
             html.Div(
                 className="card-body row",
                 children=[
-                    html.Div(
-                        className="col-9",
-                        children=[
-                            html.Div(
-                                className="row",
-                                children=[
-                                    dbc.Button(
-                                        "Simulate",
-                                        id="simulate_action",
-                                        color="primary",
-                                        className="btn-block mx-3",
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                children=[
-                                    dbc.Card(
-                                        [
-                                            dbc.CardHeader(
-                                                dbc.Tabs(
-                                                    id="tabs_network",
-                                                    children=[
-                                                        dbc.Tab(
-                                                            label="New State t+1",
-                                                            tab_id="tab_new_network_state",
-                                                        ),
-                                                        dbc.Tab(
-                                                            label="Old State t+1",
-                                                            tab_id="tab_old_network_state",
-                                                        ),
-                                                    ],
-                                                    active_tab="tab_new_network_state",
-                                                ),
-                                            ),
-                                            dbc.CardBody(
-                                                id="card_body_network",
-                                                children=[
-                                                    "Compose an action above and then simulate it."
-                                                ],
-                                            ),
-                                        ]
-                                    )
-                                ],
-                            ),
-                        ],
-                    ),
                     html.Div(
                         className="col-3",
                         children=[
@@ -702,6 +656,52 @@ def compare_line(network_graph):
                                             ),
                                         ],
                                     ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    html.Div(
+                        className="col-9",
+                        children=[
+                            html.Div(
+                                className="row",
+                                children=[
+                                    dbc.Button(
+                                        "Simulate",
+                                        id="simulate_action",
+                                        color="primary",
+                                        className="btn-block mx-3",
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                children=[
+                                    dbc.Card(
+                                        [
+                                            dbc.CardHeader(
+                                                dbc.Tabs(
+                                                    id="tabs_network",
+                                                    children=[
+                                                        dbc.Tab(
+                                                            label="New State t+1",
+                                                            tab_id="tab_new_network_state",
+                                                        ),
+                                                        dbc.Tab(
+                                                            label="Old State t+1",
+                                                            tab_id="tab_old_network_state",
+                                                        ),
+                                                    ],
+                                                    active_tab="tab_new_network_state",
+                                                ),
+                                            ),
+                                            dbc.CardBody(
+                                                id="card_body_network",
+                                                children=[
+                                                    "Compose an action above and then simulate it."
+                                                ],
+                                            ),
+                                        ]
+                                    )
                                 ],
                             ),
                         ],
