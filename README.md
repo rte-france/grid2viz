@@ -22,9 +22,9 @@ One third IEEE118 region NeurIPS Robustness Track Demo - [Demo repository](https
 ![robustness-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_april_018_wk1_robustness_track.gif "One third IEEE118 region Robustness Track Demo")
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Adaptability/HEAD) 
-IEEE118 NeurIPS Adaptability Track Demo
+IEEE118 NeurIPS Adaptability Track Demo - [Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Adaptability) here.
+
 ![adaptability-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_aug_07_adaptability_track.gif "IEEE118 Adaptability Track Demo")
-[Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Adaptability) here.
 
 ## Documentation
 go to: https://grid2viz.readthedocs.io/en/latest/
