@@ -223,7 +223,6 @@ class Assist(BaseAssistant):
             params_for_reboot["parameters"] = p
 
             episode_reboot = EpisodeReboot.EpisodeReboot()
-            agent_path = path
             episode_reboot.load(
                 env.backend,
                 data=episode,
@@ -913,7 +912,6 @@ def update_action(
     params_for_reboot["parameters"] = p
 
     episode_reboot = EpisodeReboot.EpisodeReboot()
-    agent_path = path
     episode_reboot.load(
         env.backend,
         data=episode,
