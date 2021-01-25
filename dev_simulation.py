@@ -1,15 +1,10 @@
 import json
 
-from alphaDeesp.expert_operator import expert_operator
-from alphaDeesp.core.grid2op.Grid2opSimulation import (
-    Grid2opSimulation,
-    score_changes_between_two_observations,
-)
+
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-from dash_table import DataTable
 import dill
 import numpy as np
 from dash import Dash, callback_context
@@ -23,7 +18,9 @@ from grid2op.PlotGrid import PlotPlotly
 import plotly.graph_objects as go
 
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
-from grid2viz.src.simulation.simulation_assist import BaseAssistant
+from ExpertAssist import Assist
+from manager_simulation import make_episode, make_network_agent_study, make_network
+
 
 # We need to create app before importing the rest of the project as it uses @app decorators
 font_awesome = [
@@ -44,203 +41,6 @@ agent_path = (
     r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
 )
 env_path = r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic"
-with open(path, "rb") as f:
-    episode = dill.load(f)
-episode_data = EpisodeData.from_disk(agent_dir, scenario)
-episode.decorate(episode_data)
-
-network_graph_factory = PlotPlotly(
-    grid_layout=episode.observation_space.grid_layout,
-    observation_space=episode.observation_space,
-    responsive=True,
-)
-
-t = 1
-network_graph = network_graph_factory.plot_obs(observation=episode.observations[t])
-
-
-def get_ranked_overloads(observation_space, observation):
-    timestepsOverflowAllowed = (
-        3  # observation_space.parameters.NB_TIMESTEP_OVERFLOW_ALLOWED
-    )
-
-    sort_rho = -np.sort(
-        -observation.rho
-    )  # sort in descending order for positive values
-    sort_indices = np.argsort(-observation.rho)
-    ltc_list = [sort_indices[i] for i in range(len(sort_rho)) if sort_rho[i] >= 1]
-
-    # now reprioritize ltc if critical or not
-    ltc_critical = [
-        l
-        for l in ltc_list
-        if (observation.timestep_overflow[l] == timestepsOverflowAllowed)
-    ]
-    ltc_not_critical = [
-        l
-        for l in ltc_list
-        if (observation.timestep_overflow[l] != timestepsOverflowAllowed)
-    ]
-
-    ltc_list = ltc_critical + ltc_not_critical
-    if len(ltc_list) == 0:
-        ltc_list = [sort_indices[0]]
-    return ltc_list
-
-
-expert_config = {
-    "totalnumberofsimulatedtopos": 25,
-    "numberofsimulatedtopospernode": 5,
-    "maxUnusedLines": 2,
-    "ratioToReconsiderFlowDirection": 0.75,
-    "ratioToKeepLoop": 0.25,
-    "ThersholdMinPowerOfLoop": 0.1,
-    "ThresholdReportOfLine": 0.2,
-}
-
-reward_type = "MinMargin_reward"
-
-p = Parameters()
-p.NO_OVERFLOW_DISCONNECTION = False
-env = make(
-    env_path,
-    test=True,
-    param=p,
-)
-env.seed(0)
-
-params_for_runner = env.get_params_for_runner()
-params_to_fetch = ["init_grid_path"]
-params_for_reboot = {
-    key: value for key, value in params_for_runner.items() if key in params_to_fetch
-}
-params_for_reboot["parameters"] = p
-
-episode_reboot = EpisodeReboot.EpisodeReboot()
-
-episode_reboot.load(
-    env.backend,
-    data=episode,
-    agent_path=agent_path,
-    name=episode.episode_name,
-    env_kwargs=params_for_reboot,
-)
-
-obs, reward, *_ = episode_reboot.go_to(t)
-
-simulator = Grid2opSimulation(
-    obs,
-    env.action_space,
-    env.observation_space,
-    param_options=expert_config,
-    debug=False,
-    ltc=[get_ranked_overloads(env.observation_space, obs)[0]],
-    reward_type=reward_type,
-)
-
-ranked_combinations, expert_system_results, actions = expert_operator(
-    simulator, plot=False, debug=False
-)
-
-
-class Assist(BaseAssistant):
-    def __init__(self):
-        super().__init__()
-
-    def layout(self):
-        return html.Div(
-            [
-                dcc.Store(id="assistant_store", data="Toto"),
-                dbc.Button(
-                    id="assist-button", children=["Evaluate with the Expert system"]
-                ),
-                html.Div(id="expert-results"),
-                html.P(
-                    id="assist-action-info",
-                    className="more-info-table",
-                    children="Select an action in the table above.",
-                ),
-            ]
-        )
-
-    def register_callbacks(self, app):
-        @app.callback(
-            Output("expert-results", "children"),
-            [Input("assist-button", "n_clicks")],
-        )
-        def evaluate_expert_system(n_clicks):
-            if n_clicks is None:
-                raise PreventUpdate
-            return DataTable(
-                id="table",
-                columns=[{"name": i, "id": i} for i in expert_system_results.columns],
-                data=expert_system_results.to_dict("records"),
-                style_table={"overflowX": "auto"},
-                row_selectable="single",
-                style_cell={
-                    "overflow": "hidden",
-                    "textOverflow": "ellipsis",
-                    "maxWidth": 0,
-                },
-                tooltip_data=[
-                    {
-                        column: {"value": str(value), "type": "markdown"}
-                        for column, value in row.items()
-                    }
-                    for row in expert_system_results.to_dict("rows")
-                ],
-            )
-
-        @app.callback(
-            [
-                Output("assistant_store", "data"),
-                Output("assist-action-info", "children"),
-            ],
-            [Input("table", "selected_rows")],
-        )
-        def select_action(selected_rows):
-            if selected_rows is None:
-                raise PreventUpdate
-            selected_row = selected_rows[0]
-            action = actions[selected_row]
-            # Temporary implementation for testing purposes
-            p = Parameters()
-            p.NO_OVERFLOW_DISCONNECTION = False
-            env = make(
-                env_path,
-                test=True,
-                param=p,
-            )
-            env.seed(0)
-
-            params_for_runner = env.get_params_for_runner()
-            params_to_fetch = ["init_grid_path"]
-            params_for_reboot = {
-                key: value
-                for key, value in params_for_runner.items()
-                if key in params_to_fetch
-            }
-            params_for_reboot["parameters"] = p
-
-            episode_reboot = EpisodeReboot.EpisodeReboot()
-            episode_reboot.load(
-                env.backend,
-                data=episode,
-                agent_path=agent_path,
-                name=episode.episode_name,
-                env_kwargs=params_for_reboot,
-            )
-            obs, reward, *_ = episode_reboot.go_to(t)
-            obs, *_ = obs.simulate(action=action, time_step=0)
-            try:
-                new_network_graph = network_graph_factory.plot_obs(observation=obs)
-            except ValueError:
-                import traceback
-
-                new_network_graph = traceback.format_exc()
-
-            return new_network_graph, str(action)
-
 
 assistant = Assist()
 
@@ -714,14 +514,18 @@ def compare_line(network_graph):
 @app.callback(
     Output("tabs-choose-assist-method-content", "children"),
     [Input("tabs-choose-assist-method", "active_tab")],
+    [State("scenario", "data"), State("agent_study", "data")],
 )
-def simulation_method_tab_content(active_tab):
+def simulation_method_tab_content(active_tab, scenario, study_agent):
+    episode = make_episode(study_agent, scenario)
     if active_tab is None:
         raise PreventUpdate
     if active_tab == "tab-choose-method":
         return choose_tab_content(episode)
     elif active_tab == "tab-assist-method":
-        return assistant.checked_layout(choose_tab_content(episode))
+        return assistant.register_layout(
+            episode, layout_to_ckeck_against=choose_tab_content(episode)
+        )
 
 
 @app.callback(
@@ -755,6 +559,8 @@ def simulation_method_tab_content(active_tab):
         State("network_graph_t", "data"),
         State("network_graph_t+1", "data"),
         State("network_graph_new", "data"),
+        State("scenario", "data"),
+        State("agent_study", "data"),
     ],
 )
 def update_action(
@@ -781,6 +587,8 @@ def update_action(
     network_graph_t,
     network_graph_t_next,
     network_graph_new,
+    scenario,
+    study_agent,
 ):
     ctx = callback_context
 
@@ -801,11 +609,12 @@ def update_action(
 
     if add_n_clicks is None:
         raise PreventUpdate
+    episode = make_episode(study_agent, scenario)
     if method_tab == "tab-0":
         # Dropdown
         if objet_tab == "tab-0":
             # Lines
-            (line_ids,) = np.where(episode_data.line_names == selected_line)
+            (line_ids,) = np.where(episode.line_names == selected_line)
             line_id = int(line_ids[0])
             side = "ex" if "ex" in ex_or_lines else "or"
             bus_number_lines = -1  # Disconnect
@@ -834,7 +643,7 @@ def update_action(
                     action_dict = {"change_bus": {f"lines_{side}_id": [line_id]}}
         elif objet_tab == "tab-1":
             # Loads
-            (load_ids,) = np.where(episode_data.load_names == selected_load)
+            (load_ids,) = np.where(episode.load_names == selected_load)
             load_id = load_ids[0]
             bus_number_loads = -1  # Disconnect
             if bus_loads == "Bus1":
@@ -848,7 +657,7 @@ def update_action(
                 action_dict = {"change_bus": {"loads_id": [load_id]}}
         else:
             # Gens
-            (gen_ids,) = np.where(episode_data.prod_names == selected_gen)
+            (gen_ids,) = np.where(episode.prod_names == selected_gen)
             gen_id = int(
                 gen_ids[0]
             )  # gen_ids[0] is of type np.int64 which is not json serializable
@@ -928,7 +737,7 @@ def update_action(
     obs, *_ = obs.simulate(action=act, time_step=0)
     try:
         graph_div_child = dcc.Graph(figure=network_graph_t)
-        new_network_graph = network_graph_factory.plot_obs(observation=obs)
+        new_network_graph = make_network(episode).plot_obs(observation=obs)
     except ValueError:
         import traceback
 
@@ -1045,15 +854,17 @@ def simulate(
     network_graph_new,
     network_graph_t_next,
     active_tab_choose_assist,
-    simualtion_assistant_store,
+    simulation_assistant_store,
 ):
     if simulate_n_clicks is None or (
-        actions is None and simualtion_assistant_store is None
+        actions is None and simulation_assistant_store is None
     ):
         raise PreventUpdate
     if active_tab_networks == "tab_new_network_state":
         if active_tab_choose_assist == "tab-assist-method":
-            return dcc.Graph(figure=go.Figure(simualtion_assistant_store))
+            return dcc.Graph(
+                figure=go.Figure(assistant.store_to_graph(simulation_assistant_store))
+            )
         else:
             return dcc.Graph(figure=network_graph_new)
     elif active_tab_networks == "tab_old_network_state":
@@ -1064,33 +875,42 @@ def simulate(
     Output("simulation-assistant-store", "data"), [Input("assistant_store", "data")]
 )
 def transfer_assistant_store(data):
-    """Necessary so that the store can be reach evenn when the assistant_store is
+    """Necessary so that the store can be reach even when the assistant_store is
     not part of the view (e.g. when in choose mode)"""
     return data
 
 
-app.layout = html.Div(
-    id="simulation_page",
-    children=[
-        dcc.Store(id="actions", storage_type="memory"),
-        dcc.Store(id="simulation-assistant-store", storage_type="memory"),
-        dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),
-        dcc.Store(
-            id="network_graph_t+1",
-            storage_type="memory",
-            data=network_graph_factory.plot_obs(
-                observation=episode.observations[t + 1]
+def layout(study_agent, scenario, timestep):
+    episode = make_episode(study_agent, scenario)
+    network_graph = make_network_agent_study(
+        episode, timestep=timestep, responsive=True
+    )
+    return html.Div(
+        id="simulation_page",
+        children=[
+            dcc.Store(id="scenario", storage_type="memory", data=scenario),
+            dcc.Store(id="agent_ref", storage_type="memory"),
+            dcc.Store(id="agent_study", storage_type="memory", data=study_agent),
+            dcc.Store(id="actions", storage_type="memory"),
+            dcc.Store(id="simulation-assistant-store", storage_type="memory"),
+            dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),
+            dcc.Store(
+                id="network_graph_t+1",
+                storage_type="memory",
+                data=make_network_agent_study(episode, timestep=timestep + 1),
             ),
-        ),
-        dcc.Store(
-            id="network_graph_new",
-            storage_type="memory",
-        ),
-        choose_assist_line(episode, network_graph),
-        compare_line(network_graph),
-    ],
-)
+            dcc.Store(
+                id="network_graph_new",
+                storage_type="memory",
+            ),
+            choose_assist_line(episode, network_graph),
+            compare_line(network_graph),
+        ],
+    )
 
+
+t = 1
+app.layout = layout(scenario=scenario, study_agent="do-nothing-baseline", timestep=t)
 
 assistant.register_callbacks(app)
 
