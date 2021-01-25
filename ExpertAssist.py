@@ -1,3 +1,5 @@
+import os
+
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -16,6 +18,8 @@ from grid2op.Episode import EpisodeData, EpisodeReboot
 from grid2op.MakeEnv import make
 from grid2op.Parameters import Parameters
 from grid2op.PlotGrid import PlotPlotly
+
+from contextlib import redirect_stdout
 
 from grid2viz.src.simulation.simulation_assist import BaseAssistant
 
@@ -161,19 +165,19 @@ class Assist(BaseAssistant):
         def evaluate_expert_system(n_clicks):
             if n_clicks is None:
                 raise PreventUpdate
-            simulator = Grid2opSimulation(
-                obs,
-                env.action_space,
-                env.observation_space,
-                param_options=expert_config,
-                debug=False,
-                ltc=[get_ranked_overloads(env.observation_space, obs)[0]],
-                reward_type=reward_type,
-            )
-
-            ranked_combinations, expert_system_results, actions = expert_operator(
-                simulator, plot=False, debug=False
-            )
+            with redirect_stdout(None):
+                simulator = Grid2opSimulation(
+                    obs,
+                    env.action_space,
+                    env.observation_space,
+                    param_options=expert_config,
+                    debug=False,
+                    ltc=[get_ranked_overloads(env.observation_space, obs)[0]],
+                    reward_type=reward_type,
+                )
+                ranked_combinations, expert_system_results, actions = expert_operator(
+                    simulator, plot=False, debug=False
+                )
             return (
                 DataTable(
                     id="table",
