@@ -10,15 +10,33 @@ class BaseAssistant(ABC):
         self._layout = None
 
     @abstractmethod
-    def layout(self):
+    def layout(self, *args):
         pass
 
     @abstractmethod
     def register_callbacks(self, app):
         pass
 
+    @abstractmethod
+    def store_to_graph(self, store_data):
+        """
+        Returns a Grid2Op network graph for the data stored in store_data
+        Parameters
+        ----------
+        store_data
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def register_layout(self, *layout_args, layout_to_ckeck_against=None):
+        self._layout = self.layout(*layout_args)
+        self.check_layout(layout_to_ckeck_against)
+        return self._layout
+
     def check_layout(self, layout_to_check_against):
-        self._layout = self.layout()
         try:
             if (
                 self._layout.children[0]._type != "Store"
@@ -89,10 +107,6 @@ class BaseAssistant(ABC):
 
     get_layout_ids = staticmethod(get_layout_ids())
 
-    def checked_layout(self, layout_to_check):
-        self.check_layout(layout_to_check)
-        return self._layout
-
 
 if __name__ == "__main__":
     import dash
@@ -136,9 +150,12 @@ if __name__ == "__main__":
             def update_output_div(input_value):
                 return "Output: {}".format(input_value)
 
+        def store_to_graph(self, store_data):
+            return store_data
+
     assistant = Assist()
     layout = html.Div(id="my-output-")
-    app.layout = assistant.checked_layout(layout)
+    assistant.register_layout(layout_to_ckeck_against=layout)
     assistant.register_callbacks(app)
 
     app.run_server()
