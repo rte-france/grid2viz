@@ -266,6 +266,7 @@ def choose_assist_line(episode, network_graph):
                 className="card-body row",
                 children=[
                     html.Div(
+                        id="div-choose-assist",
                         className="col-7 chooseAssist",
                         children=[
                             dbc.Card(
@@ -296,7 +297,7 @@ def choose_assist_line(episode, network_graph):
                     ),
                     html.Div(
                         className="col-5",
-                        id="",
+                        id="div-network-graph-choose-assist",
                         children=[
                             html.H5("Network at time step t"),
                             html.Div(
@@ -512,7 +513,11 @@ def compare_line(network_graph):
 
 
 @app.callback(
-    Output("tabs-choose-assist-method-content", "children"),
+    [
+        Output("tabs-choose-assist-method-content", "children"),
+        Output("div-choose-assist", "class"),
+        Output("div-network-graph-choose-assist", "class"),
+    ],
     [Input("tabs-choose-assist-method", "active_tab")],
     [State("scenario", "data"), State("agent_study", "data")],
 )
@@ -521,10 +526,14 @@ def simulation_method_tab_content(active_tab, scenario, study_agent):
     if active_tab is None:
         raise PreventUpdate
     if active_tab == "tab-choose-method":
-        return choose_tab_content(episode)
+        return choose_tab_content(episode), "col-3", "col-9"
     elif active_tab == "tab-assist-method":
-        return assistant.register_layout(
-            episode, layout_to_ckeck_against=choose_tab_content(episode)
+        return (
+            assistant.register_layout(
+                episode, layout_to_ckeck_against=choose_tab_content(episode)
+            ),
+            "col-12",
+            "hidden",
         )
 
 
@@ -897,7 +906,9 @@ def layout(study_agent, scenario, timestep):
             dcc.Store(
                 id="network_graph_t+1",
                 storage_type="memory",
-                data=make_network_agent_study(episode, timestep=timestep + 1),
+                data=make_network_agent_study(
+                    episode, timestep=timestep + 1, responsive=True
+                ),
             ),
             dcc.Store(
                 id="network_graph_new",
