@@ -15,6 +15,7 @@ from grid2viz.src.kpi import actions_model
 from grid2viz.src.manager import (
     make_episode,
     grid2viz_home_directory,
+    make_network_agent_overview,
 )
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
@@ -157,15 +158,15 @@ def register_callbacks_macro(app):
             )
         ]
 
-    # @app.callback(
-    #     Output("network_actions", "figure"),
-    #     [Input("agent_study", "data")],
-    #     [State("scenario", "data")]
-    # )
-    # def update_network_graph(study_agent, scenario):
-    #     episode = make_episode(study_agent, scenario)
-    #
-    #     return make_network_agent_overview(episode)
+    @app.callback(
+        Output("network_actions", "figure"),
+        [Input("agent_study", "data")],
+        [State("scenario", "data")],
+    )
+    def update_network_graph(study_agent, scenario):
+        episode = make_episode(study_agent, scenario)
+
+        return make_network_agent_overview(episode)
 
     @app.callback(
         Output("timeseries_table", "data"),
