@@ -14,14 +14,17 @@ Grid2Viz is a web application that offers several interactive views into the res
 
 ## Demo Gallery
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
-You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking the Binder button. The [Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness) used here presents the **best agent results of NeurIPS 2020 L2RPN Competition - Robustness Track** .
+You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking the Binder button. The[Demo repositories used here presents the **best agent results of NeurIPS 2020 L2RPN Competition** .
 
-![robustness-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_april_018_wk1_robustness_track.gif "One third IEEE118 region Robustness Track Demo")
 <!---[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/master/?urlpath=git-pull?repo=https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness%26amp%3Burlpath=tree/../%26amp%3Burlpath=tree/Grid2Viz_demo.ipynb%3Fautodecode)--><!--- 1rst urlpath to download the dataset from a new github - 2nd urlpath to get back to a parent root directory - 3rd urlpath to directly load the notebook -->
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Robustness/HEAD)
-One third IEEE118 region NeurIPS Robustness Track Demo
+One third IEEE118 region NeurIPS Robustness Track Demo - [Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Robustness) here
+![robustness-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_april_018_wk1_robustness_track.gif "One third IEEE118 region Robustness Track Demo")
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Adaptability/HEAD) 
+IEEE118 NeurIPS Adaptability Track Demo - [Demo repository](https://github.com/marota/Grid2viz-dataset-NeurIPS-Adaptability) here.
+
 ![adaptability-demo](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/gif/Scenario_aug_07_adaptability_track.gif "IEEE118 Adaptability Track Demo")
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marota/Grid2viz-dataset-NeurIPS-Adaptability/HEAD) IEEE118 NeurIPS Adaptability Track Demo
 
 ## Documentation
 go to: https://grid2viz.readthedocs.io/en/latest/
