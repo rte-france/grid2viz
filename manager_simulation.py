@@ -15,12 +15,14 @@ from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
+from ExpertAssist import Assist
 
 # refer to https://github.com/rte-france/Grid2Op/blob/master/getting_started/8_PlottingCapabilities.ipynb for better usage
 
 graph = None
 graph_matplotlib = None
 
+assistant = Assist()
 
 # TODO: addSubstationColor - integrate that into grid2op Plotgrid
 def add_substation_color_matplot(subs, plot_helper, fig):
