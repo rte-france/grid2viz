@@ -278,7 +278,12 @@ def choose_assist_line(network_graph):
     )
 
 
-def compare_line():
+def compare_line(episode, timestep):
+    timestamp = episode.timestamps[timestep]
+    reward = f"{episode.rewards[timestep]:,.0f}"
+    rho = f"{episode.rho.loc[ episode.rho.timestamp == timestamp, 'value'].max() * 100:.0f}%"
+    nb_overflows = f"{episode.total_overflow_ts['value'][timestep]:,.0f}"
+    losses = f"0"
     return html.Div(
         id="compare_line",
         className="lineBlock card",
@@ -303,7 +308,7 @@ def compare_line():
                                                     html.P(
                                                         id="agent_reward",
                                                         className="border-bottom h3 mb-0 text-right",
-                                                        children="0",
+                                                        children=reward,
                                                     ),
                                                     html.P(
                                                         className="text-muted",
@@ -317,7 +322,7 @@ def compare_line():
                                                     html.P(
                                                         id="agent_rho",
                                                         className="border-bottom h3 mb-0 text-right",
-                                                        children="0",
+                                                        children=rho,
                                                     ),
                                                     html.P(
                                                         className="text-muted",
@@ -331,7 +336,7 @@ def compare_line():
                                                     html.P(
                                                         id="agent_overflows",
                                                         className="border-bottom h3 mb-0 text-right",
-                                                        children="0",
+                                                        children=nb_overflows,
                                                     ),
                                                     html.P(
                                                         className="text-muted",
@@ -345,7 +350,7 @@ def compare_line():
                                                     html.P(
                                                         id="agent_losses",
                                                         className="border-bottom h3 mb-0 text-right",
-                                                        children="0",
+                                                        children=losses,
                                                     ),
                                                     html.P(
                                                         className="text-muted",
@@ -506,6 +511,6 @@ def layout(study_agent, scenario, timestep):
                 storage_type="memory",
             ),
             choose_assist_line(network_graph),
-            compare_line(),
+            compare_line(episode, timestep=timestep + 1),
         ],
     )

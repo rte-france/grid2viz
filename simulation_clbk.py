@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 
 import dash_core_components as dcc
@@ -75,7 +76,7 @@ def register_callbacks_simulation(app):
             State("network_graph_new", "data"),
             State("scenario", "data"),
             State("agent_study", "data"),
-            State("user_timestamps", "data"),
+            State("user_timestamps", "value"),
         ],
     )
     def update_action(
@@ -252,7 +253,9 @@ def register_callbacks_simulation(app):
             name=episode.episode_name,
             env_kwargs=params_for_reboot,
         )
-        t = episode.timestamps.index(timestamp)
+        t = episode.timestamps.index(
+            dt.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+        )
         obs, reward, *_ = episode_reboot.go_to(t)
         act = PlayableAction()
 
@@ -397,6 +400,37 @@ def register_callbacks_simulation(app):
                 return dcc.Graph(figure=network_graph_new)
         elif active_tab_networks == "tab_old_network_state":
             return dcc.Graph(figure=network_graph_t_next)
+
+    @app.callback(
+        [
+            Output("new_action_reward", "children"),
+            Output("new_action_rho", "children"),
+            Output("new_action_overflows", "children"),
+            Output("new_action_losses", "children"),
+        ],
+        [Input("simulate_action", "n_clicks")],
+        [
+            State("tabs-choose-assist-method", "active_tab"),
+            State("scenario", "data"),
+            State("agent_study", "data"),
+            State("user_timestamps", "value"),
+        ],
+    )
+    def update_kpis(
+        simulate_n_clicks, active_tab_choose_assist, scenario, study_agent, timestamp
+    ):
+        if simulate_n_clicks is None:
+            raise PreventUpdate
+        if active_tab_choose_assist == "tab-choose-method":
+            episode = make_episode(study_agent, scenario)
+            timestep = episode.timestamps.index(
+                dt.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+            )
+            reward = f"{episode.rewards[timestep]:,.0f}"
+            rho = f"{episode.rho.loc[episode.rho.timestamp == timestamp, 'value'].max() * 100:.0f}%"
+            nb_overflows = f"{episode.total_overflow_ts['value'][timestep]:,.0f}"
+            losses = f"0"
+            return reward, rho, nb_overflows, losses
 
     @app.callback(
         Output("simulation-assistant-store", "data"), [Input("assistant_store", "data")]
