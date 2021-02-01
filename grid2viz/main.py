@@ -31,6 +31,8 @@ ARG_N_CORES_DESC = "The number of cores to use for the first loading of the best
 
 ARG_CACHE_DESC = "True if you want to build all the cache data for all agents at once before relaunching grid2viz"
 
+ARG_WARM_START_DESC = "If True, the application is warm started based on the parameters defined in the WARMSTART section of the config.ini file"
+
 
 def main():
     parser_main = argparse.ArgumentParser(description="Grid2Viz")
@@ -51,6 +53,9 @@ def main():
 
     parser_main.add_argument("--n_cores", default=2, type=int, help=ARG_N_CORES_DESC)
     parser_main.add_argument("--cache", default=False, type=bool, help=ARG_CACHE_DESC)
+    parser_main.add_argument(
+        "--warm-start", default=False, type=bool, help=ARG_WARM_START_DESC
+    )
 
     args = parser_main.parse_args()
 
@@ -85,8 +90,17 @@ def main():
     if is_makeCache_only:
         make_cache()
     else:
-        from grid2viz.app import app_run
+        from grid2viz.app import app_run, define_layout_and_callbacks
 
+        scenario = "000"
+        agent_ref = "do-nothing-baseline"
+        agent_study = "do-nothing-baseline"
+        user_timestamps = None
+        window = None
+        page = None
+        define_layout_and_callbacks(
+            scenario, agent_ref, agent_study, user_timestamps, window, page
+        )
         app_run(args.port, args.debug)
 
 
