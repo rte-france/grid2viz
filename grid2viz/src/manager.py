@@ -97,12 +97,12 @@ def make_network_matplotlib(episode):
 ######
 # we want a non responsive graph for now in agent_study
 # so we have to define it differently from the global graph in make_network that we don't use here
-def make_network_agent_study(episode, timestep):
+def make_network_agent_study(episode, timestep, responsive=False):
     # subs_on_bus_2 = np.repeat(False, episode_data.observations[0].n_sub)
     graph = PlotPlotly(
         grid_layout=episode.observation_space.grid_layout,
         observation_space=episode.observation_space,
-        responsive=False,
+        responsive=responsive,
     )
     graph._sub_radius = 30  # instead of 25 by default
     graph._bus_radius = 10  # instead of 4 by default

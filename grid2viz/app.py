@@ -30,6 +30,7 @@ from grid2viz.src.overview.overview_clbk import (
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
 from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
+from grid2viz.src.simulation.ExpertAssist import Assist
 
 """
 End Warning
@@ -59,6 +60,8 @@ def define_layout_and_callbacks(
     register_callbacks_macro(app)
     register_callbacks_micro(app)
     register_callbacks_simulation(app)
+    assistant = Assist()
+    assistant.register_callbacks(app)
 
 
 def app_run(port=8050, debug=False):

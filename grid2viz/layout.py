@@ -11,6 +11,7 @@ nav_items = [
     dbc.NavItem(dbc.NavLink("Scenario Overview", href="/overview", id="nav_scen_over")),
     dbc.NavItem(dbc.NavLink("Agent Overview", href="/macro", id="nav_agent_over")),
     dbc.NavItem(dbc.NavLink("Agent Study", href="/micro", id="nav_agent_study")),
+    dbc.NavItem(dbc.NavLink("Simulation", href="/simulation", id="nav_simulation")),
     dbc.DropdownMenu(
         label="Help",
         color="link",

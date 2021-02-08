@@ -13,6 +13,7 @@ from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.micro import micro_lyt as micro
 from grid2viz.src.episodes import episodes_lyt as episodes
+from grid2viz.src.simulation import simulation_lyt as simulation
 
 """
 End Warning
@@ -74,6 +75,7 @@ def register_callbacks_main(app):
             Output("nav_scen_over", "active"),
             Output("nav_agent_over", "active"),
             Output("nav_agent_study", "active"),
+            Output("nav_simulation", "active"),
             Output("reset_timeseries_table_macro", "data"),
         ],
         [Input("url", "pathname")],
@@ -122,6 +124,7 @@ def register_callbacks_main(app):
                 False,
                 False,
                 False,
+                False,
                 reset_ts_table_macro,
             )
         elif pathName_split == "overview":
@@ -130,6 +133,7 @@ def register_callbacks_main(app):
                 "overview",
                 False,
                 True,
+                False,
                 False,
                 False,
                 reset_ts_table_macro,
@@ -147,6 +151,7 @@ def register_callbacks_main(app):
                 True,
                 False,
                 False,
+                False,
             )
         elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
@@ -154,6 +159,21 @@ def register_callbacks_main(app):
             layout = (
                 micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario),
                 "micro",
+                False,
+                False,
+                False,
+                True,
+                False,
+                reset_ts_table_macro,
+            )
+            return layout
+        elif pathName_split == "simulation":
+            if ref_agent is None or study_agent is None:
+                raise PreventUpdate
+            layout = (
+                simulation.layout(study_agent, scenario, user_selected_timestamp),
+                "simulation",
+                False,
                 False,
                 False,
                 False,
