@@ -15,6 +15,7 @@ from grid2viz.src.kpi import actions_model
 from grid2viz.src.manager import (
     make_episode,
     grid2viz_home_directory,
+    make_network_agent_overview,
 )
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
@@ -157,15 +158,15 @@ def register_callbacks_macro(app):
             )
         ]
 
-    # @app.callback(
-    #     Output("network_actions", "figure"),
-    #     [Input("agent_study", "data")],
-    #     [State("scenario", "data")]
-    # )
-    # def update_network_graph(study_agent, scenario):
-    #     episode = make_episode(study_agent, scenario)
-    #
-    #     return make_network_agent_overview(episode)
+    @app.callback(
+        Output("network_actions", "figure"),
+        [Input("agent_study", "data")],
+        [State("scenario", "data")],
+    )
+    def update_network_graph(study_agent, scenario):
+        episode = make_episode(study_agent, scenario)
+
+        return make_network_agent_overview(episode)
 
     @app.callback(
         Output("timeseries_table", "data"),
@@ -218,30 +219,45 @@ def register_callbacks_macro(app):
     @app.callback(
         [
             Output("indicator_score_output", "children"),
+            Output("indicator_survival_time", "children"),
             Output("indicator_nb_overflow", "children"),
             Output("indicator_nb_action", "children"),
+            Output("indicator_nb_maintenances", "children"),
         ],
         [Input("agent_study", "data"), Input("scenario", "data")],
     )
     def update_nbs(study_agent, scenario):
         new_episode = make_episode(study_agent, scenario)
         score = f"{get_score_agent(new_episode):,}"
+        survival_time = (
+            f"{get_agent_survival_time(new_episode)}/{get_episode_length(new_episode)}"
+        )
         nb_overflow = f"{get_nb_overflow_agent(new_episode):,}"
         nb_action = f"{get_nb_action_agent(new_episode):,}"
+        nb_maintenances = f"{get_nb_maintenances(new_episode)}"
 
-        return score, nb_overflow, nb_action
+        return score, survival_time, nb_overflow, nb_action, nb_maintenances
 
-    def get_score_agent(agent):
-        score = agent.meta["cumulative_reward"]
+    def get_score_agent(episode):
+        score = episode.meta["cumulative_reward"]
         return round(score)
 
-    def get_nb_overflow_agent(agent):
-        return agent.total_overflow_ts["value"].sum()
+    def get_agent_survival_time(episode):
+        return episode.meta["nb_timestep_played"]
 
-    def get_nb_action_agent(agent):
+    def get_episode_length(episode):
+        return episode.meta["chronics_max_timestep"]
+
+    def get_nb_overflow_agent(episode):
+        return episode.total_overflow_ts["value"].sum()
+
+    def get_nb_action_agent(episode):
         return int(
-            agent.action_data_table[["action_line", "action_subs"]].sum(axis=1).sum()
+            episode.action_data_table[["action_line", "action_subs"]].sum(axis=1).sum()
         )
+
+    def get_nb_maintenances(episode):
+        return int(episode.nb_maintenances)
 
     # @app.callback(
     #     Output("agent_study", "data"),
