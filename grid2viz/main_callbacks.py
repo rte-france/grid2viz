@@ -44,11 +44,18 @@ def compute_window(user_selected_timestamp, study_agent, scenario):
 
 
 def agent_select_update(
-    scenario, pathname, agents, agent_default_value, options, value, disabled_views
+    scenario,
+    pathname,
+    agents,
+    agent_default_value,
+    options,
+    value,
+    disabled_views,
+    agent,
 ):
     if value is None:
         options = [{"label": agent, "value": agent} for agent in agents]
-        value = agent_default_value
+        value = agent_default_value if agent is None else agent
         manager.make_episode(value, scenario)
     disabled = False
     pathname_split = pathname.split("/")
@@ -245,9 +252,10 @@ def register_callbacks_main(app):
         [
             State("select_ref_agent", "options"),
             State("select_ref_agent", "value"),
+            State("agent_ref", "data"),
         ],
     )
-    def update_ref_agent_select_options(scenario, pathname, options, value):
+    def update_ref_agent_select_options(scenario, pathname, options, value, ref_agent):
         if scenario is None:
             raise PreventUpdate
         return agent_select_update(
@@ -258,6 +266,7 @@ def register_callbacks_main(app):
             options,
             value,
             ["episodes", "micro"],
+            ref_agent,
         )
 
     @app.callback(
@@ -270,9 +279,12 @@ def register_callbacks_main(app):
         [
             State("select_study_agent", "options"),
             State("select_study_agent", "value"),
+            State("agent_study", "data"),
         ],
     )
-    def update_study_agent_select_options(scenario, pathname, options, value):
+    def update_study_agent_select_options(
+        scenario, pathname, options, value, study_agent
+    ):
         if scenario is None:
             raise PreventUpdate
         return agent_select_update(
@@ -283,6 +295,7 @@ def register_callbacks_main(app):
             options,
             value,
             ["micro", "episodes", "overview"],
+            study_agent,
         )
 
     @app.callback(

@@ -40,16 +40,25 @@ app.config.suppress_callback_exceptions = True
 app.title = "Grid2Viz"
 app.server.secret_key = "Grid2Viz"
 
-##create layout
-layout(app)
 
-##create callbaks
-register_callbacks_main(app)
-register_callbacks_episodes(app)
-register_callbacks_overview(app)
-register_callbacks_macro(app)
-register_callbacks_micro(app)
-register_callbacks_simulation(app)
+def define_layout_and_callbacks(
+    scenario=None,
+    agent_ref=None,
+    agent_study=None,
+    user_timestamps=None,
+    window=None,
+    page=None,
+):
+    ##create layout
+    layout(app, scenario, agent_ref, agent_study, user_timestamps, window, page)
+
+    ##create callbaks
+    register_callbacks_main(app)
+    register_callbacks_episodes(app)
+    register_callbacks_overview(app)
+    register_callbacks_macro(app)
+    register_callbacks_micro(app)
+    register_callbacks_simulation(app)
 
 
 def app_run(port=8050, debug=False):
