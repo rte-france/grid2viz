@@ -1,4 +1,5 @@
 import argparse
+import configparser
 import os
 
 ## A bug can appear with MacOSX if matplotlib is not set to a non-interactive mode
@@ -33,6 +34,8 @@ ARG_CACHE_DESC = "True if you want to build all the cache data for all agents at
 
 ARG_WARM_START_DESC = "If True, the application is warm started based on the parameters defined in the WARMSTART section of the config.ini file"
 
+ARG_CONFIG_PATH_DESC = "Path to the configuration file config.ini"
+
 
 def main():
     parser_main = argparse.ArgumentParser(description="Grid2Viz")
@@ -56,6 +59,13 @@ def main():
     parser_main.add_argument(
         "--warm-start", default=False, type=bool, help=ARG_WARM_START_DESC
     )
+    parser_main.add_argument(
+        "--config-path",
+        default=None,
+        required=False,
+        type=str,
+        help=ARG_CONFIG_PATH_DESC,
+    )
 
     args = parser_main.parse_args()
 
@@ -78,11 +88,15 @@ def main():
     n_cores = args.n_cores
 
     with open(config_path, "w") as f:
-        f.write(
-            CONFIG_FILE_CONTENT.format(
-                agents_dir=agents_dir, env_dir=env_dir, n_cores=n_cores
+        if args.config_path is not None:
+            with open(args.config_path, "r") as g:
+                f.write(g.read())
+        else:
+            f.write(
+                CONFIG_FILE_CONTENT.format(
+                    agents_dir=agents_dir, env_dir=env_dir, n_cores=n_cores
+                )
             )
-        )
 
     is_makeCache_only = args.cache
 
@@ -92,15 +106,24 @@ def main():
     else:
         from grid2viz.app import app_run, define_layout_and_callbacks
 
-        scenario = "000"
-        agent_ref = "do-nothing-baseline"
-        agent_study = "do-nothing-baseline"
-        user_timestamps = None
-        window = None
-        page = None
-        define_layout_and_callbacks(
-            scenario, agent_ref, agent_study, user_timestamps, window, page
-        )
+        if args.warm_start:
+            if args.config_path is None:
+                raise ValueError(
+                    "Cannot warmstart without a configuration provided with --config-path"
+                )
+            parser = configparser.ConfigParser()
+            parser.read(args.config_path)
+            scenario = parser.get("WARMSTART", "scenario")
+            agent_ref = parser.get("WARMSTART", "agent_ref")
+            agent_study = parser.get("WARMSTART", "agent_study")
+            user_timestamps = None
+            window = None
+            page = parser.get("WARMSTART", "page")
+            define_layout_and_callbacks(
+                scenario, agent_ref, agent_study, user_timestamps, window, page
+            )
+        else:
+            define_layout_and_callbacks()
         app_run(args.port, args.debug)
 
 
