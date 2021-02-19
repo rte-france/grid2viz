@@ -14,11 +14,11 @@ from grid2op.MakeEnv import make
 from grid2op.Parameters import Parameters
 
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
-from manager_simulation import make_episode, make_network, assistant, agents_dir
-from simulation_lyt import choose_tab_content
+from grid2viz.src.manager import make_episode, make_network, agents_dir
+from grid2viz.src.simulation.simulation_lyt import choose_tab_content
 
 
-def register_callbacks_simulation(app):
+def register_callbacks_simulation(app, assistant):
     @app.callback(
         [
             Output("tabs-choose-assist-method-content", "children"),

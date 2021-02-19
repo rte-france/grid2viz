@@ -59,8 +59,8 @@ def define_layout_and_callbacks(
     register_callbacks_overview(app)
     register_callbacks_macro(app)
     register_callbacks_micro(app)
-    register_callbacks_simulation(app)
     assistant = Assist()
+    register_callbacks_simulation(app, assistant)
     assistant.register_callbacks(app)
 
 
