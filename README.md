@@ -14,7 +14,7 @@ Grid2Viz is a web application that offers several interactive views into the res
 
 ### Video highlighting Grid2viz analyzis capabilities
 [![Alt text](https://img.youtube.com/vi/xlqS-CzvMwk/0.jpg)](https://www.youtube.com/watch?v=xlqS-CzvMwk)
-<em>Through this 10-minute video, the  behavior of best AI agents from ![L2RPN NeurIPS competition](https://l2rpn.chalearn.org/competitions) is analyzed with Grid2viz under a very interesting and tense scenario.<\em>
+<em>Through this 10-minute video, the  behavior of best AI agents from [L2RPN NeurIPS competition](https://l2rpn.chalearn.org/competitions) is analyzed with Grid2viz under a very interesting and tense scenario.<\em>
  
 ## Demo Gallery
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
