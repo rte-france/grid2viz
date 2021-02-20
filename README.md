@@ -1,7 +1,7 @@
 
 # Grid2Viz: The Grid2Op Visualization companion app
 
-Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
+Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform. It is part of the [GridAlive](https://github.com/rte-france/gridAlive) lab ecosystem.
 
 *   [0 Demo Gallery](#demo-gallery)
 *   [1 Documentation](#documentation)
@@ -15,7 +15,7 @@ Grid2Viz is a web application that offers several interactive views into the res
 ### Video highlighting Grid2viz analyzis capabilities
 [![Alt text](https://img.youtube.com/vi/xlqS-CzvMwk/0.jpg)](https://www.youtube.com/watch?v=xlqS-CzvMwk)
 
-<em>Through this 10-minute video, the  behavior of best AI agents from [L2RPN NeurIPS competition](https://l2rpn.chalearn.org/competitions) is analyzed with Grid2viz under a very interesting and tense scenario.<\em>
+<em>Through this 10-minute video, the  behavior of best AI agents from [L2RPN NeurIPS competition](https://l2rpn.chalearn.org/competitions) is analyzed with Grid2viz under a very interesting and tense scenario.</em>
  
 ## Demo Gallery
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
