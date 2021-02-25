@@ -2,7 +2,7 @@ import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-
+import datetime as dt
 from grid2viz.src.manager import make_episode, make_network_agent_study
 
 
@@ -478,10 +478,15 @@ def compare_line(episode, timestep):
     )
 
 
-def layout(study_agent, scenario, timestep=None):
+def layout(study_agent, scenario, user_timestamp=None):
     episode = make_episode(study_agent, scenario)
-    if timestep is None:
+
+    if user_timestamp is None:
         timestep = 1
+    else:
+        timestep=episode.timestamps.index(
+            dt.datetime.strptime(user_timestamp, "%Y-%m-%d %H:%M")
+        )
     network_graph = make_network_agent_study(
         episode, timestep=timestep, responsive=True
     )
