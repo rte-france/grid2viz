@@ -316,7 +316,7 @@ class EpisodeAnalytics:
         )
         attacks_data_table["timestep"] = self.timesteps
         attacks_data_table["timestamp"] = self.timestamps
-        for time_step, attack in enumerate(episode_data.attacks):
+        for time_step, attack in enumerate(episode_data.attacks[:size]):
             (
                 n_lines_modified,
                 str_lines_modified,
