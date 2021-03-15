@@ -484,7 +484,7 @@ def layout(study_agent, scenario, user_timestamp=None):
     if user_timestamp is None:
         timestep = 1
     else:
-        timestep=episode.timestamps.index(
+        timestep = episode.timestamps.index(
             dt.datetime.strptime(user_timestamp, "%Y-%m-%d %H:%M")
         )
     network_graph = make_network_agent_study(
