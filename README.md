@@ -81,6 +81,10 @@ grid2viz --port 8000
 
 > **_WARNING_** Due to the caching operation the first run can take a while. All the agents present in the configuration files
 will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min. You can follow the progress in the console.
+You can however generate all the cache over all agents and scenarios before end with `--cache=True`
+```commandline
+grid2viz --port 8000 --agents_path AGENTS_PATH --n_cores Max_Cores --cache True
+```
 
 ## Getting started
 
