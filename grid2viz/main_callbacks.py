@@ -290,6 +290,14 @@ def register_callbacks_main(app):
         )
 
     @app.callback(
+        Output("badge_ts", "children"), [Input("user_timestep_store", "data")]
+    )
+    def update_badge_ts(data):
+        if data is None:
+            raise PreventUpdate
+        return data
+
+    @app.callback(
         [
             Output("select_study_agent", "options"),
             Output("select_study_agent", "disabled"),

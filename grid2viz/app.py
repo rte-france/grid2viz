@@ -46,12 +46,13 @@ def define_layout_and_callbacks(
     scenario=None,
     agent_ref=None,
     agent_study=None,
-    user_timestamps=None,
+    user_timestep=None,
     window=None,
     page=None,
+    config=None,
 ):
     ##create layout
-    layout(app, scenario, agent_ref, agent_study, user_timestamps, window, page)
+    layout(app, scenario, agent_ref, agent_study, user_timestep, window, page)
 
     ##create callbaks
     register_callbacks_main(app)
@@ -62,9 +63,13 @@ def define_layout_and_callbacks(
     assistant = Assist()
     register_callbacks_simulation(app, assistant)
     assistant.register_callbacks(app)
+    for key, value in config.items():
+        app.server.config[key] = value
 
 
-def app_run(port=8050, debug=False):
+def app_run(port=8050, debug=False, page=None):
+    if page is not None:
+        print(f"Warm start is running on http://127.0.0.1:8050/{page}")
     app.run_server(port=port, debug=debug)
 
 

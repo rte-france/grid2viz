@@ -106,6 +106,7 @@ def main():
     else:
         from grid2viz.app import app_run, define_layout_and_callbacks
 
+        page = None
         if args.warm_start:
             if args.config_path is None:
                 raise ValueError(
@@ -116,15 +117,16 @@ def main():
             scenario = parser.get("WARMSTART", "scenario")
             agent_ref = parser.get("WARMSTART", "agent_ref")
             agent_study = parser.get("WARMSTART", "agent_study")
-            user_timestamps = None
+            user_timestep = parser.get("WARMSTART", "time_step")
             window = None
             page = parser.get("WARMSTART", "page")
+            config = dict(env_path=parser.get("DEFAULT", "env_dir"))
             define_layout_and_callbacks(
-                scenario, agent_ref, agent_study, user_timestamps, window, page
+                scenario, agent_ref, agent_study, user_timestep, window, page, config
             )
         else:
             define_layout_and_callbacks()
-        app_run(args.port, args.debug)
+        app_run(args.port, args.debug, page)
 
 
 def make_cache():

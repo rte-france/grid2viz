@@ -2,6 +2,8 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
+from grid2viz.src.manager import make_episode
+
 nav_items = [
     dbc.NavItem(
         dbc.NavLink(
@@ -32,7 +34,7 @@ nav_items = [
 ]
 
 
-def navbar(scenario=None):
+def navbar(scenario=None, ts=""):
     return dbc.Navbar(
         [
             html.Div(
@@ -80,6 +82,13 @@ def navbar(scenario=None):
                         ],
                         className="badge",
                     ),
+                ],
+                className="reminder float-left",
+            ),
+            html.Div(
+                children=[
+                    dbc.Badge("TS:", color="secondary", className="ml-1"),
+                    dbc.Badge(ts, color="light", className="ml-1", id="badge_ts"),
                 ],
                 className="reminder float-left",
             ),
@@ -155,21 +164,25 @@ def make_layout(
     scenario=None,
     agent_ref=None,
     agent_study=None,
-    user_timestamps=None,
+    user_timestep=None,
     window=None,
     page=None,
 ):
+    episode = make_episode(episode_name=scenario, agent=agent_study)
+    timestamp_str = episode.timestamps[int(user_timestep)].strftime("%Y-%m-%d %H:%M")
+    user_timestamp = [dict(label=timestamp_str, value=timestamp_str)]
     app.layout = html.Div(
         [
             dcc.Store(id="scenario", storage_type="memory", data=scenario),
             dcc.Store(id="agent_ref", storage_type="memory", data=agent_ref),
             dcc.Store(id="agent_study", storage_type="memory", data=agent_study),
-            dcc.Store(id="user_timestamps_store", data=user_timestamps),
+            dcc.Store(id="user_timestep_store", data=user_timestep),
+            dcc.Store(id="user_timestamps_store", data=user_timestamp),
             dcc.Store(id="window", data=window),
             dcc.Store(id="page", data=page),
             dcc.Store(id="relayoutStoreMicro"),
             dcc.Store(id="reset_timeseries_table_macro", data=True),
-            navbar(scenario),
+            navbar(scenario, ts=user_timestep),
             body(page),
         ]
     )
