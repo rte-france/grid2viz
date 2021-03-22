@@ -1,3 +1,7 @@
+# Copyright (C) 2021, RTE (http://www.rte-france.com/)
+# See AUTHORS.txt
+# SPDX-License-Identifier: MPL-2.0
+
 """
     This files handles the generic information about the agent of reference of the selected scenario
     and let choose and compute study agent information.

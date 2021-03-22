@@ -1,3 +1,7 @@
+# Copyright (C) 2021, RTE (http://www.rte-france.com/)
+# See AUTHORS.txt
+# SPDX-License-Identifier: MPL-2.0
+
 """
 This file builds the layout for the scenario overview tab.
 This tab handles the generic information about the environment and the selection of a reference agent for future analysis.

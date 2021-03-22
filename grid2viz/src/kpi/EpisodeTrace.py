@@ -1,3 +1,7 @@
+# Copyright (C) 2021, RTE (http://www.rte-france.com/)
+# See AUTHORS.txt
+# SPDX-License-Identifier: MPL-2.0
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
