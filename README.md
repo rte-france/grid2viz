@@ -1,7 +1,7 @@
 
 # Grid2Viz: The Grid2Op Visualization companion app
 
-Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform.
+Grid2Viz is a web application that offers several interactive views into the results of Reinforcement Learning agents that ran on the [Grid2Op](https://github.com/rte-france/Grid2Op) platform. It is part of the [GridAlive](https://github.com/rte-france/gridAlive) lab ecosystem.
 
 *   [0 Demo Gallery](#demo-gallery)
 *   [1 Documentation](#documentation)
@@ -12,6 +12,11 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [6 Interface](#interface)
 *   [7 Trouble shooting](#troubleshooting)
 
+### Video highlighting Grid2viz analyzis capabilities
+[![Alt text](https://img.youtube.com/vi/xlqS-CzvMwk/0.jpg)](https://www.youtube.com/watch?v=xlqS-CzvMwk)
+
+<em>Through this 10-minute video, the  behavior of best AI agents from [L2RPN NeurIPS competition](https://l2rpn.chalearn.org/competitions) is analyzed with Grid2viz under a very interesting and tense scenario.</em>
+ 
 ## Demo Gallery
 <!--- #[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mjothy/grid2viz/jupyter_dash?urlpath=lab)#if launching jupyter lab directly-->
 You can launch a demo in your web navigator by running the Grid2viz_demo notebook through Binder by clicking the Binder button. The[Demo repositories used here presents the **best agent results of NeurIPS 2020 L2RPN Competition** .
@@ -76,6 +81,10 @@ grid2viz --port 8000
 
 > **_WARNING_** Due to the caching operation the first run can take a while. All the agents present in the configuration files
 will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min. You can follow the progress in the console.
+You can however generate all the cache over all agents and scenarios before end with `--cache=True`
+```commandline
+grid2viz --port 8000 --agents_path AGENTS_PATH --n_cores Max_Cores --cache True
+```
 
 ## Getting started
 

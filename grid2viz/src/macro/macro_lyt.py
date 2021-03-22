@@ -84,7 +84,7 @@ def indicator_line(scenario, study_agent, ref_agent):
                                 className="m-2",
                                 children=[
                                     html.P(
-                                        id="indicator_nb_maintenances",
+                                        id="indicator_survival_time",
                                         className="border-bottom h3 mb-0 text-right",
                                         children="{}/{}".format(
                                             episode.meta["nb_timestep_played"],
