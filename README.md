@@ -10,7 +10,8 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [4 Getting Started](#getting-started)
 *   [5 Caching](#caching)
 *   [6 Interface](#interface)
-*   [7 Trouble shooting](#troubleshooting)
+*   [7 Contributing](#contributing)
+*   [8 Trouble shooting](#troubleshooting)
 
 ### Video highlighting Grid2viz analyzis capabilities
 [![Alt text](https://img.youtube.com/vi/xlqS-CzvMwk/0.jpg)](https://www.youtube.com/watch?v=xlqS-CzvMwk)
@@ -156,6 +157,9 @@ The Agent Study page will display kpi of your reference agent compared to your s
 You will also see a summary of the previous page's kpi.
 
 ![agent study](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/screenshots/agent_study.png "Agent Study")
+
+## CONTRIBUTING
+As agent behavior analysis is still an active field of research and new ideas can come along the way, we welcome contributions to develop new relevant visualizations (within grid2viz/grid2viz/src/kpi)  or interactions (see nameOfTab_clbk.py) within the application. Existing feature improvement is also welcome.
 
 ## Run the tests
 
