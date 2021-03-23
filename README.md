@@ -159,7 +159,10 @@ You will also see a summary of the previous page's kpi.
 ![agent study](https://raw.githubusercontent.com/mjothy/grid2viz/master/grid2viz/assets/screenshots/agent_study.png "Agent Study")
 
 ## CONTRIBUTING
-As agent behavior analysis is still an active field of research and new ideas can come along the way, we welcome contributions to develop new relevant visualizations (within grid2viz/grid2viz/src/kpi)  or interactions (see nameOfTab_clbk.py) within the application. Existing feature improvement is also welcome.
+As agent behavior analysis is still an active field of research and new ideas can come along the way, we welcome contributions to develop:
+*  new relevant visualizations (within grid2viz/grid2viz/src/kpi) 
+*  new interactions (see nameOfTab_clbk.py) within the application
+*  existing feature improvements are also welcome.
 
 ## Run the tests
 
