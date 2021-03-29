@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+import os
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -16,6 +17,7 @@ from grid2op.Parameters import Parameters
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
 from grid2viz.src.manager import make_episode, make_network, agents_dir
 from grid2viz.src.simulation.simulation_lyt import choose_tab_content
+from grid2viz.src.simulation.reboot import env, params_for_reboot
 
 
 def register_callbacks_simulation(app, assistant):
@@ -76,6 +78,7 @@ def register_callbacks_simulation(app, assistant):
             State("scenario", "data"),
             State("agent_study", "data"),
             State("user_timestamps", "value"),
+            State("user_timestep_store", "data"),
         ],
     )
     def update_action(
@@ -104,6 +107,7 @@ def register_callbacks_simulation(app, assistant):
         scenario,
         study_agent,
         timestamp,
+        timestep,
     ):
         ctx = callback_context
 
@@ -224,37 +228,15 @@ def register_callbacks_simulation(app, assistant):
             else:
                 actions.extend(actions_for_textarea)
 
-        # Temporary implementation for testing purposes
-        p = Parameters()
-        p.NO_OVERFLOW_DISCONNECTION = False
-        env = make(
-            r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic",
-            test=True,
-            param=p,
-        )
-        env.seed(0)
-
-        params_for_runner = env.get_params_for_runner()
-        params_to_fetch = ["init_grid_path"]
-        params_for_reboot = {
-            key: value
-            for key, value in params_for_runner.items()
-            if key in params_to_fetch
-        }
-        params_for_reboot["parameters"] = p
-
         episode_reboot = EpisodeReboot.EpisodeReboot()
         episode_reboot.load(
             env.backend,
             data=episode,
-            agent_path=agents_dir + study_agent,
+            agent_path=os.path.join(agents_dir, study_agent),
             name=episode.episode_name,
             env_kwargs=params_for_reboot,
         )
-        t = episode.timestamps.index(
-            dt.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-        )
-        obs, reward, *_ = episode_reboot.go_to(t)
+        obs, reward, *_ = episode_reboot.go_to(int(timestep))
         act = PlayableAction()
 
         for action in actions:
@@ -374,6 +356,7 @@ def register_callbacks_simulation(app, assistant):
             State("scenario", "data"),
             State("agent_study", "data"),
             State("user_timestep_store", "data"),
+            State("network_graph_t", "data"),
         ],
     )
     def simulate(
@@ -385,6 +368,7 @@ def register_callbacks_simulation(app, assistant):
         scenario,
         agent,
         ts,
+        network_graph_t,
     ):
         if simulate_n_clicks is None or (
             actions is None and simulation_assistant_store is None
@@ -400,7 +384,10 @@ def register_callbacks_simulation(app, assistant):
                 )
             )
         else:
-            return dcc.Graph(figure=network_graph_new)
+            if actions:
+                return dcc.Graph(figure=network_graph_new)
+            else:
+                return dcc.Graph(figure=network_graph_t)
 
     @app.callback(
         [
@@ -416,6 +403,7 @@ def register_callbacks_simulation(app, assistant):
             State("agent_study", "data"),
             State("user_timestep_store", "data"),
             State("simulation-assistant-store", "data"),
+            State("actions", "data"),
         ],
     )
     def update_kpis(
@@ -425,16 +413,34 @@ def register_callbacks_simulation(app, assistant):
         study_agent,
         ts,
         simulation_assistant_store,
+        actions,
     ):
         if simulate_n_clicks is None:
             raise PreventUpdate
         episode = make_episode(study_agent, scenario)
         if active_tab_choose_assist == "tab-choose-method":
-            reward = f"{episode.rewards[int(ts)]:,.0f}"
-            rho = f"{episode.rho.loc[episode.rho.time == int(ts), 'value'].max() * 100:.0f}%"
-            nb_overflows = f"{episode.total_overflow_ts['value'][int(ts)]:,.0f}"
+            episode_reboot = EpisodeReboot.EpisodeReboot()
+            episode_reboot.load(
+                env.backend,
+                data=episode,
+                agent_path=os.path.join(agents_dir, study_agent),
+                name=episode.episode_name,
+                env_kwargs=params_for_reboot,
+            )
+            obs, reward, *_ = episode_reboot.go_to(int(ts))
+            act = PlayableAction()
+
+            reward = f"0"
+            rho_max = f"0"
+            nb_overflows = f"0"
             losses = f"0"
-            return reward, rho, nb_overflows, losses
+            if actions:
+                for action in actions:
+                    act.update(action)
+                obs, reward, *_ = obs.simulate(action=act, time_step=0)
+                rho_max = f"{obs.rho.max() * 100:.0f}%"
+                nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
+            return reward, rho_max, nb_overflows, losses
         else:
             return assistant.store_to_kpis(simulation_assistant_store, episode, int(ts))
 
