@@ -72,7 +72,6 @@ def register_callbacks_simulation(app, assistant):
             State("radio_bus_gens", "value"),
             State("input_redispatch", "value"),
             State("network_graph_t", "data"),
-            State("network_graph_t+1", "data"),
             State("network_graph_new", "data"),
             State("scenario", "data"),
             State("agent_study", "data"),
@@ -101,7 +100,6 @@ def register_callbacks_simulation(app, assistant):
         bus_gens,
         redisp_volume,
         network_graph_t,
-        network_graph_t_next,
         network_graph_new,
         scenario,
         study_agent,
@@ -121,7 +119,7 @@ def register_callbacks_simulation(app, assistant):
                 "Compose some actions to study",
                 graph_div,
                 None,
-                network_graph_t_next,
+                network_graph_t,
             )
 
         if add_n_clicks is None:
@@ -216,7 +214,7 @@ def register_callbacks_simulation(app, assistant):
                 graph_div_child = html.Div(
                     children=traceback.format_exc(), className="more-info-table"
                 )
-                return actions, "", graph_div_child, action_dict, network_graph_t_next
+                return actions, "", graph_div_child, action_dict, network_graph_t
             if "action_list" in action_dict:
                 actions_for_textarea = action_dict["action_list"]
             else:
@@ -271,7 +269,7 @@ def register_callbacks_simulation(app, assistant):
             graph_div_child = html.Div(
                 children=traceback.format_exc(), className="more-info-table"
             )
-            new_network_graph = network_graph_t_next
+            new_network_graph = network_graph_t
 
         try:
             json.dumps(actions)
@@ -367,11 +365,10 @@ def register_callbacks_simulation(app, assistant):
 
     @app.callback(
         Output("card_body_network", "children"),
-        [Input("simulate_action", "n_clicks"), Input("tabs_network", "active_tab")],
+        [Input("simulate_action", "n_clicks")],
         [
             State("actions", "data"),
             State("network_graph_new", "data"),
-            State("network_graph_t+1", "data"),
             State("tabs-choose-assist-method", "active_tab"),
             State("simulation-assistant-store", "data"),
             State("scenario", "data"),
@@ -381,10 +378,8 @@ def register_callbacks_simulation(app, assistant):
     )
     def simulate(
         simulate_n_clicks,
-        active_tab_networks,
         actions,
         network_graph_new,
-        network_graph_t_next,
         active_tab_choose_assist,
         simulation_assistant_store,
         scenario,
@@ -395,20 +390,17 @@ def register_callbacks_simulation(app, assistant):
             actions is None and simulation_assistant_store is None
         ):
             raise PreventUpdate
-        if active_tab_networks == "tab_new_network_state":
-            if active_tab_choose_assist == "tab-assist-method":
-                episode = make_episode(agent, scenario)
-                return dcc.Graph(
-                    figure=go.Figure(
-                        assistant.store_to_graph(
-                            simulation_assistant_store, episode, int(ts)
-                        )
+        if active_tab_choose_assist == "tab-assist-method":
+            episode = make_episode(agent, scenario)
+            return dcc.Graph(
+                figure=go.Figure(
+                    assistant.store_to_graph(
+                        simulation_assistant_store, episode, int(ts)
                     )
                 )
-            else:
-                return dcc.Graph(figure=network_graph_new)
-        elif active_tab_networks == "tab_old_network_state":
-            return dcc.Graph(figure=network_graph_t_next)
+            )
+        else:
+            return dcc.Graph(figure=network_graph_new)
 
     @app.callback(
         [

@@ -449,13 +449,13 @@ def compare_line(episode, timestep):
                                                     id="tabs_network",
                                                     children=[
                                                         dbc.Tab(
-                                                            label="New State t+1",
+                                                            label="New State",
                                                             tab_id="tab_new_network_state",
                                                         ),
-                                                        dbc.Tab(
-                                                            label="Old State t+1",
-                                                            tab_id="tab_old_network_state",
-                                                        ),
+                                                        # dbc.Tab(
+                                                        #     label="Old State t+1",
+                                                        #     tab_id="tab_old_network_state",
+                                                        # ),
                                                     ],
                                                     active_tab="tab_new_network_state",
                                                 ),
@@ -496,13 +496,6 @@ def layout(study_agent, scenario, user_timestamp=None):
             dcc.Store(id="actions", storage_type="memory"),
             dcc.Store(id="simulation-assistant-store", storage_type="memory"),
             dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),
-            dcc.Store(
-                id="network_graph_t+1",
-                storage_type="memory",
-                data=make_network_agent_study(
-                    episode, timestep=timestep + 1, responsive=True
-                ),
-            ),
             dcc.Store(
                 id="network_graph_new",
                 storage_type="memory",
