@@ -414,21 +414,29 @@ def register_callbacks_simulation(app, assistant):
             State("tabs-choose-assist-method", "active_tab"),
             State("scenario", "data"),
             State("agent_study", "data"),
-            State("user_timestep_store", "value"),
+            State("user_timestep_store", "data"),
+            State("simulation-assistant-store", "data"),
         ],
     )
     def update_kpis(
-        simulate_n_clicks, active_tab_choose_assist, scenario, study_agent, ts
+        simulate_n_clicks,
+        active_tab_choose_assist,
+        scenario,
+        study_agent,
+        ts,
+        simulation_assistant_store,
     ):
         if simulate_n_clicks is None:
             raise PreventUpdate
+        episode = make_episode(study_agent, scenario)
         if active_tab_choose_assist == "tab-choose-method":
-            episode = make_episode(study_agent, scenario)
-            reward = f"{episode.rewards[ts]:,.0f}"
-            rho = f"{episode.rho.loc[episode.rho.timestamp == ts, 'value'].max() * 100:.0f}%"
-            nb_overflows = f"{episode.total_overflow_ts['value'][ts]:,.0f}"
+            reward = f"{episode.rewards[int(ts)]:,.0f}"
+            rho = f"{episode.rho.loc[episode.rho.time == int(ts), 'value'].max() * 100:.0f}%"
+            nb_overflows = f"{episode.total_overflow_ts['value'][int(ts)]:,.0f}"
             losses = f"0"
             return reward, rho, nb_overflows, losses
+        else:
+            return assistant.store_to_kpis(simulation_assistant_store, episode, int(ts))
 
     @app.callback(
         Output("simulation-assistant-store", "data"), [Input("assistant_store", "data")]

@@ -232,3 +232,21 @@ class Assist(BaseAssistant):
             new_network_graph = traceback.format_exc()
 
         return new_network_graph
+
+    def store_to_kpis(self, store_data, episode, ts):
+        episode_reboot = EpisodeReboot.EpisodeReboot()
+        episode_reboot.load(
+            env.backend,
+            data=episode,
+            agent_path=os.path.join(agents_dir, episode.agent),
+            name=episode.episode_name,
+            env_kwargs=params_for_reboot,
+        )
+        obs, reward, *_ = episode_reboot.go_to(ts)
+        act = PlayableAction()
+        act.update(store_data)
+        obs, *_ = obs.simulate(action=act, time_step=0)
+        rho_max = f"{obs.rho.max() * 100:.0f}%"
+        nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
+        losses = f"0"
+        return reward, rho_max, nb_overflows, losses

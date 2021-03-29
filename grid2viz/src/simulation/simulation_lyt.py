@@ -478,17 +478,12 @@ def compare_line(episode, timestep):
     )
 
 
-def layout(study_agent, scenario, user_timestamp=None):
+def layout(study_agent, scenario, user_timestep=None):
     episode = make_episode(study_agent, scenario)
-
-    if user_timestamp is None:
-        timestep = 1
-    else:
-        timestep = episode.timestamps.index(
-            dt.datetime.strptime(user_timestamp, "%Y-%m-%d %H:%M")
-        )
+    if user_timestep is None:
+        user_timestep = 1
     network_graph = make_network_agent_study(
-        episode, timestep=timestep, responsive=True
+        episode, timestep=user_timestep, responsive=True
     )
     return html.Div(
         id="simulation_page",
@@ -501,6 +496,6 @@ def layout(study_agent, scenario, user_timestamp=None):
                 storage_type="memory",
             ),
             choose_assist_line(network_graph),
-            compare_line(episode, timestep=timestep + 1),
+            compare_line(episode, timestep=user_timestep),
         ],
     )

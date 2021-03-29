@@ -85,6 +85,7 @@ def register_callbacks_main(app):
             State("agent_study", "data"),
             State("user_timestamps", "value"),
             State("page", "data"),
+            State("user_timestep_store", "data"),
             State("user_timestamps_store", "data"),
             State("reset_timeseries_table_macro", "data"),
         ],
@@ -96,6 +97,7 @@ def register_callbacks_main(app):
         study_agent,
         user_selected_timestamp,
         prev_page,
+        user_timestep_store,
         timestamps_store,
         reset_ts_table_macro,
     ):
@@ -171,7 +173,7 @@ def register_callbacks_main(app):
             if ref_agent is None or study_agent is None:
                 raise PreventUpdate
             layout = (
-                simulation.layout(study_agent, scenario, user_selected_timestamp),
+                simulation.layout(study_agent, scenario, int(user_timestep_store)),
                 "simulation",
                 False,
                 False,
