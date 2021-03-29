@@ -1,4 +1,4 @@
-import datetime as dt
+import json
 import json
 import os
 
@@ -11,13 +11,12 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from grid2op.Action import PlayableAction
 from grid2op.Episode import EpisodeReboot
-from grid2op.MakeEnv import make
-from grid2op.Parameters import Parameters
 
-from grid2viz.src.utils.serialization import NoIndent, MyEncoder
-from grid2viz.src.manager import make_episode, make_network, agents_dir
-from grid2viz.src.simulation.simulation_lyt import choose_tab_content
+from grid2viz.src.manager import make_episode, make_network_agent_study
+from grid2viz.src.manager import make_network, agents_dir
 from grid2viz.src.simulation.reboot import env, params_for_reboot
+from grid2viz.src.simulation.simulation_lyt import choose_tab_content
+from grid2viz.src.utils.serialization import NoIndent, MyEncoder
 
 
 def register_callbacks_simulation(app, assistant):
@@ -46,6 +45,17 @@ def register_callbacks_simulation(app, assistant):
             )
 
     @app.callback(
+        Output("network_graph_t", "data"),
+        [Input("agent_study", "data"), Input("user_timestep_store", "data")],
+        [State("scenario", "data")],
+    )
+    def update_network_graph_t(study_agent, ts, scenario):
+        if study_agent is None or scenario is None or ts is None:
+            raise PreventUpdate
+        episode = make_episode(study_agent, scenario)
+        return make_network_agent_study(episode, timestep=int(ts), responsive=True)
+
+    @app.callback(
         [
             Output("actions", "data"),
             Output("action_info", "children"),
@@ -53,7 +63,11 @@ def register_callbacks_simulation(app, assistant):
             Output("textarea", "value"),
             Output("network_graph_new", "data"),
         ],
-        [Input("add_action", "n_clicks"), Input("reset_action", "n_clicks")],
+        [
+            Input("add_action", "n_clicks"),
+            Input("reset_action", "n_clicks"),
+            Input("network_graph_t", "data"),
+        ],
         [
             State("actions", "data"),
             State("textarea", "value"),
@@ -73,7 +87,6 @@ def register_callbacks_simulation(app, assistant):
             State("radio_topology_type_gens", "value"),
             State("radio_bus_gens", "value"),
             State("input_redispatch", "value"),
-            State("network_graph_t", "data"),
             State("network_graph_new", "data"),
             State("scenario", "data"),
             State("agent_study", "data"),
@@ -84,6 +97,7 @@ def register_callbacks_simulation(app, assistant):
     def update_action(
         add_n_clicks,
         reset_n_clicks,
+        network_graph_t,
         actions,
         action_dict,
         method_tab,
@@ -102,7 +116,6 @@ def register_callbacks_simulation(app, assistant):
         topology_type_gens,
         bus_gens,
         redisp_volume,
-        network_graph_t,
         network_graph_new,
         scenario,
         study_agent,
@@ -116,7 +129,7 @@ def register_callbacks_simulation(app, assistant):
         else:
             button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        if button_id == "reset_action":
+        if button_id == "reset_action" or button_id == "network_graph_t":
             graph_div = dcc.Graph(figure=network_graph_t)
             return (
                 None,
@@ -391,6 +404,34 @@ def register_callbacks_simulation(app, assistant):
 
     @app.callback(
         [
+            Output("agent_reward", "children"),
+            Output("agent_rho", "children"),
+            Output("agent_overflows", "children"),
+            Output("agent_losses", "children"),
+        ],
+        [Input("network_graph_t", "data"), Input("user_timestep_store", "data")],
+        [
+            State("agent_study", "data"),
+            State("scenario", "data"),
+        ],
+    )
+    def update_kpis(
+        network_graph_t,
+        ts,
+        study_agent,
+        scenario,
+    ):
+        episode = make_episode(study_agent, scenario)
+        reward = f"{episode.rewards[int(ts)]:,.0f}"
+        rho_max = (
+            f"{episode.rho.loc[episode.rho.time == int(ts), 'value'].max() * 100:.0f}%"
+        )
+        nb_overflows = f"{episode.total_overflow_ts['value'][int(ts)]:,.0f}"
+        losses = f"0"
+        return reward, rho_max, nb_overflows, losses
+
+    @app.callback(
+        [
             Output("new_action_reward", "children"),
             Output("new_action_rho", "children"),
             Output("new_action_overflows", "children"),
@@ -406,7 +447,7 @@ def register_callbacks_simulation(app, assistant):
             State("actions", "data"),
         ],
     )
-    def update_kpis(
+    def update_kpis_new_action(
         simulate_n_clicks,
         active_tab_choose_assist,
         scenario,
