@@ -490,19 +490,9 @@ def layout(study_agent, scenario, user_timestamp=None):
     network_graph = make_network_agent_study(
         episode, timestep=timestep, responsive=True
     )
-    timestamp = episode.timestamps[timestep]
     return html.Div(
         id="simulation_page",
         children=[
-            dcc.Store(id="scenario", storage_type="memory", data=scenario),
-            dcc.Store(id="agent_study", storage_type="memory", data=study_agent),
-            dcc.Dropdown(
-                id="user_timestamps",
-                className="hidden",
-                style={"width": "200px"},
-                options=[dict(label=timestamp, value=timestamp)],
-                value=timestamp,
-            ),
             dcc.Store(id="actions", storage_type="memory"),
             dcc.Store(id="simulation-assistant-store", storage_type="memory"),
             dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),

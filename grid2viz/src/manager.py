@@ -491,7 +491,7 @@ for agent in agents:
     scenarios = scenarios + scens
 
 scenarios = set(scenarios)
-
+env_path = parser.get("DEFAULT", "env_dir")
 # Create a .grid2viz directory in the user home directory
 grid2viz_home_directory = Path.home() / ".grid2viz"
 grid2viz_home_directory.mkdir(parents=False, exist_ok=True)

@@ -374,6 +374,9 @@ def register_callbacks_simulation(app, assistant):
             State("network_graph_t+1", "data"),
             State("tabs-choose-assist-method", "active_tab"),
             State("simulation-assistant-store", "data"),
+            State("scenario", "data"),
+            State("agent_study", "data"),
+            State("user_timestep_store", "data"),
         ],
     )
     def simulate(
@@ -384,6 +387,9 @@ def register_callbacks_simulation(app, assistant):
         network_graph_t_next,
         active_tab_choose_assist,
         simulation_assistant_store,
+        scenario,
+        agent,
+        ts,
     ):
         if simulate_n_clicks is None or (
             actions is None and simulation_assistant_store is None
@@ -391,9 +397,12 @@ def register_callbacks_simulation(app, assistant):
             raise PreventUpdate
         if active_tab_networks == "tab_new_network_state":
             if active_tab_choose_assist == "tab-assist-method":
+                episode = make_episode(agent, scenario)
                 return dcc.Graph(
                     figure=go.Figure(
-                        assistant.store_to_graph(simulation_assistant_store)
+                        assistant.store_to_graph(
+                            simulation_assistant_store, episode, int(ts)
+                        )
                     )
                 )
             else:
@@ -413,22 +422,19 @@ def register_callbacks_simulation(app, assistant):
             State("tabs-choose-assist-method", "active_tab"),
             State("scenario", "data"),
             State("agent_study", "data"),
-            State("user_timestamps", "value"),
+            State("user_timestep_store", "value"),
         ],
     )
     def update_kpis(
-        simulate_n_clicks, active_tab_choose_assist, scenario, study_agent, timestamp
+        simulate_n_clicks, active_tab_choose_assist, scenario, study_agent, ts
     ):
         if simulate_n_clicks is None:
             raise PreventUpdate
         if active_tab_choose_assist == "tab-choose-method":
             episode = make_episode(study_agent, scenario)
-            timestep = episode.timestamps.index(
-                dt.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-            )
-            reward = f"{episode.rewards[timestep]:,.0f}"
-            rho = f"{episode.rho.loc[episode.rho.timestamp == timestamp, 'value'].max() * 100:.0f}%"
-            nb_overflows = f"{episode.total_overflow_ts['value'][timestep]:,.0f}"
+            reward = f"{episode.rewards[ts]:,.0f}"
+            rho = f"{episode.rho.loc[episode.rho.timestamp == ts, 'value'].max() * 100:.0f}%"
+            nb_overflows = f"{episode.total_overflow_ts['value'][ts]:,.0f}"
             losses = f"0"
             return reward, rho, nb_overflows, losses
 

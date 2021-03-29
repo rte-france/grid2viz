@@ -120,7 +120,10 @@ def main():
             user_timestep = parser.get("WARMSTART", "time_step")
             window = None
             page = parser.get("WARMSTART", "page")
-            config = dict(env_path=parser.get("DEFAULT", "env_dir"))
+            config = dict(
+                env_path=parser.get("DEFAULT", "env_dir"),
+                agents_dir=parser.get("DEFAULT", "agents_dir"),
+            )
             define_layout_and_callbacks(
                 scenario, agent_ref, agent_study, user_timestep, window, page, config
             )

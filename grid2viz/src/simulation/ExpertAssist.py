@@ -22,25 +22,8 @@ from grid2op.PlotGrid import PlotPlotly
 from contextlib import redirect_stdout
 
 from grid2viz.src.simulation.simulation_assist import BaseAssistant
+from grid2viz.src.manager import make_episode, env_path, agents_dir
 
-scenario = "000"
-agent = "do-nothing-baseline"
-agent_dir = "D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/" + agent
-path = r"D:\Projects\RTE-Grid2Viz\grid2viz\grid2viz\data\agents\_cache\000\do-nothing-baseline.dill"
-agent_path = (
-    r"D:/Projects/RTE-Grid2Viz/grid2viz/grid2viz/data/agents/do-nothing-baseline"
-)
-env_path = r"D:\Projects\RTE-Grid2Viz\Grid2Op\grid2op\data\rte_case14_realistic"
-with open(path, "rb") as f:
-    episode = dill.load(f)
-episode_data = EpisodeData.from_disk(agent_dir, scenario)
-episode.decorate(episode_data)
-
-network_graph_factory = PlotPlotly(
-    grid_layout=episode.observation_space.grid_layout,
-    observation_space=episode.observation_space,
-    responsive=True,
-)
 
 expert_config = {
     "totalnumberofsimulatedtopos": 25,
@@ -62,27 +45,12 @@ env = make(
     param=p,
 )
 env.seed(0)
-
 params_for_runner = env.get_params_for_runner()
 params_to_fetch = ["init_grid_path"]
 params_for_reboot = {
     key: value for key, value in params_for_runner.items() if key in params_to_fetch
 }
 params_for_reboot["parameters"] = p
-
-episode_reboot = EpisodeReboot.EpisodeReboot()
-
-episode_reboot.load(
-    env.backend,
-    data=episode,
-    agent_path=agent_path,
-    name=episode.episode_name,
-    env_kwargs=params_for_reboot,
-)
-
-t = 1
-
-obs, reward, *_ = episode_reboot.go_to(t)
 
 
 def get_ranked_overloads(observation_space, observation):
@@ -161,11 +129,29 @@ class Assist(BaseAssistant):
         @app.callback(
             [Output("expert-results", "children"), Output("assistant_actions", "data")],
             [Input("assist-button", "n_clicks")],
+            [
+                State("scenario", "data"),
+                State("agent_study", "data"),
+                State("user_timestep_store", "data"),
+            ],
         )
-        def evaluate_expert_system(n_clicks):
+        def evaluate_expert_system(n_clicks, scenario, agent, ts):
             if n_clicks is None:
                 raise PreventUpdate
             with redirect_stdout(None):
+                episode = make_episode(episode_name=scenario, agent=agent)
+                episode_reboot = EpisodeReboot.EpisodeReboot()
+                agent_path = app.server.config["agents_dir"]
+                episode_reboot.load(
+                    env.backend,
+                    data=episode,
+                    agent_path=os.path.join(agent_path, episode.agent),
+                    name=episode.episode_name,
+                    env_kwargs=params_for_reboot,
+                )
+
+                obs, reward, *_ = episode_reboot.go_to(int(ts))
+
                 simulator = Grid2opSimulation(
                     obs,
                     env.action_space,
@@ -220,38 +206,25 @@ class Assist(BaseAssistant):
             act.update(action)
             return action, str(act)
 
-    def store_to_graph(self, store_data):
-        p = Parameters()
-        p.NO_OVERFLOW_DISCONNECTION = False
-        env = make(
-            env_path,
-            test=True,
-            param=p,
-        )
-        env.seed(0)
-
-        params_for_runner = env.get_params_for_runner()
-        params_to_fetch = ["init_grid_path"]
-        params_for_reboot = {
-            key: value
-            for key, value in params_for_runner.items()
-            if key in params_to_fetch
-        }
-        params_for_reboot["parameters"] = p
-
+    def store_to_graph(self, store_data, episode, ts):
         episode_reboot = EpisodeReboot.EpisodeReboot()
         episode_reboot.load(
             env.backend,
             data=episode,
-            agent_path=agent_path,
+            agent_path=os.path.join(agents_dir, episode.agent),
             name=episode.episode_name,
             env_kwargs=params_for_reboot,
         )
-        obs, reward, *_ = episode_reboot.go_to(t)
+        obs, reward, *_ = episode_reboot.go_to(ts)
         act = PlayableAction()
         act.update(store_data)
         obs, *_ = obs.simulate(action=act, time_step=0)
         try:
+            network_graph_factory = PlotPlotly(
+                grid_layout=episode.observation_space.grid_layout,
+                observation_space=episode.observation_space,
+                responsive=True,
+            )
             new_network_graph = network_graph_factory.plot_obs(observation=obs)
         except ValueError:
             import traceback

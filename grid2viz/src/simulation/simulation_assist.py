@@ -1,8 +1,5 @@
 from abc import abstractmethod, ABC
 from itertools import chain
-import inspect
-
-from dash.dependencies import Output, Input, State
 
 
 class BaseAssistant(ABC):
