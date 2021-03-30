@@ -86,14 +86,16 @@ def navbar(scenario=None, ts=""):
                 className="reminder float-left",
             ),
             html.Div(
-                children=[
-                    dbc.Badge("TS:", color="secondary", className="ml-1"),
-                    dbc.Badge(ts, color="light", className="ml-1", id="badge_ts"),
-                ],
-                className="reminder float-left",
-            ),
-            html.Div(
                 [
+                    html.Div(
+                        children=[
+                            dbc.Badge("TS:", color="secondary", className="ml-1"),
+                            dbc.Badge(
+                                ts, color="light", className="ml-1", id="badge_ts"
+                            ),
+                        ],
+                        className="reminder float-left",
+                    ),
                     html.Div(
                         [
                             dbc.Button(

@@ -253,6 +253,18 @@ def register_callbacks_main(app):
             return filtered_data[0]["value"]
 
     @app.callback(
+        Output("user_timestep_store", "data"),
+        [Input("user_timestamps", "value")],
+        [State("agent_study", "data"), State("scenario", "data")],
+    )
+    def update_user_timstep_store(user_timestamp, agent, scenario):
+        if user_timestamp is None:
+            raise PreventUpdate
+        episode = manager.make_episode(agent, scenario)
+        user_timestamp_dt = dt.datetime.strptime(user_timestamp, "%Y-%m-%d %H:%M")
+        return episode.timestamps.index(user_timestamp_dt)
+
+    @app.callback(
         Output("enlarge_left", "n_clicks"), [Input("user_timestamps", "value")]
     )
     def reset_n_cliks_left(value):
