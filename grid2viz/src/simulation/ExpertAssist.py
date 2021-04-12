@@ -1,29 +1,26 @@
 import os
+from contextlib import redirect_stdout
 
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import dill
 import numpy as np
 from alphaDeesp.core.grid2op.Grid2opSimulation import (
     Grid2opSimulation,
 )
 from alphaDeesp.expert_operator import expert_operator
+from dash import callback_context
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from dash_table import DataTable
 from grid2op.Action import PlayableAction
-from grid2op.Episode import EpisodeData, EpisodeReboot
-from grid2op.MakeEnv import make
-from grid2op.Parameters import Parameters
+from grid2op.Episode import EpisodeReboot
 from grid2op.PlotGrid import PlotPlotly
 
-from contextlib import redirect_stdout
-
-from grid2viz.src.simulation.simulation_assist import BaseAssistant
 from grid2viz.src.manager import make_episode, agents_dir
 from grid2viz.src.simulation.reboot import env, params_for_reboot
+from grid2viz.src.simulation.simulation_assist import BaseAssistant
 
 expert_config = {
     "totalnumberofsimulatedtopos": 25,
@@ -76,6 +73,10 @@ class Assist(BaseAssistant):
             [
                 dcc.Store(id="assistant_store"),
                 dcc.Store(id="assistant_actions"),
+                dcc.Store(
+                    id="assistant-size", data=dict(assist="col-3", graph="col-9")
+                ),
+                # html.P("Ratio below which to ")
                 html.P("Choose a line to cut:", className="my-2"),
                 dac.Select(
                     id="select_lines_to_cut",
@@ -86,20 +87,29 @@ class Assist(BaseAssistant):
                     mode="default",
                     value=episode.line_names[0],
                 ),
-                dbc.Checklist(
-                    options=[
-                        {"label": "Generate snapshots", "value": 1},
-                    ],
-                    value=[],
-                    id="generate_snapshot_id",
-                    inline=True,
-                ),
-                html.P("Chose a chronics scenario:", className="my-2"),
+                # dbc.Checklist(
+                #     options=[
+                #         {"label": "Generate snapshots", "value": 1},
+                #     ],
+                #     value=[],
+                #     id="generate_snapshot_id",
+                #     inline=True,
+                # ),
+                html.P("Number of simulations to run:", className="my-2"),
                 dbc.Input(
                     type="number", min=0, max=10, step=1, id="input_chronics_scenario"
                 ),
                 dbc.Button(
-                    id="assist-button", children=["Evaluate with the Expert system"]
+                    id="assist-evaluate",
+                    children=["Evaluate with the Expert system"],
+                    color="danger",
+                    className="m-3",
+                ),
+                dbc.Button(
+                    id="assist-reset",
+                    children=["Reset"],
+                    color="secondary",
+                    className="m-3",
                 ),
                 html.Div(id="expert-results"),
                 html.P(
@@ -112,17 +122,36 @@ class Assist(BaseAssistant):
 
     def register_callbacks(self, app):
         @app.callback(
-            [Output("expert-results", "children"), Output("assistant_actions", "data")],
-            [Input("assist-button", "n_clicks")],
+            [
+                Output("expert-results", "children"),
+                Output("assistant_actions", "data"),
+                Output("assistant-size", "data"),
+            ],
+            [Input("assist-evaluate", "n_clicks"), Input("assist-reset", "n_clicks")],
             [
                 State("scenario", "data"),
                 State("agent_study", "data"),
                 State("user_timestep_store", "data"),
             ],
         )
-        def evaluate_expert_system(n_clicks, scenario, agent, ts):
-            if n_clicks is None:
+        def evaluate_expert_system(
+            evaluate_n_clicks, reset_n_clicks, scenario, agent, ts
+        ):
+            if evaluate_n_clicks is None:
                 raise PreventUpdate
+
+            ctx = callback_context
+            if not ctx.triggered:
+                raise PreventUpdate
+            else:
+                button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+            if button_id == "assist-evaluate":
+                assistant_size = dict(assist="col-12", graph="hidden")
+            else:
+                assistant_size = dict(assist="col-3", graph="col-9")
+                return "", [], assistant_size
+
             with redirect_stdout(None):
                 episode = make_episode(episode_name=scenario, agent=agent)
                 episode_reboot = EpisodeReboot.EpisodeReboot()
@@ -172,6 +201,7 @@ class Assist(BaseAssistant):
                     ],
                 ),
                 [action.as_dict() for action in actions],
+                assistant_size,
             )
 
         @app.callback(

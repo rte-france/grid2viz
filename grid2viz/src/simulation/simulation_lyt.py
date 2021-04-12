@@ -156,65 +156,67 @@ def gens_tab_layout(episode):
 
 
 def choose_tab_content(episode):
-    return [
-        dbc.Tabs(
-            id="tab_method",
-            className="nav-fill",
-            children=[
-                dbc.Tab(
-                    label="Dropdowns",
-                    children=[
-                        dbc.Tabs(
-                            id="tab_object",
-                            className="nav-fill",
-                            children=[
-                                dbc.Tab(
-                                    label="Lines",
-                                    children=lines_tab_layout(episode),
-                                ),
-                                dbc.Tab(
-                                    label="Loads",
-                                    children=loads_tab_layout(episode),
-                                ),
-                                dbc.Tab(
-                                    label="Gens",
-                                    children=gens_tab_layout(episode),
-                                ),
-                            ],
-                        )
-                    ],
-                ),
-                dbc.Tab(
-                    label="Dict",
-                    children=[
-                        html.P("Enter the action dictionary:"),
-                        dbc.Textarea(
-                            id="textarea",
-                            className="mb-3",
-                            placeholder='{"set_line_status": []}',
-                        ),
-                    ],
-                ),
-            ],
-        ),
-        dbc.Button(
-            "Add",
-            id="add_action",
-            color="danger",
-            className="mt-3 mb-3",
-        ),
-        dbc.Button(
-            "Reset",
-            id="reset_action",
-            color="secondary",
-            className="m-3",
-        ),
-        html.P(
-            id="action_info",
-            className="more-info-table",
-            children="Compose some actions to study",
-        ),
-    ]
+    return html.Div(
+        [
+            dbc.Tabs(
+                id="tab_method",
+                className="nav-fill",
+                children=[
+                    dbc.Tab(
+                        label="Dropdowns",
+                        children=[
+                            dbc.Tabs(
+                                id="tab_object",
+                                className="nav-fill",
+                                children=[
+                                    dbc.Tab(
+                                        label="Lines",
+                                        children=lines_tab_layout(episode),
+                                    ),
+                                    dbc.Tab(
+                                        label="Loads",
+                                        children=loads_tab_layout(episode),
+                                    ),
+                                    dbc.Tab(
+                                        label="Gens",
+                                        children=gens_tab_layout(episode),
+                                    ),
+                                ],
+                            )
+                        ],
+                    ),
+                    dbc.Tab(
+                        label="Dict",
+                        children=[
+                            html.P("Enter the action dictionary:"),
+                            dbc.Textarea(
+                                id="textarea",
+                                className="mb-3",
+                                placeholder='{"set_line_status": []}',
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            dbc.Button(
+                "Add",
+                id="add_action",
+                color="danger",
+                className="mt-3 mb-3",
+            ),
+            dbc.Button(
+                "Reset",
+                id="reset_action",
+                color="secondary",
+                className="m-3",
+            ),
+            html.P(
+                id="action_info",
+                className="more-info-table",
+                children="Compose some actions to study",
+            ),
+        ]
+    )
 
 
 def choose_assist_line(network_graph):
@@ -490,6 +492,7 @@ def layout(study_agent, scenario, user_timestep=None):
         children=[
             dcc.Store(id="actions", storage_type="memory"),
             dcc.Store(id="simulation-assistant-store", storage_type="memory"),
+            dcc.Store(id="simulation-assistant-size", storage_type="memory"),
             dcc.Store(id="network_graph_t", storage_type="memory", data=network_graph),
             dcc.Store(
                 id="network_graph_new",

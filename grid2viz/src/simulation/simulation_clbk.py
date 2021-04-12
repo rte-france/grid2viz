@@ -21,28 +21,47 @@ from grid2viz.src.utils.serialization import NoIndent, MyEncoder
 
 def register_callbacks_simulation(app, assistant):
     @app.callback(
-        [
-            Output("tabs-choose-assist-method-content", "children"),
-            Output("div-choose-assist", "class"),
-            Output("div-network-graph-choose-assist", "class"),
-        ],
+        Output("tabs-choose-assist-method-content", "children"),
         [Input("tabs-choose-assist-method", "active_tab")],
-        [State("scenario", "data"), State("agent_study", "data")],
+        [
+            State("scenario", "data"),
+            State("agent_study", "data"),
+        ],
     )
     def simulation_method_tab_content(active_tab, scenario, study_agent):
         episode = make_episode(study_agent, scenario)
         if active_tab is None:
             raise PreventUpdate
         if active_tab == "tab-choose-method":
-            return choose_tab_content(episode), "col-3", "col-9"
+            return choose_tab_content(episode)
         elif active_tab == "tab-assist-method":
-            return (
-                assistant.register_layout(
-                    episode, layout_to_ckeck_against=choose_tab_content(episode)
-                ),
-                "col-12",
-                "hidden",
+            return assistant.register_layout(
+                episode, layout_to_ckeck_against=choose_tab_content(episode)
             )
+
+    @app.callback(
+        [
+            Output("div-choose-assist", "class"),
+            Output("div-network-graph-choose-assist", "class"),
+        ],
+        [
+            Input("tabs-choose-assist-method", "active_tab"),
+            Input("simulation-assistant-size", "data"),
+        ],
+    )
+    def simulation_method_tab_content(active_tab, data):
+        if active_tab is None:
+            raise PreventUpdate
+        if active_tab == "tab-choose-method":
+            return "col-3", "col-9"
+        elif active_tab == "tab-assist-method":
+            if data is None:
+                assist_size = "col-3"
+                graph_size = "col-9"
+            else:
+                assist_size = data["assist"]
+                graph_size = data["graph"]
+            return assist_size, graph_size
 
     @app.callback(
         Output("network_graph_t", "data"),
@@ -486,9 +505,13 @@ def register_callbacks_simulation(app, assistant):
             return assistant.store_to_kpis(simulation_assistant_store, episode, int(ts))
 
     @app.callback(
-        Output("simulation-assistant-store", "data"), [Input("assistant_store", "data")]
+        [
+            Output("simulation-assistant-store", "data"),
+            Output("simulation-assistant-size", "data"),
+        ],
+        [Input("assistant_store", "data"), Input("assistant-size", "data")],
     )
-    def transfer_assistant_store(data):
+    def transfer_assistant_store(store, size):
         """Necessary so that the store can be reach even when the assistant_store is
         not part of the view (e.g. when in choose mode)"""
-        return data
+        return store, size
