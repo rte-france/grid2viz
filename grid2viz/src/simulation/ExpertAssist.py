@@ -76,8 +76,7 @@ class Assist(BaseAssistant):
                 dcc.Store(
                     id="assistant-size", data=dict(assist="col-3", graph="col-9")
                 ),
-                # html.P("Ratio below which to ")
-                html.P("Choose a line to cut:", className="my-2"),
+                html.P("Choose a line to study:", className="my-2"),
                 dac.Select(
                     id="select_lines_to_cut",
                     options=[
@@ -86,6 +85,15 @@ class Assist(BaseAssistant):
                     ],
                     mode="default",
                     value=episode.line_names[0],
+                ),
+                html.P("Flow ratio (in %) to get below"),
+                dbc.Input(
+                    type="number",
+                    min=0,
+                    max=100,
+                    step=1,
+                    id="input_flow_ratio",
+                    value=100,
                 ),
                 # dbc.Checklist(
                 #     options=[
@@ -97,7 +105,12 @@ class Assist(BaseAssistant):
                 # ),
                 html.P("Number of simulations to run:", className="my-2"),
                 dbc.Input(
-                    type="number", min=0, max=10, step=1, id="input_chronics_scenario"
+                    type="number",
+                    min=0,
+                    max=10,
+                    step=1,
+                    id="input_nb_simulations",
+                    value=5,
                 ),
                 dbc.Button(
                     id="assist-evaluate",
@@ -132,10 +145,20 @@ class Assist(BaseAssistant):
                 State("scenario", "data"),
                 State("agent_study", "data"),
                 State("user_timestep_store", "data"),
+                State("input_nb_simulations", "value"),
+                State("input_flow_ratio", "value"),
+                State("select_lines_to_cut", "value"),
             ],
         )
         def evaluate_expert_system(
-            evaluate_n_clicks, reset_n_clicks, scenario, agent, ts
+            evaluate_n_clicks,
+            reset_n_clicks,
+            scenario,
+            agent,
+            ts,
+            nb_simulations,
+            flow_ratio,
+            line_to_study,
         ):
             if evaluate_n_clicks is None:
                 raise PreventUpdate
@@ -151,9 +174,19 @@ class Assist(BaseAssistant):
             else:
                 assistant_size = dict(assist="col-3", graph="col-9")
                 return "", [], assistant_size
-
+            thermal_limit = env.get_thermal_limit()
             with redirect_stdout(None):
+                if nb_simulations is not None:
+                    expert_config["totalnumberofsimulatedtopos"] = nb_simulations
                 episode = make_episode(episode_name=scenario, agent=agent)
+                if flow_ratio is not None and line_to_study is not None:
+                    new_thermal_limit = thermal_limit.copy()
+                    line_id = np.where(episode.line_names == line_to_study)[0][0]
+                    new_thermal_limit[line_id] = (
+                        flow_ratio / 100.0 * new_thermal_limit[line_id]
+                    )
+                    env.set_thermal_limit(new_thermal_limit)
+
                 episode_reboot = EpisodeReboot.EpisodeReboot()
                 agent_path = app.server.config["agents_dir"]
                 episode_reboot.load(
@@ -178,6 +211,7 @@ class Assist(BaseAssistant):
                 ranked_combinations, expert_system_results, actions = expert_operator(
                     simulator, plot=False, debug=False
                 )
+                env.set_thermal_limit(thermal_limit)
             return (
                 DataTable(
                     id="table",
@@ -200,7 +234,7 @@ class Assist(BaseAssistant):
                         for row in expert_system_results.to_dict("rows")
                     ],
                 ),
-                [action.as_dict() for action in actions],
+                [action.to_vect() for action in actions],
                 assistant_size,
             )
 
@@ -209,16 +243,22 @@ class Assist(BaseAssistant):
                 Output("assistant_store", "data"),
                 Output("assist-action-info", "children"),
             ],
-            [Input("table", "selected_rows")],
+            [Input("table", "selected_rows"), Input("assist-reset", "n_clicks")],
             [State("assistant_actions", "data")],
         )
-        def select_action(selected_rows, actions):
+        def select_action(selected_rows, n_clicks, actions):
+            ctx = callback_context
+            if not ctx.triggered:
+                raise PreventUpdate
+            else:
+                component_id = ctx.triggered[0]["prop_id"].split(".")[0]
+            if component_id == "assist-reset":
+                return [], ""
             if selected_rows is None:
                 raise PreventUpdate
             selected_row = selected_rows[0]
             action = actions[selected_row]
-            act = PlayableAction()
-            act.update(action)
+            act = env.action_space.from_vect(np.array(action))
             return action, str(act)
 
     def store_to_graph(self, store_data, episode, ts):
@@ -231,8 +271,7 @@ class Assist(BaseAssistant):
             env_kwargs=params_for_reboot,
         )
         obs, reward, *_ = episode_reboot.go_to(ts)
-        act = PlayableAction()
-        act.update(store_data)
+        act = env.action_space.from_vect(np.array(store_data))
         obs, *_ = obs.simulate(action=act, time_step=0)
         try:
             network_graph_factory = PlotPlotly(
@@ -258,8 +297,7 @@ class Assist(BaseAssistant):
             env_kwargs=params_for_reboot,
         )
         obs, reward, *_ = episode_reboot.go_to(ts)
-        act = PlayableAction()
-        act.update(store_data)
+        act = env.action_space.from_vect(np.array(store_data))
         obs, *_ = obs.simulate(action=act, time_step=0)
         rho_max = f"{obs.rho.max() * 100:.0f}%"
         nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
