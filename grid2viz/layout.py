@@ -83,7 +83,7 @@ def navbar(scenario=None, ts=""):
                         className="badge",
                     ),
                 ],
-                className="reminder float-left mt-6",
+                className="reminder float-left",
             ),
             html.Div(
                 [
@@ -94,7 +94,7 @@ def navbar(scenario=None, ts=""):
                                 ts, color="light", className="ml-1", id="badge_ts"
                             ),
                         ],
-                        className="reminder float-left",
+                        className="reminder float-left mt-2",
                     ),
                     html.Div(
                         [
@@ -170,8 +170,13 @@ def make_layout(
     window=None,
     page=None,
 ):
-    episode = make_episode(episode_name=scenario, agent=agent_study)
-    timestamp_str = episode.timestamps[int(user_timestep)].strftime("%Y-%m-%d %H:%M")
+    if scenario is None or agent_study is None:
+        timestamp_str = ""
+    else:
+        episode = make_episode(episode_name=scenario, agent=agent_study)
+        timestamp_str = episode.timestamps[int(user_timestep)].strftime(
+            "%Y-%m-%d %H:%M"
+        )
     user_timestamp = [dict(label=timestamp_str, value=timestamp_str)]
     app.layout = html.Div(
         [

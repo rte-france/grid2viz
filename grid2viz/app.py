@@ -63,8 +63,9 @@ def define_layout_and_callbacks(
     assistant = Assist()
     register_callbacks_simulation(app, assistant)
     assistant.register_callbacks(app)
-    for key, value in config.items():
-        app.server.config[key] = value
+    if config is not None:
+        for key, value in config.items():
+            app.server.config[key] = value
 
 
 def app_run(port=8050, debug=False, page=None):

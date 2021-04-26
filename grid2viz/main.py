@@ -81,9 +81,18 @@ def main():
 
     if args.env_path is not None:
         env_dir = os.path.abspath(args.env_path)
+    elif args.config_path is not None:
+        parser = configparser.ConfigParser()
+        parser.read(args.config_path)
+        try:
+            env_dir = parser.get("DEFAULT", "env_dir")
+            print(f"Using environment from config file: {env_dir}")
+        except configparser.NoOptionError:
+            print("A config file was provided without an env_dir key. It is mandatory.")
+            raise
     else:
-        env_dir = os.path.join(pkg_root_dir, "data", "env_conf")
-        print("Using default environment at {}".format(env_dir))
+        env_dir = os.path.join(pkg_root_dir, "data", "rte_case14_realistic")
+        print(f"Using default environment at {env_dir}")
 
     n_cores = args.n_cores
 
