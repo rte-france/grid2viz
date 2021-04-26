@@ -83,7 +83,7 @@ def navbar(scenario=None, ts=""):
                         className="badge",
                     ),
                 ],
-                className="reminder float-left",
+                className="reminder float-left mt-6",
             ),
             html.Div(
                 [
