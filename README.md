@@ -12,7 +12,7 @@ Grid2Viz is a web application that offers several interactive views into the res
 *   [6 Interface](#interface)
 *   [7 Contributing](#contributing)
 *   [8 Trouble shooting](#troubleshooting)
-
+ 
 ### Video highlighting Grid2viz analyzis capabilities
 [![Alt text](https://img.youtube.com/vi/xlqS-CzvMwk/0.jpg)](https://www.youtube.com/watch?v=xlqS-CzvMwk)
 
