@@ -269,7 +269,7 @@ def register_callbacks_simulation(app, assistant):
             env_kwargs=params_for_reboot,
         )
         obs, reward, *_ = episode_reboot.go_to(int(timestep))
-        act = PlayableAction()
+        act = env.action_space()
 
         for action in actions:
             act.update(action)
@@ -488,7 +488,7 @@ def register_callbacks_simulation(app, assistant):
                 env_kwargs=params_for_reboot,
             )
             obs, reward, *_ = episode_reboot.go_to(int(ts))
-            act = PlayableAction()
+            act = env.action_space()
 
             reward = f"0"
             rho_max = f"0"
