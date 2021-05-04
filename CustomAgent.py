@@ -192,12 +192,12 @@ class MultipleTopologyAgent(BaseAgent):
         for sub_id in sub_to_switch:
             n_elements = self.observation_space.sub_info[sub_id]
 
-            target_topology_1 = np.ones(n_elements)
+            target_topology_1 = np.ones(n_elements, dtype=int)
             action_def_1 = {
                 "set_bus": {"substations_id": [(sub_id, target_topology_1)]}
             }
 
-            target_topology_2 = np.ones(n_elements)
+            target_topology_2 = np.ones(n_elements, dtype=int)
             target_topology_2[[2 * i for i in range(int(np.round(n_elements / 2)))]] = 2
             action_def_2 = {
                 "set_bus": {"substations_id": [(sub_id, target_topology_2)]}
