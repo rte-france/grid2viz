@@ -1,3 +1,7 @@
+# Copyright (C) 2021, RTE (http://www.rte-france.com/)
+# See AUTHORS.txt
+# SPDX-License-Identifier: MPL-2.0
+
 """
 This file handles the html entry point of the application through dash components.
 It will generate the layout of a given page and handle the routing

@@ -1,3 +1,7 @@
+# Copyright (C) 2021, RTE (http://www.rte-france.com/)
+# See AUTHORS.txt
+# SPDX-License-Identifier: MPL-2.0
+
 import configparser
 import itertools
 import json
@@ -228,7 +232,7 @@ def make_network_scenario_overview(episode):
     obs_colored.line_status = line_status_colored
 
     obs_colored.load_p = np.array(max_loads.value)
-    obs_colored.prod_p = np.array(max_gens.value)
+    obs_colored.gen_p = np.array(max_gens.value)
 
     network_graph = graph.plot_obs(obs_colored, line_info=None)
     # network_graph=graph.plot_info(

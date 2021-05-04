@@ -1,4 +1,6 @@
-import os
+# Copyright (C) 2021, RTE (http://www.rte-france.com/)
+# See AUTHORS.txt
+# SPDX-License-Identifier: MPL-2.0
 
 import grid2op
 from grid2op.Agent import TopologyGreedy, DoNothingAgent
