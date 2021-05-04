@@ -402,10 +402,10 @@ def register_callbacks_simulation(app, assistant):
         ts,
         network_graph_t,
     ):
-        if simulate_n_clicks is None or (
-            actions is None and simulation_assistant_store is None
-        ):
-            raise PreventUpdate
+        if simulate_n_clicks is None:
+            return
+        if actions is None and simulation_assistant_store is None:
+            return "No action performed"
         if active_tab_choose_assist == "tab-assist-method":
             episode = make_episode(agent, scenario)
             return dcc.Graph(
