@@ -1,6 +1,9 @@
 from abc import abstractmethod, ABC
 from itertools import chain
 
+import dash_core_components as dcc
+import dash_html_components as html
+
 
 class BaseAssistant(ABC):
     def __init__(self):
@@ -103,6 +106,29 @@ class BaseAssistant(ABC):
         return get_layout_ids
 
     get_layout_ids = staticmethod(get_layout_ids())
+
+
+class EmptyAssist(BaseAssistant):
+    def __init__(self):
+        super().__init__()
+
+    def layout(self, *args):
+        return html.Div(
+            [
+                dcc.Store(id="assistant_store"),
+                dcc.Store(id="assistant_actions"),
+                dcc.Store(
+                    id="assistant-size", data=dict(assist="col-3", graph="col-9")
+                ),
+                html.P("No Assistant found.", className="my-2"),
+            ]
+        )
+
+    def register_callbacks(self, app):
+        pass
+
+    def store_to_graph(self, store_data):
+        pass
 
 
 if __name__ == "__main__":

@@ -5,6 +5,8 @@ It will generate the layout of a given page and handle the routing
 
 import dash_bootstrap_components as dbc
 from dash import Dash
+import sys
+import warnings
 
 # We need to create app before importing the rest of the project as it uses @app decorators
 font_awesome = [
@@ -30,7 +32,17 @@ from grid2viz.src.overview.overview_clbk import (
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
 from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
-from grid2viz.src.simulation.ExpertAssist import Assist
+
+try:
+    from grid2viz.src.simulation.ExpertAssist import Assist
+except (ImportError, ModuleNotFoundError):
+    from grid2viz.src.simulation.simulation_assist import EmptyAssist as Assist
+
+    warnings.warn(
+        "ExpertOp4Grid is not installed and the assist feature will not be available."
+        " To use the Assist feature, you can install ExpertOp4Grid by "
+        "\n\t{} -m pip install ExpertOp4Grid\n".format(sys.executable)
+    )
 
 """
 End Warning
