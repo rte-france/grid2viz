@@ -167,7 +167,7 @@ def register_callbacks_simulation(app, assistant):
                 # Lines
                 (line_ids,) = np.where(episode.line_names == selected_line)
                 line_id = int(line_ids[0])
-                side = "ex" if "ex" in ex_or_lines else "or"
+                side = "ex" if "Ex" in ex_or_lines else "or"
                 bus_number_lines = -1  # Disconnect
                 if bus_lines == "Bus1":
                     bus_number_lines = 1
