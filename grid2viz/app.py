@@ -86,7 +86,7 @@ def define_layout_and_callbacks(
 
 def app_run(port=8050, debug=False, page=None):
     if page is not None:
-        print(f"Warm start is running on http://127.0.0.1:8050/{page}")
+        print(f"Warm start is running on http://127.0.0.1:{port}/{page}")
     app.run_server(port=port, debug=debug)
 
 
