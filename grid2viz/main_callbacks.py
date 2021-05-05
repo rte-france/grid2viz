@@ -226,7 +226,7 @@ def register_callbacks_main(app):
         [State("scenario", "data")],
     )
     def update_user_timestamps_options(data, agent, scenario):
-        if data is None:
+        if data is None or agent is None or scenario is None:
             raise PreventUpdate
         episode = manager.make_episode(agent, scenario)
         nb_timesteps_played = episode.meta["nb_timestep_played"]
@@ -243,7 +243,7 @@ def register_callbacks_main(app):
         [State("scenario", "data")],
     )
     def update_user_timestamps_value(data, agent, scenario):
-        if not data:
+        if data is None or agent is None or scenario is None:
             raise PreventUpdate
         episode = manager.make_episode(agent, scenario)
         nb_timesteps_played = episode.meta["nb_timestep_played"]
@@ -262,7 +262,7 @@ def register_callbacks_main(app):
         [State("agent_study", "data"), State("scenario", "data")],
     )
     def update_user_timstep_store(user_timestamp, agent, scenario):
-        if user_timestamp is None:
+        if user_timestamp is None or agent is None or scenario is None:
             raise PreventUpdate
         episode = manager.make_episode(agent, scenario)
         user_timestamp_dt = dt.datetime.strptime(user_timestamp, "%Y-%m-%d %H:%M")
