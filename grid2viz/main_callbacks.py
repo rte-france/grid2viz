@@ -233,7 +233,8 @@ def register_callbacks_main(app):
         return [
             ts
             for ts in data
-            if dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
+            if ts["value"] != ""
+            and dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
             in episode.timestamps[:nb_timesteps_played]
         ]
 
@@ -250,7 +251,8 @@ def register_callbacks_main(app):
         filtered_data = [
             ts
             for ts in data
-            if dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
+            if ts["value"] != ""
+            and dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
             in episode.timestamps[:nb_timesteps_played]
         ]
         if filtered_data:
