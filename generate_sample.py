@@ -2,6 +2,7 @@
 # See AUTHORS.txt
 # SPDX-License-Identifier: MPL-2.0
 
+import os
 import grid2op
 from grid2op.Agent import TopologyGreedy, DoNothingAgent
 from grid2op.Runner import Runner
