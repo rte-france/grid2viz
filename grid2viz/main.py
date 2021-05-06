@@ -127,10 +127,22 @@ def main():
                 )
             parser = configparser.ConfigParser()
             parser.read(args.config_path)
-            scenario = parser.get("WARMSTART", "scenario")
-            agent_ref = parser.get("WARMSTART", "agent_ref")
-            agent_study = parser.get("WARMSTART", "agent_study")
-            user_timestep = parser.get("WARMSTART", "time_step")
+            try:
+                scenario = parser.get("WARMSTART", "scenario")
+            except configparser.NoOptionError:
+                scenario = None
+            try:
+                agent_ref = parser.get("WARMSTART", "agent_ref")
+            except configparser.NoOptionError:
+                agent_ref = None
+            try:
+                agent_study = parser.get("WARMSTART", "agent_study")
+            except configparser.NoOptionError:
+                agent_study = None
+            try:
+                user_timestep = parser.get("WARMSTART", "time_step")
+            except configparser.NoOptionError:
+                user_timestep = None
             window = None
             page = parser.get("WARMSTART", "page")
             config = dict(

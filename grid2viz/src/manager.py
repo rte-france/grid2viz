@@ -477,7 +477,10 @@ scenarios = []
 scenarios_agent = {}
 agent_scenario = {}
 
-n_cores = int(parser.get("DEFAULT", "n_cores"))
+try:
+    n_cores = int(parser.get("DEFAULT", "n_cores"))
+except configparser.NoOptionError:
+    n_cores = 1
 
 for agent in agents:
     scen_path = os.path.join(agents_dir, agent)
