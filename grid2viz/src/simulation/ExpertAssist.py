@@ -24,9 +24,11 @@ from grid2viz.src.simulation.simulation_assist import BaseAssistant
 
 try:
     from lightsim2grid.LightSimBackend import LightSimBackend
+
     BACKEND = LightSimBackend
 except ModuleNotFoundError:
     from grid2op.Backend import PandaPowerBackend
+
     BACKEND = PandaPowerBackend
 
 expert_config = {
@@ -74,7 +76,7 @@ def get_ranked_overloads(observation_space, observation):
 class Assist(BaseAssistant):
     def __init__(self):
         super().__init__()
-        obs_reboot=None
+        self.obs_reboot = None
 
     def layout(self, episode):
         return html.Div(
@@ -158,8 +160,6 @@ class Assist(BaseAssistant):
                 State("select_lines_to_cut", "value"),
             ],
         )
-
-
         def evaluate_expert_system(
             evaluate_n_clicks,
             reset_n_clicks,
@@ -185,7 +185,7 @@ class Assist(BaseAssistant):
                 assistant_size = dict(assist="col-3", graph="col-9")
                 return "", [], assistant_size
             thermal_limit = env.get_thermal_limit()
-            #with redirect_stdout(None):
+            # with redirect_stdout(None):
             if nb_simulations is not None:
                 expert_config["totalnumberofsimulatedtopos"] = nb_simulations
             episode = make_episode(episode_name=scenario, agent=agent)
@@ -196,29 +196,28 @@ class Assist(BaseAssistant):
                     flow_ratio / 100.0 * new_thermal_limit[line_id]
                 )
 
-
             episode_reboot = EpisodeReboot.EpisodeReboot()
-            agent_path = app.server.config["agents_dir"]
+
             episode_reboot.load(
                 env.backend,
                 data=episode,
-                agent_path=os.path.join(agent_path, episode.agent),
+                agent_path=os.path.join(agents_dir, episode.agent),
                 name=episode.episode_name,
                 env_kwargs=params_for_reboot,
             )
 
             obs, reward, *_ = episode_reboot.go_to(int(ts))
 
-            #fictively changing obs.rho and thermal limits to be used by the expert system
-            #also making sure that obs thermal_limits are initialized, not to dafault large values as given by reboot
-            obs.rho = obs.rho * obs._obs_env.get_thermal_limit() /new_thermal_limit
+            # fictively changing obs.rho and thermal limits to be used by the expert system
+            # also making sure that obs thermal_limits are initialized, not to dafault large values as given by reboot
+            obs.rho = obs.rho * obs._obs_env.get_thermal_limit() / new_thermal_limit
             obs._obs_env.set_thermal_limit(new_thermal_limit)
 
-            if(line_to_study is not None):
+            if line_to_study is not None:
                 line_id = np.where(episode.line_names == line_to_study)[0][0]
-                ltc=[line_id]
+                ltc = [line_id]
             else:
-                ltc=[get_ranked_overloads(env.observation_space, obs)[0]]
+                ltc = [get_ranked_overloads(env.observation_space, obs)[0]]
 
             simulator = Grid2opSimulation(
                 obs,
@@ -232,7 +231,7 @@ class Assist(BaseAssistant):
             ranked_combinations, expert_system_results, actions = expert_operator(
                 simulator, plot=False, debug=False
             )
-            #reinitialize proper thermal limits
+            # reinitialize proper thermal limits
             obs._obs_env.set_thermal_limit(thermal_limit)
             self.obs_reboot = obs
 
@@ -286,20 +285,24 @@ class Assist(BaseAssistant):
             return action, str(act)
 
     def store_to_graph(self, store_data, episode, ts):
-       #episode_reboot = EpisodeReboot.EpisodeReboot()
-       #episode_reboot.load(
-       #    env.backend,
-       #    data=episode,
-       #    agent_path=os.path.join(agents_dir, episode.agent),
-       #    name=episode.episode_name,
-       #    env_kwargs=params_for_reboot,
-       #)
-       #obs, reward, *_ = episode_reboot.go_to(ts)
+        # episode_reboot = EpisodeReboot.EpisodeReboot()
+        # episode_reboot.load(
+        #    env.backend,
+        #    data=episode,
+        #    agent_path=os.path.join(agents_dir, episode.agent),
+        #    name=episode.episode_name,
+        #    env_kwargs=params_for_reboot,
+        # )
+        # obs, reward, *_ = episode_reboot.go_to(ts)
         act = env.action_space.from_vect(np.array(store_data))
-        if(self.obs_reboot is not None):
+        if self.obs_reboot is not None:
             obs, *_ = self.obs_reboot.simulate(action=act, time_step=0)
-            #make sure rho is properly calibrated. Problem could be that obs_reboot thermal limits are not properly initialized
-            obs.rho=obs.rho*self.obs_reboot._obs_env.get_thermal_limit()/env.get_thermal_limit()
+            # make sure rho is properly calibrated. Problem could be that obs_reboot thermal limits are not properly initialized
+            obs.rho = (
+                obs.rho
+                * self.obs_reboot._obs_env.get_thermal_limit()
+                / env.get_thermal_limit()
+            )
             try:
                 network_graph_factory = PlotPlotly(
                     grid_layout=episode.observation_space.grid_layout,
