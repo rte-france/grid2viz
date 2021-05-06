@@ -269,11 +269,13 @@ def register_callbacks_simulation(app, assistant):
             env_kwargs=params_for_reboot,
         )
         obs, reward, *_ = episode_reboot.go_to(int(timestep))
+        obs._obs_env.set_thermal_limit(env.get_thermal_limit())
         act = env.action_space()
 
         for action in actions:
             act.update(action)
         obs, *_ = obs.simulate(action=act, time_step=0)
+
         try:
             graph_div_child = dcc.Graph(figure=network_graph_t)
             new_network_graph = make_network(episode).plot_obs(observation=obs)
