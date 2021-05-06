@@ -38,7 +38,11 @@ nav_items = [
 ]
 
 
-def navbar(scenario=None, ts=""):
+def navbar(
+    scenario=None, ts="", timestamp_dropdown_options=None, timestamp_dropdown_value=""
+):
+    if timestamp_dropdown_options is None:
+        timestamp_dropdown_options = []
     return dbc.Navbar(
         [
             html.Div(
@@ -116,7 +120,11 @@ def navbar(scenario=None, ts=""):
                         ]
                     ),
                     dcc.Dropdown(
-                        id="user_timestamps", className="", style={"width": "200px"}
+                        id="user_timestamps",
+                        className="",
+                        style={"width": "200px"},
+                        options=timestamp_dropdown_options,
+                        value=timestamp_dropdown_value,
                     ),
                     html.Div(
                         [
@@ -174,6 +182,8 @@ def make_layout(
     window=None,
     page=None,
 ):
+    if user_timestep is None:
+        user_timestep = 0
     if scenario is None or agent_study is None:
         timestamp_str = ""
     else:
@@ -193,7 +203,12 @@ def make_layout(
             dcc.Store(id="page", data=page),
             dcc.Store(id="relayoutStoreMicro"),
             dcc.Store(id="reset_timeseries_table_macro", data=True),
-            navbar(scenario, ts=user_timestep),
+            navbar(
+                scenario,
+                ts=user_timestep,
+                timestamp_dropdown_options=user_timestamp,
+                timestamp_dropdown_value=user_timestamp[0]["value"],
+            ),
             body(page),
         ]
     )

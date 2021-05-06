@@ -107,6 +107,8 @@ def register_callbacks_main(app):
     ):
         if timestamps_store is None:
             timestamps_store = []
+        if user_timestep_store is None:
+            user_timestep_store = 0
         timestamps = [
             dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store
         ]
