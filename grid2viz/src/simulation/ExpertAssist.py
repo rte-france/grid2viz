@@ -207,7 +207,17 @@ class Assist(BaseAssistant):
             )
 
             obs, reward, *_ = episode_reboot.go_to(int(ts))
-
+            if not np.all(
+                np.round(episode.observations[int(ts)].a_or, 2) == np.round(obs.a_or, 2)
+            ):
+                return (
+                    html.Div(
+                        children=f"Issue - Unable to reboot episode at time step {ts} for agent {episode.agent}",
+                        className="more-info-table",
+                    ),
+                    [],
+                    assistant_size,
+                )
             # fictively changing obs.rho and thermal limits to be used by the expert system
             # also making sure that obs thermal_limits are initialized, not to dafault large values as given by reboot
             obs.rho = obs.rho * obs._obs_env.get_thermal_limit() / new_thermal_limit

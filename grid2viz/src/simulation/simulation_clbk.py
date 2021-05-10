@@ -269,6 +269,21 @@ def register_callbacks_simulation(app, assistant):
             env_kwargs=params_for_reboot,
         )
         obs, reward, *_ = episode_reboot.go_to(int(timestep))
+        if not np.all(
+            np.round(episode.observations[int(timestep)].a_or, 2)
+            == np.round(obs.a_or, 2)
+        ):
+            return (
+                actions,
+                "",
+                html.Div(
+                    children=f"Issue - Unable to reboot episode at time step {timestep} for agent {episode.agent}",
+                    className="more-info-table",
+                ),
+                "",
+                network_graph_t,
+            )
+
         act = env.action_space()
 
         for action in actions:
@@ -487,13 +502,17 @@ def register_callbacks_simulation(app, assistant):
                 name=episode.episode_name,
                 env_kwargs=params_for_reboot,
             )
-            obs, reward, *_ = episode_reboot.go_to(int(ts))
-            act = env.action_space()
-
             reward = f"0"
             rho_max = f"0"
             nb_overflows = f"0"
             losses = f"0"
+
+            obs, reward, *_ = episode_reboot.go_to(int(ts))
+            if not np.all(
+                np.round(episode.observations[int(ts)].a_or, 2) == np.round(obs.a_or, 2)
+            ):
+                return reward, rho_max, nb_overflows, losses
+            act = env.action_space()
             if actions:
                 for action in actions:
                     act.update(action)
