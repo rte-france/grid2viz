@@ -26,4 +26,5 @@ Grid2Viz is a web application that offers several interactive views into the res
    views/scenario_overview.rst
    views/agent_overview.rst
    views/agent_study.rst
+   views/simulation.rst
 
