@@ -117,10 +117,10 @@ class Assist(BaseAssistant):
                 dbc.Input(
                     type="number",
                     min=0,
-                    max=10,
+                    max=50,
                     step=1,
                     id="input_nb_simulations",
-                    value=5,
+                    value=15,
                 ),
                 dbc.Button(
                     id="assist-evaluate",
@@ -139,6 +139,10 @@ class Assist(BaseAssistant):
                     id="assist-action-info",
                     className="more-info-table",
                     children="Select an action in the table above.",
+                ),
+                dcc.Link(
+                    "See the ExpertOP4Grid documentation for more information",
+                    href="https://expertop4grid.readthedocs.io/en/latest/DESCRIPTION.html#didactic-example",
                 ),
             ]
         )
@@ -245,6 +249,10 @@ class Assist(BaseAssistant):
             obs._obs_env.set_thermal_limit(thermal_limit)
             self.obs_reboot = obs
 
+            expert_system_results = expert_system_results.sort_values(
+                ["Topology simulated score", "Efficacity"]
+            )
+
             return (
                 DataTable(
                     id="table",
@@ -338,6 +346,10 @@ class Assist(BaseAssistant):
         )
         obs, reward, *_ = episode_reboot.go_to(ts)
         act = env.action_space.from_vect(np.array(store_data))
+        if not np.all(
+            np.round(episode.observations[int(ts)].a_or, 2) == np.round(obs.a_or, 2)
+        ):
+            return f"0", f"0", f"0", f"0"
         obs, *_ = obs.simulate(action=act, time_step=0)
         rho_max = f"{obs.rho.max() * 100:.0f}%"
         nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
