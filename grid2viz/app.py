@@ -66,9 +66,19 @@ def define_layout_and_callbacks(
     window=None,
     page=None,
     config=None,
+    activate_simulation=False,
 ):
     ##create layout
-    layout(app, scenario, agent_ref, agent_study, user_timestep, window, page)
+    layout(
+        app,
+        scenario,
+        agent_ref,
+        agent_study,
+        user_timestep,
+        window,
+        page,
+        activate_simulation,
+    )
 
     ##create callbaks
     register_callbacks_main(app)
@@ -76,9 +86,10 @@ def define_layout_and_callbacks(
     register_callbacks_overview(app)
     register_callbacks_macro(app)
     register_callbacks_micro(app)
-    assistant = Assist()
-    register_callbacks_simulation(app, assistant)
-    assistant.register_callbacks(app)
+    if activate_simulation:
+        assistant = Assist()
+        register_callbacks_simulation(app, assistant)
+        assistant.register_callbacks(app)
     if config is not None:
         for key, value in config.items():
             app.server.config[key] = value

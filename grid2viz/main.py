@@ -40,6 +40,8 @@ ARG_WARM_START_DESC = "If True, the application is warm started based on the par
 
 ARG_CONFIG_PATH_DESC = "Path to the configuration file config.ini"
 
+ARG_ACTIVATE_BETA_DESC = "If True, Activate beta features"
+
 
 def main():
     parser_main = argparse.ArgumentParser(description="Grid2Viz")
@@ -69,6 +71,9 @@ def main():
         required=False,
         type=str,
         help=ARG_CONFIG_PATH_DESC,
+    )
+    parser_main.add_argument(
+        "--activate-beta", default=False, type=bool, help=ARG_ACTIVATE_BETA_DESC
     )
 
     args = parser_main.parse_args()
@@ -112,6 +117,7 @@ def main():
             )
 
     is_makeCache_only = args.cache
+    activate_beta = args.activate_beta
 
     # Inline import to load app only now
     if is_makeCache_only:
@@ -150,10 +156,17 @@ def main():
                 agents_dir=parser.get("DEFAULT", "agents_dir"),
             )
             define_layout_and_callbacks(
-                scenario, agent_ref, agent_study, user_timestep, window, page, config
+                scenario,
+                agent_ref,
+                agent_study,
+                user_timestep,
+                window,
+                page,
+                config,
+                activate_beta,
             )
         else:
-            define_layout_and_callbacks()
+            define_layout_and_callbacks(activate_simulation=activate_beta)
         app_run(args.port, args.debug, page)
 
 
