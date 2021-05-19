@@ -242,16 +242,18 @@ class Assist(BaseAssistant):
                 ltc=ltc,
                 reward_type=reward_type,
             )
-            ranked_combinations, expert_system_results, actions = expert_operator(
-                simulator, plot=False, debug=False
-            )
+            with redirect_stdout(None):
+                ranked_combinations, expert_system_results, actions = expert_operator(
+                    simulator, plot=False, debug=False
+                )
             # reinitialize proper thermal limits
             obs._obs_env.set_thermal_limit(thermal_limit)
             self.obs_reboot = obs
 
             expert_system_results = expert_system_results.sort_values(
-                ["Topology simulated score", "Efficacity"]
+                ["Topology simulated score", "Efficacity"], ascending=False
             )
+            actions = actions[expert_system_results.index]
 
             return (
                 DataTable(
@@ -336,21 +338,19 @@ class Assist(BaseAssistant):
             return new_network_graph
 
     def store_to_kpis(self, store_data, episode, ts):
-        episode_reboot = EpisodeReboot.EpisodeReboot()
-        episode_reboot.load(
-            env.backend,
-            data=episode,
-            agent_path=os.path.join(agents_dir, episode.agent),
-            name=episode.episode_name,
-            env_kwargs=params_for_reboot,
-        )
-        obs, reward, *_ = episode_reboot.go_to(ts)
         act = env.action_space.from_vect(np.array(store_data))
-        if not np.all(
-            np.round(episode.observations[int(ts)].a_or, 2) == np.round(obs.a_or, 2)
-        ):
-            return f"0", f"0", f"0", f"0"
-        obs, *_ = obs.simulate(action=act, time_step=0)
+        if self.obs_reboot is not None:
+            obs, reward, *_ = self.obs_reboot.simulate(action=act, time_step=0)
+            # make sure rho is properly calibrated. Problem could be that obs_reboot thermal limits are not properly initialized
+            obs.rho = (
+                obs.rho
+                * self.obs_reboot._obs_env.get_thermal_limit()
+                / env.get_thermal_limit()
+            )
+        else:
+            raise RuntimeError(
+                f"Assist.store_to_kpis cannot be called before first rebooting the Episode"
+            )
         rho_max = f"{obs.rho.max() * 100:.0f}%"
         nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
         losses = f"0"
