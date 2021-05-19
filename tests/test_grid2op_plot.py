@@ -7,13 +7,10 @@ os.environ["GRID2VIZ_ROOT"] = os.path.join(
     pathlib.Path(__file__).parent.absolute(), "data"
 )
 
+config_file_path = os.path.join(os.environ["GRID2VIZ_ROOT"], "config_tests.ini")
+
 agents_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "data", "agents")
 
-config_str = f"[DEFAULT]\nagents_dir={agents_path}\nn_cores=2"
-config_file_path = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
-
-with open(config_file_path, "w") as f:
-    f.write(config_str)
 
 from grid2op.Backend import PandaPowerBackend
 from grid2op.Episode.EpisodeData import EpisodeData

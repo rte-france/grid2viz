@@ -232,17 +232,17 @@ class Assist(BaseAssistant):
                 ltc = [line_id]
             else:
                 ltc = [get_ranked_overloads(env.observation_space, obs)[0]]
-
-            simulator = Grid2opSimulation(
-                obs,
-                env.action_space,
-                env.observation_space,
-                param_options=expert_config,
-                debug=False,
-                ltc=ltc,
-                reward_type=reward_type,
-            )
             with redirect_stdout(None):
+                simulator = Grid2opSimulation(
+                    obs,
+                    env.action_space,
+                    env.observation_space,
+                    param_options=expert_config,
+                    debug=False,
+                    ltc=ltc,
+                    reward_type=reward_type,
+                )
+
                 ranked_combinations, expert_system_results, actions = expert_operator(
                     simulator, plot=False, debug=False
                 )
@@ -253,7 +253,7 @@ class Assist(BaseAssistant):
             expert_system_results = expert_system_results.sort_values(
                 ["Topology simulated score", "Efficacity"], ascending=False
             )
-            actions = actions[expert_system_results.index]
+            actions = [actions[i] for i in expert_system_results.index]
 
             return (
                 DataTable(
