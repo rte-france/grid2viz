@@ -17,6 +17,7 @@ from grid2viz.src.manager import make_network, agents_dir
 from grid2viz.src.simulation.reboot import env, params_for_reboot
 from grid2viz.src.simulation.simulation_lyt import choose_tab_content
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
+from grid2viz.src.simulation.simulation_utils import action_dict_from_choose_tab
 
 
 def register_callbacks_simulation(app, assistant):
@@ -161,83 +162,53 @@ def register_callbacks_simulation(app, assistant):
         if add_n_clicks is None:
             raise PreventUpdate
         episode = make_episode(study_agent, scenario)
-        if method_tab == "tab-0":
+        if method_tab == "tab_method_dropdowns":
             # Dropdown
-            if objet_tab == "tab-0":
+            if objet_tab == "tab_object_lines":
                 # Lines
-                (line_ids,) = np.where(episode.line_names == selected_line)
-                line_id = int(line_ids[0])
-                side = "ex" if "Ex" in ex_or_lines else "or"
-                bus_number_lines = -1  # Disconnect
-                if bus_lines == "Bus1":
-                    bus_number_lines = 1
-                elif bus_lines == "Bus2":
-                    bus_number_lines = 2
-                if topology_type_lines == "Set":
-                    if target_lines == "Status":
-                        if disc_rec_lines == "Reconnect":
-                            action_dict = {"set_line_status": [(line_id, 1)]}
-                        else:
-                            # Disconnect
-                            action_dict = {"set_line_status": [(line_id, -1)]}
-                    else:
-                        # Bus
-                        action_dict = {
-                            "set_bus": {
-                                f"lines_{side}_id": [(line_id, bus_number_lines)]
-                            }
-                        }
-                else:
-                    # Change
-                    if target_lines == "Status":
-                        action_dict = {"change_line_status": [line_id]}
-                    else:
-                        # Bus
-                        action_dict = {"change_bus": {f"lines_{side}_id": [line_id]}}
-            elif objet_tab == "tab-1":
+                params_dict = dict(
+                    ex_or_lines=ex_or_lines,
+                    target_lines=target_lines,
+                    disc_rec_lines=disc_rec_lines,
+                )
+                action_dict = action_dict_from_choose_tab(
+                    episode,
+                    kind="Lines",
+                    selected_object=selected_line,
+                    bus=bus_lines,
+                    topology_type=topology_type_lines,
+                    params_dict=params_dict,
+                )
+
+            elif objet_tab == "tab_object_loads":
                 # Loads
-                (load_ids,) = np.where(episode.load_names == selected_load)
-                load_id = load_ids[0]
-                bus_number_loads = -1  # Disconnect
-                if bus_loads == "Bus1":
-                    bus_number_loads = 1
-                elif bus_loads == "Bus2":
-                    bus_number_loads = 2
-                if topology_type_loads == "Set":
-                    action_dict = {
-                        "set_bus": {"loads_id": [(load_id, bus_number_loads)]}
-                    }
-                else:
-                    # Change
-                    action_dict = {"change_bus": {"loads_id": [load_id]}}
+                action_dict = action_dict_from_choose_tab(
+                    episode,
+                    kind="Loads",
+                    selected_object=selected_load,
+                    bus=bus_loads,
+                    topology_type=topology_type_loads,
+                )
             else:
-                # Gens
-                (gen_ids,) = np.where(episode.prod_names == selected_gen)
-                gen_id = int(
-                    gen_ids[0]
-                )  # gen_ids[0] is of type np.int64 which is not json serializable
-                bus_number_gens = -1  # Disconnect
-                if bus_gens == "Bus1":
-                    bus_number_gens = 1
-                elif bus_gens == "Bus2":
-                    bus_number_gens = 2
-                if action_type_gens == "Redispatch":
-                    action_dict = {"redispatch": {gen_id: float(redisp_volume)}}
-                else:
-                    # Topology
-                    if topology_type_gens == "Set":
-                        action_dict = {
-                            "set_bus": {"generators_id": [(gen_id, bus_number_gens)]}
-                        }
-                    else:
-                        # Change
-                        action_dict = {"change_bus": {"generators_id": [gen_id]}}
+                # Gens: tab_object_gens
+                params_dict = dict(
+                    action_type_gens=action_type_gens,
+                    redisp_volume=redisp_volume,
+                )
+                action_dict = action_dict_from_choose_tab(
+                    episode,
+                    kind="Gens",
+                    selected_object=selected_gen,
+                    bus=bus_gens,
+                    topology_type=topology_type_gens,
+                    params_dict=params_dict,
+                )
             if actions is None:
                 actions = [action_dict]
             else:
                 actions.append(action_dict)
         else:
-            # Dict
+            # Dict: tab_method_dict
             if action_dict is None:
                 raise PreventUpdate
             try:
@@ -305,7 +276,7 @@ def register_callbacks_simulation(app, assistant):
         except Exception as ex:
             print("actions")
             print(actions)
-        if method_tab == "tab-0":
+        if method_tab == "tab_method_dropdowns":
             return (
                 actions,
                 str(act),

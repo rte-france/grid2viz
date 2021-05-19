@@ -163,6 +163,7 @@ def choose_tab_content(episode):
                 className="nav-fill",
                 children=[
                     dbc.Tab(
+                        tab_id="tab_method_dropdowns",
                         label="Dropdowns",
                         children=[
                             dbc.Tabs(
@@ -170,14 +171,17 @@ def choose_tab_content(episode):
                                 className="nav-fill",
                                 children=[
                                     dbc.Tab(
+                                        tab_id="tab_object_lines",
                                         label="Lines",
                                         children=lines_tab_layout(episode),
                                     ),
                                     dbc.Tab(
+                                        tab_id="tab_object_loads",
                                         label="Loads",
                                         children=loads_tab_layout(episode),
                                     ),
                                     dbc.Tab(
+                                        tab_id="tab_object_gens",
                                         label="Gens",
                                         children=gens_tab_layout(episode),
                                     ),
@@ -186,6 +190,7 @@ def choose_tab_content(episode):
                         ],
                     ),
                     dbc.Tab(
+                        tab_id="tab_method_dict",
                         label="Dict",
                         children=[
                             html.P("Enter the action dictionary:"),
