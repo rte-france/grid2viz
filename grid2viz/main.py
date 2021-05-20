@@ -30,17 +30,17 @@ ARG_ENV_PATH_DESC = (
     "The path where the environment config is stored."
     " (default to None to use the provided default environment)"
 )
-ARG_PORT_DESC = "The port to serve grid2viz on." " (default to 8050)"
-ARG_DEBUG_DESC = "Enable debug mode for developers." " (default to False)"
+ARG_PORT_DESC = "The port to serve grid2viz on. (default to 8050)"
+ARG_DEBUG_DESC = "Enable debug mode for developers. (default to False)"
 ARG_N_CORES_DESC = "The number of cores to use for the first loading of the best agents of each scenario"
 
-ARG_CACHE_DESC = "True if you want to build all the cache data for all agents at once before relaunching grid2viz"
+ARG_CACHE_DESC = "Enable the building of  all the cache data for all agents at once before relaunching grid2viz. (default to False)"
 
-ARG_WARM_START_DESC = "If True, the application is warm started based on the parameters defined in the WARMSTART section of the config.ini file"
+ARG_WARM_START_DESC = "If True, the application is warm started based on the parameters defined in the WARMSTART section of the config.ini file. (default to False)"
 
-ARG_CONFIG_PATH_DESC = "Path to the configuration file config.ini"
+ARG_CONFIG_PATH_DESC = "Path to the configuration file config.ini."
 
-ARG_ACTIVATE_BETA_DESC = "If True, Activate beta features"
+ARG_ACTIVATE_BETA_DESC = "Enable beta features. (default to False)"
 
 
 def main():
@@ -61,9 +61,9 @@ def main():
     parser_main.add_argument("--debug", action="store_true", help=ARG_DEBUG_DESC)
 
     parser_main.add_argument("--n_cores", default=2, type=int, help=ARG_N_CORES_DESC)
-    parser_main.add_argument("--cache", default=False, type=bool, help=ARG_CACHE_DESC)
+    parser_main.add_argument("--cache", action="store_true", help=ARG_CACHE_DESC)
     parser_main.add_argument(
-        "--warm-start", default=False, type=bool, help=ARG_WARM_START_DESC
+        "--warm-start", action="store_true", help=ARG_WARM_START_DESC
     )
     parser_main.add_argument(
         "--config-path",
@@ -73,7 +73,7 @@ def main():
         help=ARG_CONFIG_PATH_DESC,
     )
     parser_main.add_argument(
-        "--activate-beta", default=False, type=bool, help=ARG_ACTIVATE_BETA_DESC
+        "--activate-beta", action="store_true", help=ARG_ACTIVATE_BETA_DESC
     )
 
     args = parser_main.parse_args()
@@ -84,6 +84,16 @@ def main():
 
     if args.agents_path is not None:
         agents_dir = os.path.abspath(args.agents_path)
+    elif args.config_path is not None:
+        parser = configparser.ConfigParser()
+        parser.read(args.config_path)
+        try:
+            env_dir = parser.get("DEFAULT", "env_dir")
+            print(f"Using environment from config file: {env_dir}")
+        except configparser.NoOptionError:
+            print("A config file was provided without an agents_dir key")
+            agents_dir = os.path.join(pkg_root_dir, "data", "agents")
+            print("Using default agents logs at {}".format(agents_dir))
     else:
         agents_dir = os.path.join(pkg_root_dir, "data", "agents")
         print("Using default agents logs at {}".format(agents_dir))
@@ -97,8 +107,9 @@ def main():
             env_dir = parser.get("DEFAULT", "env_dir")
             print(f"Using environment from config file: {env_dir}")
         except configparser.NoOptionError:
-            print("A config file was provided without an env_dir key. It is mandatory.")
-            raise
+            print("A config file was provided without an env_dir key.")
+            env_dir = os.path.join(pkg_root_dir, "data", "rte_case14_realistic")
+            print(f"Using default environment at {env_dir}")
     else:
         env_dir = os.path.join(pkg_root_dir, "data", "rte_case14_realistic")
         print(f"Using default environment at {env_dir}")
@@ -106,15 +117,11 @@ def main():
     n_cores = args.n_cores
 
     with open(config_path, "w") as f:
-        if args.config_path is not None:
-            with open(args.config_path, "r") as g:
-                f.write(g.read())
-        else:
-            f.write(
-                CONFIG_FILE_CONTENT.format(
-                    agents_dir=agents_dir, env_dir=env_dir, n_cores=n_cores
-                )
+        f.write(
+            CONFIG_FILE_CONTENT.format(
+                agents_dir=agents_dir, env_dir=env_dir, n_cores=n_cores
             )
+        )
 
     is_makeCache_only = args.cache
     activate_beta = args.activate_beta
