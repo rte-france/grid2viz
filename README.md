@@ -51,6 +51,16 @@ source venv_grid2viz/bin/activate
 pip install -U grid2viz
 ```
 
+
+#### Step 2 (bis): Install from sources
+```commandline
+source venv_grid2viz/bin/activate
+git clone https://github.com/rte-france/grid2viz.git
+cd grid2Viz/
+pip install -U
+```
+
+
 ## Run Grid2Viz
 ```
 usage: grid2viz [-h] [--agents_path AGENTS_PATH] [--env_path ENV_PATH]

@@ -18,9 +18,14 @@ Step 2: Install from sources
 ::
 
     source venv_grid2viz/bin/activate
-    git clone https://github.com/mjothy/Grid2Viz.git
-    cd Grid2Viz/
+    git clone https://github.com/rte-france/grid2viz.git
+    cd grid2Viz/
     pip install -U .
 
-Right now this is the only way to use the application. We will soon provide a package available on pypi to by-pass the installation from sources.
 
+Step 2 (bis): Install from PyPI
+###############################
+::
+
+    source venv_grid2viz/bin/activate
+    pip install grid2viz
