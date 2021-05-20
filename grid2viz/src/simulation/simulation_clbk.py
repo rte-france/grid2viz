@@ -18,6 +18,7 @@ from grid2viz.src.simulation.reboot import env, params_for_reboot
 from grid2viz.src.simulation.simulation_lyt import choose_tab_content
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
 from grid2viz.src.simulation.simulation_utils import action_dict_from_choose_tab
+from grid2viz.src.kpi.EpisodeAnalytics import compute_losses
 
 
 def register_callbacks_simulation(app, assistant):
@@ -432,7 +433,7 @@ def register_callbacks_simulation(app, assistant):
             f"{episode.rho.loc[episode.rho.time == int(ts), 'value'].max() * 100:.0f}%"
         )
         nb_overflows = f"{episode.total_overflow_ts['value'][int(ts)]:,.0f}"
-        losses = f"0"
+        losses = f"{compute_losses(episode.observations[int(ts)])*100:.2f}%"
         return reward, rho_max, nb_overflows, losses
 
     @app.callback(
@@ -490,6 +491,7 @@ def register_callbacks_simulation(app, assistant):
                 obs, reward, *_ = obs.simulate(action=act, time_step=0)
                 rho_max = f"{obs.rho.max() * 100:.0f}%"
                 nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
+                losses = f"{compute_losses(obs)*100:.2f}%"
             return reward, rho_max, nb_overflows, losses
         else:
             return assistant.store_to_kpis(simulation_assistant_store, episode, int(ts))

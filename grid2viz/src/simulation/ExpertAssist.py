@@ -21,6 +21,7 @@ from grid2op.PlotGrid import PlotPlotly
 from grid2viz.src.manager import make_episode, agents_dir
 from grid2viz.src.simulation.reboot import env, params_for_reboot
 from grid2viz.src.simulation.simulation_assist import BaseAssistant
+from grid2viz.src.kpi.EpisodeAnalytics import compute_losses
 
 try:
     from lightsim2grid.LightSimBackend import LightSimBackend
@@ -353,5 +354,5 @@ class Assist(BaseAssistant):
             )
         rho_max = f"{obs.rho.max() * 100:.0f}%"
         nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
-        losses = f"0"
+        losses = f"{compute_losses(obs)*100:.2f}%"
         return reward, rho_max, nb_overflows, losses

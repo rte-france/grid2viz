@@ -19,6 +19,10 @@ from .env_actions import env_actions
 other_reward_key = "grid_operation_cost"
 
 
+def compute_losses(obs):
+    return (obs.prod_p.sum() - obs.load_p.sum()) / obs.load_p.sum()
+
+
 class ActionImpacts:
     def __init__(
         self,
