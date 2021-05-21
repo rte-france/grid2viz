@@ -88,8 +88,8 @@ def main():
         parser = configparser.ConfigParser()
         parser.read(args.config_path)
         try:
-            env_dir = parser.get("DEFAULT", "env_dir")
-            print(f"Using environment from config file: {env_dir}")
+            agents_dir = parser.get("DEFAULT", "agents_dir")
+            print(f"Using agent logs path from config file: {agents_dir}")
         except configparser.NoOptionError:
             print("A config file was provided without an agents_dir key")
             agents_dir = os.path.join(pkg_root_dir, "data", "agents")
