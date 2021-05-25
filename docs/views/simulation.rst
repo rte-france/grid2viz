@@ -7,7 +7,12 @@ Simulation
 
 The Simulation view allows to replay a specific time step with custom actions, either built as a collection of atomic actions, or with an assistant. The resulting simulated observation can then be compared to the original observation.
 
+This view allows to explore what would have happen if the agent had taken another set of actions.
+
+As for the Agent Study view, the studied time step in the Simulation view can be selected in the Agent Overview view and then changed in the navigation bar.
+
 .. image:: ../_static/simulation_1.png
+
 
 Chose or Assist
 ---------------
@@ -16,7 +21,8 @@ This section allows to configure the action to be simulated. Two options are ava
 
 - A manual configuration through a set of radio buttons and dropdowns that allow to select a specific object and a specific action to apply on. Such actions add up with the Add button.
 - An assisted action configuration through an assistant pluggin:
- - Right now, only the expert system `ExpertOp4Grid <https://github.com/marota/ExpertOp4Grid>`_ can be used
+ - Right now, only the expert system `ExpertOp4Grid <https://github.com/marota/ExpertOp4Grid>`_ is provided with the application. An interface is exposed to implement other pluggins.
+
 
 Compare
 -------
