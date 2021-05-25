@@ -32,6 +32,12 @@ class TestChooseSimulation(unittest.TestCase):
 
         self.agents_path = parser.get("DEFAULT", "agents_dir")
         self.cache_dir = os.path.join(self.agents_path, "_cache")
+        if not os.path.isdir(self.cache_dir):
+            from tests.test_make_cache import TestMakeCache
+
+            test_make_cache = TestMakeCache()
+            test_make_cache.setUp()
+            test_make_cache.test_make_cache()
         self.agent_name = "do-nothing-baseline"
         self.scenario_name = "000"
         self.env_path = parser.get("DEFAULT", "env_dir")
@@ -213,6 +219,12 @@ class TestExpertAssistSimulation(unittest.TestCase):
 
         self.agents_path = parser.get("DEFAULT", "agents_dir")
         self.cache_dir = os.path.join(self.agents_path, "_cache")
+        if not os.path.isdir(self.cache_dir):
+            from tests.test_make_cache import TestMakeCache
+
+            test_make_cache = TestMakeCache()
+            test_make_cache.setUp()
+            test_make_cache.test_make_cache()
         self.agent_name = "do-nothing-baseline"
         self.scenario_name = "000"
         self.env_path = parser.get("DEFAULT", "env_dir")

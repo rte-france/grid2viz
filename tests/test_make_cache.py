@@ -10,7 +10,8 @@ class TestMakeCache(unittest.TestCase):
         self.agent_path = os.path.join(
             pathlib.Path(__file__).parent.absolute(), "data", "agents"
         )
-        shutil.rmtree(os.path.join(self.agent_path, "_cache"))
+        if os.path.isdir(os.path.join(self.agent_path, "_cache")):
+            shutil.rmtree(os.path.join(self.agent_path, "_cache"))
 
     def test_make_cache(self):
         print(self.agent_path)
