@@ -17,6 +17,7 @@ from grid2viz.src.overview import overview_lyt as overview
 from grid2viz.src.macro import macro_lyt as macro
 from grid2viz.src.micro import micro_lyt as micro
 from grid2viz.src.episodes import episodes_lyt as episodes
+from grid2viz.src.simulation import simulation_lyt as simulation
 
 """
 End Warning
@@ -48,11 +49,18 @@ def compute_window(user_selected_timestamp, study_agent, scenario):
 
 
 def agent_select_update(
-    scenario, pathname, agents, agent_default_value, options, value, disabled_views
+    scenario,
+    pathname,
+    agents,
+    agent_default_value,
+    options,
+    value,
+    disabled_views,
+    agent,
 ):
     if value is None:
         options = [{"label": agent, "value": agent} for agent in agents]
-        value = agent_default_value
+        value = agent_default_value if agent is None else agent
         manager.make_episode(value, scenario)
     disabled = False
     pathname_split = pathname.split("/")
@@ -71,6 +79,7 @@ def register_callbacks_main(app):
             Output("nav_scen_over", "active"),
             Output("nav_agent_over", "active"),
             Output("nav_agent_study", "active"),
+            Output("nav_simulation", "active"),
             Output("reset_timeseries_table_macro", "data"),
         ],
         [Input("url", "pathname")],
@@ -80,6 +89,7 @@ def register_callbacks_main(app):
             State("agent_study", "data"),
             State("user_timestamps", "value"),
             State("page", "data"),
+            State("user_timestep_store", "data"),
             State("user_timestamps_store", "data"),
             State("reset_timeseries_table_macro", "data"),
         ],
@@ -91,11 +101,14 @@ def register_callbacks_main(app):
         study_agent,
         user_selected_timestamp,
         prev_page,
+        user_timestep_store,
         timestamps_store,
         reset_ts_table_macro,
     ):
         if timestamps_store is None:
             timestamps_store = []
+        if user_timestep_store is None:
+            user_timestep_store = 0
         timestamps = [
             dict(Timestamps=timestamp["label"]) for timestamp in timestamps_store
         ]
@@ -119,6 +132,7 @@ def register_callbacks_main(app):
                 False,
                 False,
                 False,
+                False,
                 reset_ts_table_macro,
             )
         elif pathName_split == "overview":
@@ -127,6 +141,7 @@ def register_callbacks_main(app):
                 "overview",
                 False,
                 True,
+                False,
                 False,
                 False,
                 reset_ts_table_macro,
@@ -144,6 +159,7 @@ def register_callbacks_main(app):
                 True,
                 False,
                 False,
+                False,
             )
         elif pathName_split == "micro":
             if ref_agent is None or study_agent is None:
@@ -151,6 +167,21 @@ def register_callbacks_main(app):
             layout = (
                 micro.layout(user_selected_timestamp, study_agent, ref_agent, scenario),
                 "micro",
+                False,
+                False,
+                False,
+                True,
+                False,
+                reset_ts_table_macro,
+            )
+            return layout
+        elif pathName_split == "simulation":
+            if ref_agent is None or study_agent is None:
+                raise PreventUpdate
+            layout = (
+                simulation.layout(study_agent, scenario, int(user_timestep_store)),
+                "simulation",
+                False,
                 False,
                 False,
                 False,
@@ -187,7 +218,7 @@ def register_callbacks_main(app):
         pathName_split = pathName_split[len(pathName_split) - 1]
 
         class_name = "ml-4 row"
-        if pathName_split != "micro":
+        if pathName_split not in ["micro", "simulation"]:
             class_name = " ".join([class_name, "hidden"])
         return class_name
 
@@ -197,14 +228,15 @@ def register_callbacks_main(app):
         [State("scenario", "data")],
     )
     def update_user_timestamps_options(data, agent, scenario):
-        if data is None:
+        if data is None or agent is None or scenario is None:
             raise PreventUpdate
         episode = manager.make_episode(agent, scenario)
         nb_timesteps_played = episode.meta["nb_timestep_played"]
         return [
             ts
             for ts in data
-            if dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
+            if ts["value"] != ""
+            and dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
             in episode.timestamps[:nb_timesteps_played]
         ]
 
@@ -214,18 +246,31 @@ def register_callbacks_main(app):
         [State("scenario", "data")],
     )
     def update_user_timestamps_value(data, agent, scenario):
-        if not data:
+        if data is None or agent is None or scenario is None:
             raise PreventUpdate
         episode = manager.make_episode(agent, scenario)
         nb_timesteps_played = episode.meta["nb_timestep_played"]
         filtered_data = [
             ts
             for ts in data
-            if dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
+            if ts["value"] != ""
+            and dt.datetime.strptime(ts["value"], "%Y-%m-%d %H:%M")
             in episode.timestamps[:nb_timesteps_played]
         ]
         if filtered_data:
             return filtered_data[0]["value"]
+
+    @app.callback(
+        Output("user_timestep_store", "data"),
+        [Input("user_timestamps", "value")],
+        [State("agent_study", "data"), State("scenario", "data")],
+    )
+    def update_user_timstep_store(user_timestamp, agent, scenario):
+        if user_timestamp is None or agent is None or scenario is None:
+            raise PreventUpdate
+        episode = manager.make_episode(agent, scenario)
+        user_timestamp_dt = dt.datetime.strptime(user_timestamp, "%Y-%m-%d %H:%M")
+        return episode.timestamps.index(user_timestamp_dt)
 
     @app.callback(
         Output("enlarge_left", "n_clicks"), [Input("user_timestamps", "value")]
@@ -249,9 +294,10 @@ def register_callbacks_main(app):
         [
             State("select_ref_agent", "options"),
             State("select_ref_agent", "value"),
+            State("agent_ref", "data"),
         ],
     )
-    def update_ref_agent_select_options(scenario, pathname, options, value):
+    def update_ref_agent_select_options(scenario, pathname, options, value, ref_agent):
         if scenario is None:
             raise PreventUpdate
         return agent_select_update(
@@ -262,7 +308,16 @@ def register_callbacks_main(app):
             options,
             value,
             ["episodes", "micro"],
+            ref_agent,
         )
+
+    @app.callback(
+        Output("badge_ts", "children"), [Input("user_timestep_store", "data")]
+    )
+    def update_badge_ts(data):
+        if data is None:
+            raise PreventUpdate
+        return data
 
     @app.callback(
         [
@@ -274,9 +329,12 @@ def register_callbacks_main(app):
         [
             State("select_study_agent", "options"),
             State("select_study_agent", "value"),
+            State("agent_study", "data"),
         ],
     )
-    def update_study_agent_select_options(scenario, pathname, options, value):
+    def update_study_agent_select_options(
+        scenario, pathname, options, value, study_agent
+    ):
         if scenario is None:
             raise PreventUpdate
         return agent_select_update(
@@ -287,6 +345,7 @@ def register_callbacks_main(app):
             options,
             value,
             ["micro", "episodes", "overview"],
+            study_agent,
         )
 
     @app.callback(

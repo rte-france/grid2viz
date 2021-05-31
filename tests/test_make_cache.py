@@ -1,5 +1,6 @@
 import os
 import pathlib
+import shutil
 import subprocess
 import unittest
 
@@ -9,10 +10,12 @@ class TestMakeCache(unittest.TestCase):
         self.agent_path = os.path.join(
             pathlib.Path(__file__).parent.absolute(), "data", "agents"
         )
+        if os.path.isdir(os.path.join(self.agent_path, "_cache")):
+            shutil.rmtree(os.path.join(self.agent_path, "_cache"))
 
     def test_make_cache(self):
         print(self.agent_path)
-        cmd = ["grid2viz", "--agents_path", self.agent_path, "--cache", "True"]
+        cmd = ["grid2viz", "--agents_path", self.agent_path, "--cache"]
         rv = subprocess.run(
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True
         )

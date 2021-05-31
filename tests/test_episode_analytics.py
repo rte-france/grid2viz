@@ -9,11 +9,7 @@ os.environ["GRID2VIZ_ROOT"] = os.path.join(
 
 agents_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "data", "agents")
 
-config_str = f"[DEFAULT]\nagents_dir={agents_path}"
 config_file_path = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
-
-with open(config_file_path, "w") as f:
-    f.write(config_str)
 
 from grid2op.Episode.EpisodeData import EpisodeData
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
@@ -53,7 +49,7 @@ class TestEpisodeAnalytics(unittest.TestCase):
             ["action_line", "action_subs"]
         ].sum()
         self.assertEqual(nb_actions.action_line, 0.0)
-        self.assertEqual(nb_actions.action_subs, 177.0)
+        self.assertEqual(nb_actions.action_subs, 31.0)
 
         action_per_line = get_action_per_line(self.episode_analytics)
         action_per_sub = get_action_per_sub(self.episode_analytics)
@@ -66,9 +62,9 @@ class TestEpisodeAnalytics(unittest.TestCase):
                 *action_per_sub[0].x.tolist()[:-2],
                 *sorted(action_per_sub[0].x.tolist()[-2:]),
             ],
-            ["sub_9", "sub_8", "sub_4", "sub_12", "sub_1", "sub_3"],
+            ["sub_4", "sub_1", "sub_3", "sub_8", "sub_9"],
         )
-        self.assertListEqual(action_per_sub[0].y.tolist(), [106, 45, 12, 10, 2, 2])
+        self.assertListEqual(action_per_sub[0].y.tolist(), [13, 8, 4, 3, 3])
 
     def test_multi_topo(self):
         self.agent_name = "multiTopology-baseline"

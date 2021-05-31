@@ -1,5 +1,6 @@
 {
     "_init_subtype": "grid2op.Observation.CompleteObservation.CompleteObservation",
+    "env_name": "rte_case14_realistic",
     "gen_cost_per_MW": [
         40.0,
         70.0,
@@ -63,6 +64,13 @@
         false,
         true
     ],
+    "gen_renewable": [
+        false,
+        false,
+        true,
+        true,
+        false
+    ],
     "gen_shutdown_cost": [
         10.0,
         1.0,
@@ -98,6 +106,7 @@
         "solar",
         "thermal"
     ],
+    "glop_version": "1.5.1",
     "grid_layout": {
         "sub_0": [
             -280.0,
@@ -372,6 +381,7 @@
     "name_shunt": [
         "shunt_8_0"
     ],
+    "name_storage": [],
     "name_sub": [
         "sub_0",
         "sub_1",
@@ -391,6 +401,18 @@
     "shunt_to_subid": [
         8
     ],
+    "storage_Emax": [],
+    "storage_Emin": [],
+    "storage_charging_efficiency": [],
+    "storage_discharging_efficiency": [],
+    "storage_loss": [],
+    "storage_marginal_cost": [],
+    "storage_max_p_absorb": [],
+    "storage_max_p_prod": [],
+    "storage_pos_topo_vect": [],
+    "storage_to_sub_pos": [],
+    "storage_to_subid": [],
+    "storage_type": [],
     "sub_info": [
         3,
         6,

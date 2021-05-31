@@ -101,12 +101,12 @@ def make_network_matplotlib(episode):
 ######
 # we want a non responsive graph for now in agent_study
 # so we have to define it differently from the global graph in make_network that we don't use here
-def make_network_agent_study(episode, timestep):
+def make_network_agent_study(episode, timestep, responsive=False):
     # subs_on_bus_2 = np.repeat(False, episode_data.observations[0].n_sub)
     graph = PlotPlotly(
         grid_layout=episode.observation_space.grid_layout,
         observation_space=episode.observation_space,
-        responsive=False,
+        responsive=responsive,
     )
     graph._sub_radius = 30  # instead of 25 by default
     graph._bus_radius = 10  # instead of 4 by default
@@ -477,7 +477,10 @@ scenarios = []
 scenarios_agent = {}
 agent_scenario = {}
 
-n_cores = int(parser.get("DEFAULT", "n_cores"))
+try:
+    n_cores = int(parser.get("DEFAULT", "n_cores"))
+except configparser.NoOptionError:
+    n_cores = 1
 
 for agent in agents:
     scen_path = os.path.join(agents_dir, agent)
@@ -495,7 +498,7 @@ for agent in agents:
     scenarios = scenarios + scens
 
 scenarios = set(scenarios)
-
+env_path = parser.get("DEFAULT", "env_dir")
 # Create a .grid2viz directory in the user home directory
 grid2viz_home_directory = Path.home() / ".grid2viz"
 grid2viz_home_directory.mkdir(parents=False, exist_ok=True)
