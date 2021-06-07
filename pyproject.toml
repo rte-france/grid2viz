@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grid2viz"
-version = "1.1.0"
+version = "1.2.0"
 description = "Grid2Op Visualization companion app."
 readme = "README.md"
 authors = [
@@ -39,13 +39,13 @@ Grid2Op = "^1.5.1"
 imageio = "^2.9.0"
 jupyter-dash = "^0.3.1"
 pathos = "^0.2.7"
-pandapower = "2.4.0"
+pandapower = "^2.2.0"
 matplotlib = "^3.3.3"
 numpy = "^1.18.4"
 seaborn = "^0.11.0"
 nbgitpuller = "^0.9.0"
 jupyter-server-proxy = "^1.5.0"
-ExpertOp4grid = { git = "https://github.com/marota/ExpertOp4Grid.git", branch = "master" }
+ ExpertOp4grid = { version = "^0.0.1", optional = true }
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
