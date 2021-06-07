@@ -30,6 +30,18 @@ from grid2viz.src.overview.overview_clbk import (
 )  # as overview_clbk
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
+from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
+
+try:
+    from grid2viz.src.simulation.ExpertAssist import Assist
+except (ImportError, ModuleNotFoundError):
+    from grid2viz.src.simulation.simulation_assist import EmptyAssist as Assist
+
+    warnings.warn(
+        "ExpertOp4Grid is not installed and the assist feature will not be available."
+        " To use the Assist feature, you can install ExpertOp4Grid by "
+        "\n\t{} -m pip install ExpertOp4Grid\n".format(sys.executable)
+    )
 
 """
 End Warning
@@ -40,18 +52,47 @@ app.config.suppress_callback_exceptions = True
 app.title = "Grid2Viz"
 app.server.secret_key = "Grid2Viz"
 
-##create layout
-layout(app)
+def define_layout_and_callbacks(
+    scenario=None,
+    agent_ref=None,
+    agent_study=None,
+    user_timestep=None,
+    window=None,
+    page=None,
+    config=None,
+    activate_simulation=False,
+):
+    ##create layout
+    layout(
+        app,
+        scenario,
+        agent_ref,
+        agent_study,
+        user_timestep,
+        window,
+        page,
+        activate_simulation,
+    )
 
-##create callbaks
-register_callbacks_main(app)
-register_callbacks_episodes(app)
-register_callbacks_overview(app)
-register_callbacks_macro(app)
-register_callbacks_micro(app)
+    ##create callbaks
+    register_callbacks_main(app)
+    register_callbacks_episodes(app)
+    register_callbacks_overview(app)
+    register_callbacks_macro(app)
+    register_callbacks_micro(app)
+    if activate_simulation:
+        assistant = Assist()
+        register_callbacks_simulation(app, assistant)
+        assistant.register_callbacks(app)
+    if config is not None:
+        for key, value in config.items():
+            app.server.config[key] = value
 
 
-def app_run(port=8050, debug=False):
+
+def app_run(port=8050, debug=False, page=None):
+    if page is not None:
+        print(f"Warm start is running on http://127.0.0.1:{port}/{page}")
     app.run_server(port=port, debug=debug)
 
 
