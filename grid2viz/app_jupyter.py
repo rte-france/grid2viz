@@ -54,41 +54,22 @@ app.config.suppress_callback_exceptions = True
 app.title = "Grid2Viz"
 app.server.secret_key = "Grid2Viz"
 
-def define_layout_and_callbacks(
-    scenario=None,
-    agent_ref=None,
-    agent_study=None,
-    user_timestep=None,
-    window=None,
-    page=None,
-    config=None,
-    activate_simulation=False,
-):
-    ##create layout
-    layout(
-        app,
-        scenario,
-        agent_ref,
-        agent_study,
-        user_timestep,
-        window,
-        page,
-        activate_simulation,
-    )
+##create layout
+activate_simulation=True
+layout(app,activate_simulation=activate_simulation)
 
-    ##create callbaks
-    register_callbacks_main(app)
-    register_callbacks_episodes(app)
-    register_callbacks_overview(app)
-    register_callbacks_macro(app)
-    register_callbacks_micro(app)
-    if activate_simulation:
-        assistant = Assist()
-        register_callbacks_simulation(app, assistant)
-        assistant.register_callbacks(app)
-    if config is not None:
-        for key, value in config.items():
-            app.server.config[key] = value
+
+##create callbaks
+register_callbacks_main(app)
+register_callbacks_episodes(app)
+register_callbacks_overview(app)
+register_callbacks_macro(app)
+register_callbacks_micro(app)
+if activate_simulation:
+    assistant = Assist()
+    register_callbacks_simulation(app, assistant)
+    assistant.register_callbacks(app)
+
 
 
 
