@@ -65,9 +65,9 @@ def update_layout(predicate, msg):
     return figure_layout
 
 
-def get_actions_sum(new_episode):
+def get_actions_sum(action_data_table):
     return (
-        new_episode.action_data_table.set_index("timestamp")[
+        action_data_table.set_index("timestamp")[
             ["action_line", "action_subs", "action_redisp"]
         ]
         .sum(axis=1)
