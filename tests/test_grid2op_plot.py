@@ -20,7 +20,7 @@ from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 from grid2viz.src.manager import make_network
 
 
-class TestGenerateAgent(unittest.TestCase):
+class TestPlotAgent(unittest.TestCase):
     def setUp(self):
         self.case = "rte_case14_realistic"
 

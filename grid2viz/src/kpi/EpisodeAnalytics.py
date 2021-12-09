@@ -205,7 +205,10 @@ class EpisodeAnalytics:
         # objs_on_bus_2 will store the id of objects connected to bus 2
         objs_on_bus_2 = {id: [] for id in range(episode_data.observations[0].n_sub)}
 
-        is_alarm=episode_data.observations[1].last_alarm[1]
+        is_alarm=False
+        if(("last_alarm" in episode_data.observations[0].__dict__.keys())):
+            #if(len(episode_data.observations[1].last_alarm)>=1):
+            is_alarm = (episode_data.observations[0].time_since_last_alarm[0]==0)
         # Distance from original topology is then :
         # len(line_statuses) - line_statuses.sum() + subs_on_bus_2.sum()
 
@@ -229,12 +232,13 @@ class EpisodeAnalytics:
                 act, list_actions, obs, gens_modified_ids, actual_redispatch_previous_ts
             )
 
-            is_alarm=(obs.time_since_last_alarm[0]==0)#last_alarm[1]
-            is_alarm = (obs.time_since_last_alarm[0] == 0)
             alarm_zone = []
-            if is_alarm:
-                alarm_zone=[obs.alarms_area_names[zone_id]
-                            for zone_id,zone_value in enumerate(obs.last_alarm) if (int(zone_value)==time_step)]
+            if (("last_alarm" in episode_data.observations[1].__dict__.keys())):
+                #is_alarm=(obs.time_since_last_alarm[0]==0)#last_alarm[1]
+                is_alarm = (obs.time_since_last_alarm[0] == 0)
+                if is_alarm:
+                    alarm_zone=[obs.alarms_area_names[zone_id]
+                                for zone_id,zone_value in enumerate(obs.last_alarm) if (int(zone_value)==time_step)]
 
             actual_redispatch_previous_ts = obs.actual_dispatch
 

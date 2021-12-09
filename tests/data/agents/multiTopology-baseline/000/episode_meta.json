@@ -1,11 +1,11 @@
 {
     "agent_seed": 0,
-    "backend_type": "PandaPowerBackend_rte_case14_realistic",
+    "backend_type": "LightSimBackend_rte_case14_realistic",
     "chronics_max_timestep": "30",
-    "chronics_path": "C:\\Users\\vrenault\\data_grid2op\\rte_case14_realistic\\chronics\\000",
+    "chronics_path": "/home/marotant/dev/grid2viz/tests/data/rte_case14_realistic/chronics/000",
     "cumulative_reward": 34389.6328125,
     "env_seed": 0,
     "env_type": "Environment_rte_case14_realistic",
-    "grid_path": "C:\\Users\\vrenault\\data_grid2op\\rte_case14_realistic\\grid.json",
+    "grid_path": "/home/marotant/dev/grid2viz/tests/data/rte_case14_realistic/grid.json",
     "nb_timestep_played": 30
 }
