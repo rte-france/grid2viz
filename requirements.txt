@@ -14,3 +14,4 @@ numpy == 1.19.3
 seaborn == 0.11.0
 nbgitpuller == 0.9.0
 jupyter-server-proxy == 1.5.0
+pytest
