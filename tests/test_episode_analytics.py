@@ -100,3 +100,22 @@ class TestEpisodeAnalytics(unittest.TestCase):
             self.episode_analytics.action_data_table.distance[:5].tolist(),
             [1, 2, 2, 0, 3],
         )
+
+    def test_alarm(self):
+        self.agent_name = "alarm-baseline"
+        self.scenario_name = "000"
+
+        if not (os.path.exists(os.path.join(self.agents_path, self.agent_name))):
+            print("run test_generate_agent.py to generate the necessary logs first")
+            assert(False)
+
+        self.episode_data = EpisodeData.from_disk(
+            os.path.join(self.agents_path, self.agent_name), self.scenario_name
+        )
+        self.episode_analytics = EpisodeAnalytics(
+            self.episode_data, self.scenario_name, self.agent_name
+        )
+        action_data_table=self.episode_analytics.action_data_table
+
+        assert(action_data_table.is_alarm[action_data_table.is_alarm==True].count()==2)
+        assert(action_data_table.alarm_zone[2][0]=="whole_grid")
