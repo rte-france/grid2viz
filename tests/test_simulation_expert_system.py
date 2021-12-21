@@ -99,7 +99,7 @@ class TestExpertAssistSimulation(unittest.TestCase):
         line_id = 0
         episode_reboot = EpisodeReboot.EpisodeReboot()
         episode_reboot.load(
-            self.env.backend,
+            PandaPowerBackend(),#self.env.backend,
             data=self.episode,
             agent_path=os.path.join(self.agents_path, self.agent_name),
             name=self.episode.episode_name,
@@ -139,7 +139,7 @@ class TestExpertAssistSimulation(unittest.TestCase):
 
         episode_reboot = EpisodeReboot.EpisodeReboot()
         episode_reboot.load(
-            self.env.backend,
+            PandaPowerBackend(),#self.env.backend,
             data=self.episode,
             agent_path=os.path.join(self.agents_path, self.agent_name),
             name=self.episode.episode_name,

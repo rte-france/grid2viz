@@ -388,9 +388,11 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     meta_json = {}
     scenarios = set()
     survival_dic = {}
+    attention_dic = {}
 
     for agent in agents:
         survival_dic_agent = {}
+        attention_dic_agent = {}
         for scenario_name in os.listdir(os.path.join(base_dir, agent)):
 
             scenario_folder = os.path.join(base_dir, agent, scenario_name)
@@ -434,18 +436,34 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
             best_agents[scenario_name]["out_of"] = (
                 best_agents[scenario_name]["out_of"] + 1
             )
+            other_reward_json_path=os.path.join(scenario_folder, "other_rewards.json")
+            if os.path.exists(other_reward_json_path):
+                with open(other_reward_json_path) as f:
+                    other_reward_meta = json.load(fp=f)
+                    last_step_rewards=other_reward_meta[len(other_reward_meta) - 1]
+                    if 'attention_score' in last_step_rewards.keys():
+                        attention_dic_agent[scenario_name] = last_step_rewards['attention_score']
+                    f.close()
+
+
         survival_dic[agent] = survival_dic_agent
+        attention_dic[agent] = attention_dic_agent
 
     survival_df = pd.DataFrame(columns=agents, index=scenarios)
+    attention_df = pd.DataFrame(columns=agents, index=scenarios)#, dtype=np.int64)
     for agent in agents:
         survival_dic_agent = survival_dic[agent]
+        attention_dic_agent = attention_dic[agent]
         for (scenario, survival_time) in survival_dic_agent.items():
             survival_df.loc[scenario][agent] = survival_time
+        if len(attention_dic_agent) != 0:
+            for (scenario, attention_score) in attention_dic_agent.items():
+                attention_df.loc[scenario][agent] = np.round(attention_score,2)
 
     survival_df = survival_df.fillna(-1)  # To be able to cast as int below.
     survival_df = survival_df.astype(int)
 
-    return meta_json, best_agents, survival_df
+    return meta_json, best_agents, survival_df, attention_df
 
 
 """
@@ -470,7 +488,7 @@ agents = sorted(
         if os.path.isdir(os.path.join(agents_dir, file)) and not file.startswith("_")
     ]
 )
-meta_json, best_agents, survival_df = check_all_tree_and_get_meta_and_best(
+meta_json, best_agents, survival_df, attention_df = check_all_tree_and_get_meta_and_best(
     agents_dir, agents
 )
 scenarios = []

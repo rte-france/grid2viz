@@ -1,5 +1,96 @@
 {
+    "_PATH_ENV": null,
     "_init_subtype": "grid2op.Action.DontAct.DontAct",
+    "alarms_area_lines": [
+        [
+            "0_1_0",
+            "0_4_1",
+            "1_2_2",
+            "1_3_3",
+            "1_4_4",
+            "2_3_5",
+            "3_4_6",
+            "5_10_7",
+            "5_11_8",
+            "5_12_9",
+            "8_9_10",
+            "8_13_11",
+            "9_10_12",
+            "11_12_13",
+            "12_13_14",
+            "3_6_15",
+            "3_8_16",
+            "4_5_17",
+            "6_7_18",
+            "6_8_19"
+        ]
+    ],
+    "alarms_area_names": [
+        "whole_grid"
+    ],
+    "alarms_lines_area": {
+        "0_1_0": [
+            "whole_grid"
+        ],
+        "0_4_1": [
+            "whole_grid"
+        ],
+        "11_12_13": [
+            "whole_grid"
+        ],
+        "12_13_14": [
+            "whole_grid"
+        ],
+        "1_2_2": [
+            "whole_grid"
+        ],
+        "1_3_3": [
+            "whole_grid"
+        ],
+        "1_4_4": [
+            "whole_grid"
+        ],
+        "2_3_5": [
+            "whole_grid"
+        ],
+        "3_4_6": [
+            "whole_grid"
+        ],
+        "3_6_15": [
+            "whole_grid"
+        ],
+        "3_8_16": [
+            "whole_grid"
+        ],
+        "4_5_17": [
+            "whole_grid"
+        ],
+        "5_10_7": [
+            "whole_grid"
+        ],
+        "5_11_8": [
+            "whole_grid"
+        ],
+        "5_12_9": [
+            "whole_grid"
+        ],
+        "6_7_18": [
+            "whole_grid"
+        ],
+        "6_8_19": [
+            "whole_grid"
+        ],
+        "8_13_11": [
+            "whole_grid"
+        ],
+        "8_9_10": [
+            "whole_grid"
+        ],
+        "9_10_12": [
+            "whole_grid"
+        ]
+    },
+    "dim_alarms": 1,
     "env_name": "rte_case14_realistic",
     "gen_cost_per_MW": [
         40.0,
@@ -106,7 +197,7 @@
         "solar",
         "thermal"
     ],
-    "glop_version": "1.5.1",
+    "glop_version": "1.6.4",
     "grid_layout": {
         "sub_0": [
             -280.0,

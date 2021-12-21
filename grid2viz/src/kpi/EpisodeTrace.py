@@ -177,6 +177,9 @@ def get_all_prod_trace(episode, prod_types, selection):
         trace.append(go.Scatter(x=total_series.index, y=total_series, name="total"))
     for name in prod_type_names:
         if name in selection:
+            color=None
+            if name in dic_colors_prod_types.keys():
+                color=dic_colors_prod_types[name]
             trace.append(
                 go.Scatter(
                     x=prod_with_type[prod_with_type.prod_type.values == name][
@@ -186,6 +189,7 @@ def get_all_prod_trace(episode, prod_types, selection):
                     .groupby(["timestamp"])["value"]
                     .sum(),
                     name=name,
+                    marker_color=color
                 )
             )
             selection.remove(

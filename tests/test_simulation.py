@@ -72,7 +72,7 @@ class TestChooseSimulation(unittest.TestCase):
         self.episode = episode_analytics
         self.episode_reboot = EpisodeReboot.EpisodeReboot()
         self.episode_reboot.load(
-            self.env.backend,
+            PandaPowerBackend(),#self.env.backend,
             data=self.episode,
             agent_path=os.path.join(self.agents_path, self.agent_name),
             name=self.episode.episode_name,
