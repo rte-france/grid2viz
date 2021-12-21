@@ -7,7 +7,11 @@ This file handles the html entry point of the application through dash component
 It will generate the layout of a given page and handle the routing
 """
 
+activate_simulation=False #turn it to True to activate Simulation tab. You will need Grid2op related environment in additions to the scenario logs
+
 import dash_bootstrap_components as dbc
+import warnings
+import sys
 
 # from dash import Dash
 from jupyter_dash import JupyterDash
@@ -30,7 +34,6 @@ from grid2viz.src.overview.overview_clbk import (
 )  # as overview_clbk
 from grid2viz.src.macro.macro_clbk import register_callbacks_macro  # as macro_clbk
 from grid2viz.src.micro.micro_clbk import register_callbacks_micro  # as micro_clbk
-
 """
 End Warning
 """
@@ -41,7 +44,8 @@ app.title = "Grid2Viz"
 app.server.secret_key = "Grid2Viz"
 
 ##create layout
-layout(app)
+layout(app,activate_simulation=activate_simulation)
+
 
 ##create callbaks
 register_callbacks_main(app)
@@ -49,9 +53,30 @@ register_callbacks_episodes(app)
 register_callbacks_overview(app)
 register_callbacks_macro(app)
 register_callbacks_micro(app)
+if activate_simulation:
+    from grid2viz.src.simulation.simulation_clbk import register_callbacks_simulation
+
+    try:
+        from grid2viz.src.simulation.ExpertAssist import Assist
+    except (ImportError, ModuleNotFoundError):
+        from grid2viz.src.simulation.simulation_assist import EmptyAssist as Assist
+
+        warnings.warn(
+            "ExpertOp4Grid is not installed and the assist feature will not be available."
+            " To use the Assist feature, you can install ExpertOp4Grid by "
+            "\n\t{} -m pip install ExpertOp4Grid\n".format(sys.executable)
+        )
+    
+    assistant = Assist()
+    register_callbacks_simulation(app, assistant)
+    assistant.register_callbacks(app)
 
 
-def app_run(port=8050, debug=False):
+
+
+def app_run(port=8050, debug=False, page=None):
+    if page is not None:
+        print(f"Warm start is running on http://127.0.0.1:{port}/{page}")
     app.run_server(port=port, debug=debug)
 
 
