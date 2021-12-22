@@ -306,19 +306,24 @@ def make_alarm_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward")
     """
     study_action_df = agent_episode.action_data_table
 
-    if(graph_type=="Reward"):
+    if ("is_alarm" in study_action_df.columns):
+        if(graph_type=="Reward"):
 
-        alarm_events_df = reward_trace_event_df(agent_episode, col="is_alarm")
+            alarm_events_df = reward_trace_event_df(agent_episode, col="is_alarm")
 
 
-    else:# (graph_type=="Topology")
-        alarm_events_df=topology_trace_event_df(study_action_df, col="is_alarm")
+        else:# (graph_type=="Topology")
+            alarm_events_df=topology_trace_event_df(study_action_df, col="is_alarm")
 
-    alarm_text = ["<br>-".join(alarm_zone) for alarm_zone in study_action_df.alarm_zone]
+        alarm_text = ["<br>-".join(alarm_zone) for alarm_zone in study_action_df.alarm_zone]
 
-    marker_type = "Alarms"
-    alarm_trace=make_marker_trace(alarm_events_df.iloc[:max_ts],marker_name=agent_name+" "+marker_type,
-                                  color=color,text=alarm_text[:max_ts])
+        marker_type = "Alarms"
+        alarm_trace = make_marker_trace(alarm_events_df.iloc[:max_ts], marker_name=agent_name + " " + marker_type,
+                                        color=color, text=alarm_text[:max_ts])
+    else:
+        alarm_trace=None
+
+
 
     return alarm_trace
 
@@ -372,7 +377,7 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     # create event marker traces
     action_trace=make_action_trace(agent_name=study_agent, agent_episode=study_episode,
                                    max_ts=max_ts, color="#FFEB3B", graph_type="Topology")
-
+    #if(agent_episode.action_data_table.)
     alarm_trace=make_alarm_trace( study_agent,study_episode,max_ts,"orange",graph_type="Topology")
 
     ref_action_trace=make_action_trace(agent_name=ref_agent, agent_episode=ref_episode,
@@ -399,13 +404,15 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         "data": [
             distance_trace,
             action_trace,
-            alarm_trace,
             ref_distance_trace,
             ref_action_trace,
-            ref_alarm_trace
         ],
         "layout": layout_def,
     }
+
+    if alarm_trace is not None:
+        figure["data"].append(alarm_trace)
+        figure["data"].append(ref_alarm_trace)
 
     return figure
 
@@ -439,7 +446,16 @@ def make_rewards_ts(
         studied_agent_reward_trace,
         studied_agent_reward_cum_trace,
     ) = study_episode.reward_trace
-    reward_figure["data"] = [ref_reward_trace, studied_agent_reward_trace, action_trace,alarm_trace]
+
+    #reward_figure["data"] = [ref_reward_trace, studied_agent_reward_trace, action_trace]
+    #if ("is_alarm" in study_episode.action_data_table.columns):
+    #    alarm_trace = make_alarm_trace(study_agent, study_episode, max_ts, "orange", graph_type="Reward")
+    #    reward_figure["data"].append(alarm_trace)
+
+    reward_figure["data"] = [ref_reward_trace, studied_agent_reward_trace, action_trace]
+    if(alarm_trace is not None):
+        reward_figure["data"].append(alarm_trace)
+
     cumulative_reward_figure["data"] = [
         ref_reward_cum_trace,
         studied_agent_reward_cum_trace,
