@@ -120,8 +120,7 @@ class TestExpertAssistSimulation(unittest.TestCase):
         with redirect_stdout(None):
             simulator = Grid2opSimulation(
                 obs,
-                self.env.action_space,
-                self.env.observation_space,
+                obs._obs_env,
                 param_options=self.expert_config,
                 debug=False,
                 ltc=ltc,

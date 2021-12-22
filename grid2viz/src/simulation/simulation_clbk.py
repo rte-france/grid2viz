@@ -14,7 +14,7 @@ from grid2op.Episode import EpisodeReboot
 
 from grid2viz.src.manager import make_episode, make_network_agent_study
 from grid2viz.src.manager import make_network, agents_dir
-from grid2viz.src.simulation.reboot import env, params_for_reboot
+from grid2viz.src.simulation.reboot import env, params_for_reboot, BACKEND
 from grid2viz.src.simulation.simulation_lyt import choose_tab_content
 from grid2viz.src.utils.serialization import NoIndent, MyEncoder
 from grid2viz.src.simulation.simulation_utils import action_dict_from_choose_tab
@@ -145,6 +145,9 @@ def register_callbacks_simulation(app, assistant):
     ):
         ctx = callback_context
 
+        if timestep<=0:
+            timestep=1
+
         if not ctx.triggered:
             raise PreventUpdate
         else:
@@ -234,14 +237,15 @@ def register_callbacks_simulation(app, assistant):
 
         episode_reboot = EpisodeReboot.EpisodeReboot()
         episode_reboot.load(
-            env.backend,
+            BACKEND(),
             data=episode,
             agent_path=os.path.join(agents_dir, study_agent),
             name=episode.episode_name,
             env_kwargs=params_for_reboot,
         )
+        episode_reboot.env.set_thermal_limit(env.get_thermal_limit())
         obs, reward, *_ = episode_reboot.go_to(int(timestep))
-        obs._obs_env.set_thermal_limit(env.get_thermal_limit())
+        #obs._obs_env.set_thermal_limit(env.get_thermal_limit())
         act = env.action_space()
 
         if not np.all(
@@ -470,7 +474,7 @@ def register_callbacks_simulation(app, assistant):
         if active_tab_choose_assist == "tab-choose-method":
             episode_reboot = EpisodeReboot.EpisodeReboot()
             episode_reboot.load(
-                env.backend,
+                BACKEND(),
                 data=episode,
                 agent_path=os.path.join(agents_dir, study_agent),
                 name=episode.episode_name,
@@ -481,16 +485,20 @@ def register_callbacks_simulation(app, assistant):
             nb_overflows = f"0"
             losses = f"0"
 
-            obs, reward, *_ = episode_reboot.go_to(int(ts))
+            if(ts<=0):
+                ts=1 #cannot reboot for ts<=0
+
+            episode_reboot.env.set_thermal_limit(env.get_thermal_limit())
+            obs_reboot, reward, *_ = episode_reboot.go_to(int(ts))
             if not np.all(
-                np.round(episode.observations[int(ts)].a_or, 2) == np.round(obs.a_or, 2)
+                np.round(episode.observations[int(ts)].a_or, 2) == np.round(obs_reboot.a_or, 2)
             ):
                 return reward, rho_max, nb_overflows, losses
             act = env.action_space()
             if actions:
                 for action in actions:
                     act.update(action)
-                obs, reward, *_ = obs.simulate(action=act, time_step=0)
+                obs, reward, *_ = obs_reboot.simulate(action=act, time_step=0)
                 rho_max = f"{obs.rho.max() * 100:.0f}%"
                 nb_overflows = f"{(obs.rho > 1).sum():,.0f}"
                 losses = f"{compute_losses(obs)*100:.2f}%"
