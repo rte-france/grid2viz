@@ -288,6 +288,8 @@ def register_callbacks_macro(app):
         gen_name="Gen name",
         action_id="Action id",
         distance="Topological distance",
+        is_alarm="is_alarm",
+        alarm_zone="alarm_zone"
     )
 
     @app.callback(
@@ -299,7 +301,7 @@ def register_callbacks_macro(app):
         table = actions_model.get_action_table_data(new_episode)
         table["id"] = table["timestep"]
         table.set_index("id", inplace=True, drop=False)
-        cols_to_exclude = ["id", "lines_modified", "subs_modified", "gens_modified"]
+        cols_to_exclude = ["id", "lines_modified", "subs_modified", "gens_modified","is_action"]
         cols = [
             {"name": action_table_name_converter[col], "id": col}
             for col in table.columns

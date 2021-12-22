@@ -177,7 +177,7 @@ def main():
         app_run(args.port, args.debug, page)
 
 
-def make_cache():
+def make_cache(agent_selection=None):
     from grid2viz.src.manager import (
         scenarios,
         agents,
@@ -187,6 +187,9 @@ def make_cache():
         save_in_ram_cache,
         cache_dir,
     )
+
+    if(agent_selection is not None):
+        agents=[agent for agent in agents if agent in agent_selection]
 
     from pathos.multiprocessing import ProcessPool
 

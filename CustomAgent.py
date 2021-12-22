@@ -241,3 +241,48 @@ class MultipleTopologyAgent(BaseAgent):
             acts.append(act)
 
         return acts
+
+
+class DoNothing_Attention_Agent(BaseAgent):
+    """
+    This is the most basic BaseAgent. It is purely passive, and does absolutely nothing.
+    As opposed to most reinforcement learning environments, in grid2op, doing nothing is often
+    the best solution.
+    """
+
+    def __init__(self, env):
+        BaseAgent.__init__(self, env.action_space)
+        self.alarms_lines_area = env.alarms_lines_area
+        self.alarms_area_names = env.alarms_area_names
+
+    def act(self, observation, reward, done=False):
+        """
+        As better explained in the document of :func:`grid2op.BaseAction.update` or
+        :func:`grid2op.BaseAction.ActionSpace.__call__`.
+        The preferred way to make an object of type action is to call :func:`grid2op.BaseAction.ActionSpace.__call__`
+        with the dictionary representing the action. In this case, the action is "do nothing" and it is represented by
+        the empty dictionary.
+        Parameters
+        ----------
+        observation: :class:`grid2op.Observation.Observation`
+            The current observation of the :class:`grid2op.Environment.Environment`
+        reward: ``float``
+            The current reward. This is the reward obtained by the previous action
+        done: ``bool``
+            Whether the episode has ended or not. Used to maintain gym compatibility
+        Returns
+        -------
+        res: :class:`grid2op.Action.Action`
+            The action chosen by the bot / controller / agent.
+        """
+        res = self.action_space({})
+
+        zones_alert = []
+        if (len(self.alarms_area_names)>=1):
+            zones_alert=[0]
+        res = self.action_space({"raise_alarm": zones_alert})
+        # print(res)
+        return res
+
+
+

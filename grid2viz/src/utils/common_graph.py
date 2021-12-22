@@ -213,6 +213,138 @@ def action_tooltip(episode_actions):
 
     return tooltip
 
+def make_action_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"):
+    """
+    Make a trace for action events
+
+    :param agent_name: agent to consider
+    :param agent_episode: agent episode
+    :param max_ts: maximum number of timesteps to display
+    :param color: marker color
+    :param marker_type: type of event considered for marker name
+    :return: a marker trace
+    """
+    study_action_df = agent_episode.action_data_table
+
+    if(graph_type=="Reward"):
+
+        action_events_df = reward_trace_event_df(agent_episode, col="is_action")
+
+
+    else:# (graph_type=="Topology")
+        action_events_df=topology_trace_event_df(study_action_df, col="is_action")
+
+    action_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
+
+    marker_type="Actions"
+    action_trace=make_marker_trace(action_events_df.iloc[:max_ts],marker_name=agent_name+" "+marker_type,
+                                  color=color,text=action_text[:max_ts])
+
+    return action_trace
+
+
+    actions_ts = get_actions_sum(agent_episode)
+
+    action_events_df = pd.DataFrame(
+        index=actions_ts.index, data=np.nan, columns=["action_events"]
+    )
+    action_events_df.loc[
+        (actions_ts["Nb Actions"] > 0).values, "action_events"
+    ] = agent_episode.action_data_table.loc[
+        (actions_ts["Nb Actions"] > 0).values, "distance"
+    ].values
+    study_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
+
+    action_trace = make_marker_trace(action_events_df.iloc[:max_ts], marker_name=agent_name + " "+marker_type,
+                                     color=color, text=study_text[:max_ts])
+    return action_trace
+
+def reward_trace_event_df(agent_episode,col="is_action"):#else is_alarm
+    df = observation_model.get_df_computed_reward(agent_episode)
+    study_action_df = agent_episode.action_data_table
+
+    actions_ts = get_actions_sum(study_action_df)
+    study_action_df["is_action"]=(actions_ts["Nb Actions"] > 0).values
+
+    reward_event_df = pd.DataFrame(
+        index=df["timestep"], data=np.nan, columns=["events"]
+    )
+    reward_event_df.loc[
+        study_action_df[col].values, "events"
+    ] = df.loc[(study_action_df[col]), "rewards"].values
+
+    return reward_event_df
+    #alarm_text = ["<br>-".join(alarm_zone) for alarm_zone in study_action_df.alarm_zone]
+
+
+def topology_trace_event_df(study_action_df, col="is_action"):
+    actions_ts = get_actions_sum(study_action_df)
+    study_action_df["is_action"]=(actions_ts["Nb Actions"] > 0).values
+
+    topology_distance_events_df = pd.DataFrame(
+        index=actions_ts.index, data=np.nan, columns=["events"]
+    )
+    topology_distance_events_df.loc[
+        study_action_df[col].values, "events"
+    ] = study_action_df.loc[
+        study_action_df[col], "distance"
+    ].values
+
+    return topology_distance_events_df
+    # alarm_text = ["<br>-".join(alarm_zone) for alarm_zone in study_action_df.alarm_zone]
+
+def make_alarm_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"):
+    """
+    Make a trace for alarm events
+
+    :param agent_name: agent to consider
+    :param agent_episode: agent episode
+    :param max_ts: maximum number of timesteps to display
+    :param color: marker color
+    :param marker_type: type of event considered for marker name
+    :return: a marker trace
+    """
+    study_action_df = agent_episode.action_data_table
+
+    if(graph_type=="Reward"):
+
+        alarm_events_df = reward_trace_event_df(agent_episode, col="is_alarm")
+
+
+    else:# (graph_type=="Topology")
+        alarm_events_df=topology_trace_event_df(study_action_df, col="is_alarm")
+
+    alarm_text = ["<br>-".join(alarm_zone) for alarm_zone in study_action_df.alarm_zone]
+
+    marker_type = "Alarms"
+    alarm_trace=make_marker_trace(alarm_events_df.iloc[:max_ts],marker_name=agent_name+" "+marker_type,
+                                  color=color,text=alarm_text[:max_ts])
+
+    return alarm_trace
+
+def make_marker_trace( events_df,marker_name,color,text):
+    """
+    Make a colored marker trace for specific events with some text
+
+    :param events_df: an event dataframe with timestamps as index and 1 event column
+    :param marker_name: marker name according to type of events and agent
+    :param color: marker color
+    :param text: hover text for markers
+    :return: a marker trace
+    """
+
+    event_trace = go.Scatter(
+        x=events_df.index,
+        y=events_df[events_df.columns[0]],
+        name=marker_name,
+        mode="markers",
+        marker_color=color,
+        marker={"symbol": "hexagon", "size": 10},
+        text=text,
+    )
+
+    return event_trace
+
 
 def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     """
@@ -226,61 +358,38 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     """
     ref_episode = make_episode(ref_agent, scenario)
     study_episode = make_episode(study_agent, scenario)
-    actions_ts = get_actions_sum(study_episode)
-    ref_agent_actions_ts = get_actions_sum(ref_episode)
+
+    study_action_df = study_episode.action_data_table
+    ref_action_df = ref_episode.action_data_table
+
+    actions_ts = get_actions_sum(study_action_df)
+    ref_agent_actions_ts = get_actions_sum(ref_action_df)
 
     # used below to make sure the x-axis length is the study agent one
-    study_agent_length = len(study_episode.action_data_table)
 
-    action_events_df = pd.DataFrame(
-        index=actions_ts.index, data=np.nan, columns=["action_events"]
-    )
-    action_events_df.loc[
-        (actions_ts["Nb Actions"] > 0).values, "action_events"
-    ] = study_episode.action_data_table.loc[
-        (actions_ts["Nb Actions"] > 0).values, "distance"
-    ].values
-    study_text = ["<br>-".join(str(act).split("-")) for act in study_episode.actions]
-    action_trace = go.Scatter(
-        x=action_events_df.index,
-        y=action_events_df["action_events"],
-        name=study_agent + " Actions",
-        mode="markers",
-        marker_color="#FFEB3B",
-        marker={"symbol": "hexagon", "size": 10},
-        text=study_text,
-    )
+    max_ts = len(study_episode.action_data_table)
 
-    ref_action_events_df = pd.DataFrame(
-        index=ref_agent_actions_ts.index, data=np.nan, columns=["action_events"]
-    )
-    ref_action_events_df.loc[
-        (ref_agent_actions_ts["Nb Actions"] > 0).values, "action_events"
-    ] = ref_episode.action_data_table.loc[
-        (ref_agent_actions_ts["Nb Actions"] > 0).values, "distance"
-    ].values
+    # create event marker traces
+    action_trace=make_action_trace(agent_name=study_agent, agent_episode=study_episode,
+                                   max_ts=max_ts, color="#FFEB3B", graph_type="Topology")
 
-    ref_text = ["<br>-".join(str(act).split("-")) for act in ref_episode.actions]
-    ref_text = ref_text[:study_agent_length]
-    ref_action_trace = go.Scatter(
-        x=ref_action_events_df.index[:study_agent_length],
-        y=ref_action_events_df["action_events"][:study_agent_length],
-        name=ref_agent + " Actions",
-        mode="markers",
-        marker_color="#FF5000",
-        marker={"symbol": "hexagon", "size": 10},
-        text=ref_text,
-    )
+    alarm_trace=make_alarm_trace( study_agent,study_episode,max_ts,"orange",graph_type="Topology")
+
+    ref_action_trace=make_action_trace(agent_name=ref_agent, agent_episode=ref_episode,
+                                   max_ts=max_ts, color="#FF5000", graph_type="Topology")
+
+    ref_alarm_trace=make_alarm_trace( ref_agent,ref_episode,max_ts,"purple",graph_type="Topology")
+
 
     distance_trace = go.Scatter(
-        x=study_episode.action_data_table.timestamp,
-        y=study_episode.action_data_table["distance"],
+        x=study_action_df.timestamp,
+        y=study_action_df["distance"],
         name=study_agent,
     )
 
     ref_distance_trace = go.Scatter(
-        x=ref_episode.action_data_table.timestamp[:study_agent_length],
-        y=ref_episode.action_data_table["distance"][:study_agent_length],
+        x=ref_action_df.timestamp[:max_ts],
+        y=ref_action_df["distance"][:max_ts],
         name=ref_agent,
     )
 
@@ -290,8 +399,10 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
         "data": [
             distance_trace,
             action_trace,
+            alarm_trace,
             ref_distance_trace,
             ref_action_trace,
+            ref_alarm_trace
         ],
         "layout": layout_def,
     }
@@ -313,41 +424,27 @@ def make_rewards_ts(
     """
     study_episode = make_episode(study_agent, scenario)
     ref_episode = make_episode(ref_agent, scenario)
-    actions_ts = (
-        study_episode.action_data_table.set_index("timestamp")[
-            ["action_line", "action_subs", "action_redisp"]
-        ]
-        .sum(axis=1)
-        .to_frame(name="Nb Actions")
-    )
-    df = observation_model.get_df_computed_reward(study_episode)
-    action_events_df = pd.DataFrame(
-        index=df["timestep"], data=np.nan, columns=["action_events"]
-    )
-    action_events_df.loc[
-        (actions_ts["Nb Actions"] > 0).values, "action_events"
-    ] = df.loc[(actions_ts["Nb Actions"] > 0).values, "rewards"].values
-    text = ["<br>-".join(str(act).split("-")) for act in study_episode.actions]
-    action_trace = go.Scatter(
-        x=action_events_df.index,
-        y=action_events_df["action_events"],
-        name="Actions",
-        mode="markers",
-        marker_color="#FFEB3B",
-        marker={"symbol": "hexagon", "size": 10},
-        text=text,
-    )
 
+    max_ts=len(study_episode.action_data_table)
+
+    #create event marker traces
+    action_trace=make_action_trace(agent_name=study_agent, agent_episode=study_episode,
+                                   max_ts=max_ts, color="#FFEB3B", graph_type="Reward")
+
+    alarm_trace=make_alarm_trace( study_agent,study_episode,max_ts,"orange",graph_type="Reward")
+
+    # create reward traces
     ref_reward_trace, ref_reward_cum_trace = ref_episode.reward_trace
     (
         studied_agent_reward_trace,
         studied_agent_reward_cum_trace,
     ) = study_episode.reward_trace
-    reward_figure["data"] = [ref_reward_trace, studied_agent_reward_trace, action_trace]
+    reward_figure["data"] = [ref_reward_trace, studied_agent_reward_trace, action_trace,alarm_trace]
     cumulative_reward_figure["data"] = [
         ref_reward_cum_trace,
         studied_agent_reward_cum_trace,
     ]
+
 
     for figure in [reward_figure, cumulative_reward_figure]:
         # Base on the hypothesis that the study agent trace is in position one
@@ -363,6 +460,7 @@ def make_rewards_ts(
                 }
             }
         )
+
 
     return reward_figure, cumulative_reward_figure
 
