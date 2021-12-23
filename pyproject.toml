@@ -37,14 +37,14 @@ dash-antd-components = "^0.0.1-rc.2"
 dill = "^0.3.3"
 Grid2Op = "^1.6.4"
 imageio = "^2.9.0"
-jupyter-dash = "^0.3.1"
+jupyter-dash >= "^0.3.1"
 pathos = "^0.2.7"
 pandapower = "^2.2.0"
 matplotlib = "^3.3.3"
 numpy = "^1.18.4"
 seaborn = "^0.11.0"
-nbgitpuller = "^0.9.0"
-jupyter-server-proxy = "^1.5.0"
+nbgitpuller >= "^0.9.0"
+jupyter-server-proxy >= "^1.5.0"
  ExpertOp4grid = { version = "^0.1.3", optional = true }
 
 [tool.poetry.dev-dependencies]
