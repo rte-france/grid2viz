@@ -1,1 +1,1 @@
-web: grid2viz app:server
+web: gunicorn app:server
