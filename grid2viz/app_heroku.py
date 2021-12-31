@@ -98,7 +98,8 @@ app.config.suppress_callback_exceptions = True
 
 app.title = "Grid2Viz"
 app.server.secret_key = "Grid2Viz"
-define_layout_and_callbacks(activate_simulation=True)
+#define_layout_and_callbacks(activate_simulation=True)
+define_layout_and_callbacks(activate_simulation=False)#as we don't always have the grid2op environment available for demos
 server=app.server
 
 
