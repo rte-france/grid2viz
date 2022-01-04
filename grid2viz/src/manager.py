@@ -470,7 +470,14 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
 Initialisation routine
 """
 """ Parsing of config file"""
-path_cfg = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
+if not "GRID2VIZ_ROOT" in os.environ:
+    #get grid2viz package path
+    pkg_root_dir = os.getcwd()#os.path.dirname(os.path.abspath((os.path.join(os.path.abspath(__file__), os.pardir))))
+    os.environ["GRID2VIZ_ROOT"] = pkg_root_dir
+    path_cfg = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
+else:
+    path_cfg = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
+
 parser = configparser.ConfigParser()
 print(
     Fore.BLUE + Style.BRIGHT + "The config file used is located at: {}".format(path_cfg)

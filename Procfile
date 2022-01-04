@@ -1,1 +1,1 @@
-web: grid2viz app:server
+web: gunicorn grid2viz.app_heroku:server
