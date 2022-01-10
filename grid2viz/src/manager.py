@@ -8,6 +8,8 @@ import json
 import os
 import time
 from pathlib import Path
+import pickle
+import gzip
 
 from colorama import Fore, Style
 import dill
@@ -17,6 +19,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
+from grid2op.Action import ActionSpace
+from grid2op.Observation import ObservationSpace
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 
@@ -311,7 +315,9 @@ def clear_fs_cache():
 
 
 def is_in_fs_cache(episode_name, agent):
-    return os.path.isfile(get_fs_cached_file(episode_name, agent))
+    dill_path=get_fs_cached_file(episode_name, agent)
+    is_in_fs_cache=(os.path.isfile(dill_path) | os.path.isfile(dill_path+".bz"))
+    return is_in_fs_cache
 
 
 def get_fs_cached_file(episode_name, agent):
@@ -320,22 +326,62 @@ def get_fs_cached_file(episode_name, agent):
         os.makedirs(episode_dir)
     return os.path.join(episode_dir, agent + ".dill")
 
-
 def save_in_fs_cache(episode_name, agent, episode):
     path = get_fs_cached_file(episode_name, agent)
-    with open(path, "wb") as f:
-        dill.dump(episode, f, protocol=4)
+
+    episode.rho.time=episode.rho.time.astype('int16')
+    episode.rho.equipment = episode.rho.equipment.astype('int16')
+    episode.flow_and_voltage_line=episode.flow_and_voltage_line.astype('float16')
+
+    #####
+    #to assess size of objects
+
+    #from pympler import asizeof
+    #total_size=asizeof.asizeof(episode)
+    #for key,value in vars(episode).items():
+    #   print(key)
+    #   print(asizeof.asizeof(value))
+    #   print(int(asizeof.asizeof(value)/total_size*100))
+
+    #import bz2
+    #import zipfile
+    #bz2.BZ2File('bz2_test.pbz2', 'wb') as f:
+    with gzip.open(path+".bz", "wb") as f:
+    #with zipfile.ZipFile.write(path+".zip") as f:
+    #with open(path, "wb") as f:
+        #dill.dump(episode, f, protocol=4)
+        pickle.dump(episode, f, protocol=4)
+
 
 
 def get_from_fs_cache(episode_name, agent):
     beg = time.time()
     path = get_fs_cached_file(episode_name, agent)
     print(f"Loading from filesystem cache agent {agent} on scenario {episode_name}...")
-    episode_data = retrieve_episode_from_disk(episode_name, agent)
-    with open(path, "rb") as f:
-        episode_analytics = dill.load(f)
 
-    episode_analytics.decorate(episode_data)
+    start = time.time()
+
+    if(os.path.exists(path + ".bz")):
+
+        with gzip.open(path + ".bz", "rb") as f:
+            # with zipfile.ZipFile.open(path + ".zip") as f:
+            episode_analytics=dill.load(f)
+    else:
+        with open(path, "rb") as f:
+            episode_analytics = dill.load(f)
+
+    ######
+    #add observation_space only to decorate as it could not be saved in pickle
+
+    agent_path = os.path.join(agents_dir, agent)
+    OBS_SPACE = "dict_observation_space.json"
+    ACTION_SPACE = "dict_action_space.json"
+
+    episode_analytics.observation_space = ObservationSpace.from_dict(os.path.join(agent_path, OBS_SPACE)) #need to add action space maybe also, at least for simulation page
+    episode_analytics.action_space= ActionSpace.from_dict(os.path.join(agent_path, ACTION_SPACE))
+    #episode_analytics.decorate(episode_data)
+    #episode_analytics=decorate(episode_analytics,episode_data)
+
     end = time.time()
     print(
         f"Agent {agent} on scenario {episode_name} loaded from filesystem cache in: {(end - beg):.1f} s"
@@ -464,7 +510,6 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     survival_df = survival_df.astype(int)
 
     return meta_json, best_agents, survival_df, attention_df
-
 
 """
 Initialisation routine

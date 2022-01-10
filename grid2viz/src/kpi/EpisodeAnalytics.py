@@ -13,6 +13,13 @@ from tqdm import tqdm
 from . import EpisodeTrace, maintenances, consumption_profiles
 from .env_actions import env_actions
 
+import os
+import json
+from grid2op.Exceptions import Grid2OpException, EnvError, IncorrectNumberOfElements, NonFiniteElement
+from grid2op.Action import ActionSpace
+from grid2op.Observation import ObservationSpace
+
+
 # TODO: configure the reward key you want to visualize in agent overview.
 # Either as an argument or a dropdown list in the app from which we can choose.
 # The reward dataframe should get bigger with all keys available anyway
@@ -83,8 +90,26 @@ class EpisodeAnalytics:
             self, which="maintenances", kind="nb", aggr=True
         )
 
+        for attribute in [
+                elem
+                for elem in dir(episode_data)
+                if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
+             ]:
+            if(attribute=="observations"):
+                self.observations=list(episode_data.observations)#make thos objects pickable
+            if(attribute=="actions"):
+                self.actions=list(episode_data.actions)#make thos objects pickable
+            if(attribute=="reboot"):
+                self.reboot=episode_data.reboot
+            if(attribute in ["prod_names",  "line_names", "load_names", "meta"
+                          ]):
+                setattr(self, attribute, getattr(episode_data, attribute))
+
+
         end = time.time()
         print(f"end computing df: {end - beg}")
+
+
 
     @staticmethod
     def timestamp(obs):
@@ -295,10 +320,10 @@ class EpisodeAnalytics:
                     obs.a_or,
                     obs.v_or,
                 ]
-            ).flatten()
+            ).flatten().astype('float16')
 
-            target_redispatch.loc[time_step, :] = obs.target_dispatch
-            actual_redispatch.loc[time_step, :] = obs.actual_dispatch
+            target_redispatch.loc[time_step, :] = obs.target_dispatch.astype('float32')
+            actual_redispatch.loc[time_step, :] = obs.actual_dispatch.astype('float32')
 
         load_data["timestep"] = np.repeat(timesteps, episode_data.n_loads)
         load_data["equipment_name"] = np.tile(episode_data.load_names, size).astype(str)
@@ -312,7 +337,7 @@ class EpisodeAnalytics:
         production.loc[:, "equipment_name"] = np.tile(episode_data.prod_names, size)
         production.loc[:, "equipement_id"] = np.tile(range(episode_data.n_prods), size)
 
-        rho["time"] = np.repeat(timesteps, n_rho)
+        rho["time"] = np.repeat(timesteps, n_rho).astype('int16')
         rho["timestamp"] = np.repeat(self.timestamps, n_rho)
         rho["equipment"] = np.tile(range(n_rho), size)
 
@@ -320,9 +345,9 @@ class EpisodeAnalytics:
         action_data_table["timestamp"] = self.timestamps
         action_data_table["timestep_reward"] = episode_data.rewards[:size]
 
-        load_data["value"] = load_data["value"].astype(float)
-        production["value"] = production["value"].astype(float)
-        rho["value"] = rho["value"].astype(float)
+        load_data["value"] = load_data["value"].astype('float32')
+        production["value"] = production["value"].astype('float32')
+        rho["value"] = rho["value"].astype('float16')
 
         computed_rewards["timestep"] = self.timestamps
         computed_rewards["rewards"] = episode_data.rewards[:size]
@@ -713,7 +738,6 @@ class EpisodeAnalytics:
         else:
             elements_formatted = " - ".join(elements)
         return elements_formatted
-
 
 class Test:
     def __init__(self):
