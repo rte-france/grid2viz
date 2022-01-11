@@ -80,8 +80,8 @@ class TestExpertAssistSimulation(unittest.TestCase):
         self.episode_data = EpisodeData.from_disk(
             os.path.join(self.agents_path, self.agent_name), self.scenario_name
         )
-        episode_analytics.decorate(self.episode_data)
-        episode_analytics.decorate_obs_act_spaces(os.path.join(self.agents_path, self.agent_name))
+        episode_analytics.decorate_with_reboot(self.episode_data)
+        #episode_analytics.decorate_obs_act_spaces(os.path.join(self.agents_path, self.agent_name))
 
         self.episode = episode_analytics
         self.act = self.env.action_space()

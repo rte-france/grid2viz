@@ -68,7 +68,7 @@ class TestChooseSimulation(unittest.TestCase):
         self.episode_data = EpisodeData.from_disk(
             os.path.join(self.agents_path, self.agent_name), self.scenario_name
         )
-        episode_analytics.decorate(self.episode_data)
+        episode_analytics.decorate_with_reboot(self.episode_data)
         self.episode = episode_analytics
         self.episode_reboot = EpisodeReboot.EpisodeReboot()
         self.episode_reboot.load(

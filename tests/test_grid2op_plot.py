@@ -41,7 +41,7 @@ class TestPlotAgent(unittest.TestCase):
             self.episode_data, self.scenario_name, self.agent_name
         )
 
-        self.episode_analytics.decorate(self.episode_data)
+        self.episode_analytics.decorate_light_without_reboot(self.episode_data)
         ######
         # add observation_space only to decorate as it could not be saved in pickle
         self.episode_analytics.decorate_obs_act_spaces(os.path.join(self.agents_path, self.agent_name))#.decorate(self.episode_data)
