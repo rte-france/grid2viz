@@ -253,7 +253,7 @@ def make_network_scenario_overview(episode):
 store = {}
 
 
-def make_episode(agent, episode_name):
+def make_episode(agent, episode_name,with_reboot=False):
     """
     Load episode from cache. If not already in, compute episode data
     and save it in cache.
@@ -263,15 +263,21 @@ def make_episode(agent, episode_name):
     :return: Episode with computed data
     """
     if is_in_ram_cache(episode_name, agent):
-        return get_from_ram_cache(episode_name, agent)
+        episode=get_from_ram_cache(episode_name, agent)
     elif is_in_fs_cache(episode_name, agent):
         episode = get_from_fs_cache(episode_name, agent)
         save_in_ram_cache(episode_name, agent, episode)
-        return episode
     else:
-        episode = compute_episode(episode_name, agent)
+        episode = compute_episode(episode_name, agent,with_reboot)
         save_in_ram_cache(episode_name, agent, episode)
-        return episode
+
+    if(with_reboot and "reboot" not in dir(episode)):
+        #in that case we need to reload the episode from episode data object
+        episode_data = retrieve_episode_from_disk(episode_name, agent)
+        episode.decorate_with_reboot(episode_data)
+        save_in_ram_cache(episode_name, agent, episode)
+
+    return episode
 
 
 def make_episode_without_decorate(agent, episode_name,save=False):
@@ -293,9 +299,8 @@ def make_episode_without_decorate(agent, episode_name,save=False):
         episode_data = retrieve_episode_from_disk(episode_name, agent)
         if episode_data is not None:
             episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
-
             if save:
-                episode_analytics.decorate(episode_data)
+                episode_analytics.decorate_light_without_reboot(episode_data)
                 save_in_fs_cache(episode_name, agent, episode_analytics)
             return episode_analytics
         else:
@@ -315,7 +320,7 @@ def is_in_fs_cache(episode_name, agent):
 def get_fs_cached_file(episode_name, agent):
     episode_dir = os.path.join(cache_dir, episode_name)
     if not os.path.exists(episode_dir):
-        os.makedirs(episode_dir)
+        os.makedirs(episode_dir,exist_ok=True)
     return os.path.join(episode_dir, agent + ".dill")
 
 def save_in_fs_cache(episode_name, agent, episode):
@@ -357,10 +362,10 @@ def get_from_fs_cache(episode_name, agent):
 
         with gzip.open(path + ".bz", "rb") as f:
             # with zipfile.ZipFile.open(path + ".zip") as f:
-            episode_analytics=dill.load(f)
+            episode_analytics=pickle.load(f)
     else:
         with open(path, "rb") as f:
-            episode_analytics = dill.load(f)
+            episode_analytics = pickle.load(f)
 
     ######
     #add observation_space only to decorate as it could not be saved in pickle
@@ -376,14 +381,17 @@ def get_from_fs_cache(episode_name, agent):
     return episode_analytics
 
 
-def compute_episode(episode_name, agent):
+def compute_episode(episode_name, agent,with_reboot=False):
     print(f"Loading from logs agent {agent} on scenario {episode_name}...")
     beg = time.time()
     episode_data = retrieve_episode_from_disk(episode_name, agent)
     episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
-    episode_analytics.decorate(episode_data)
-    save_in_fs_cache(episode_name, agent, episode_analytics)
-    episode_analytics.decorate(episode_data)
+    if with_reboot:
+        episode_analytics.decorate_with_reboot(episode_data)
+    else:
+        episode_analytics.decorate_light_without_reboot(episode_data)
+        save_in_fs_cache(episode_name, agent, episode_analytics)
+        episode_analytics.decorate_obs_act_spaces(os.path.join(agents_dir, agent))
     end = time.time()
     print(
         f"Agent {agent} on scenario {episode_name} loaded from logs in: {(end - beg):.1f} s"

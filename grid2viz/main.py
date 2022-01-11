@@ -235,7 +235,7 @@ def make_cache(agent_selection=None):
                 agent_episode.episode_name, agent_episode.agent
             )
 
-            agent_episode.decorate(episode_data)
+            agent_episode.decorate_light_without_reboot(episode_data)
             save_in_fs_cache(episode_name, agent, agent_episode)
             save_in_ram_cache(
                 agent_episode.episode_name, agent_episode.agent, agent_episode

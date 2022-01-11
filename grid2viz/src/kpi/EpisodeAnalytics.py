@@ -535,7 +535,10 @@ class EpisodeAnalytics:
             ret[name] = types[idx]
         return ret
 
-    def decorate(self, episode_data):
+    #to be able to save a light pickle file and reload it.
+    #saving with reboot lead to pickle errors and reboot is only used in simulation tab
+    #better reload the episode data in the simulation tab if reboot is not an attribute of episode_analytics at that stage
+    def decorate_light_without_reboot(self, episode_data):
         for attribute in [
                 elem
                 for elem in dir(episode_data)
@@ -545,10 +548,18 @@ class EpisodeAnalytics:
                 self.observations=list(episode_data.observations)#make thos objects pickable
             if(attribute=="actions"):
                 self.actions=list(episode_data.actions)#make thos objects pickable
-            if(attribute in ["prod_names",  "line_names", "load_names", "meta"
-                          ]):
+            if(attribute in ["prod_names",  "line_names", "load_names", "meta",
+                          "rewards"]):
                 setattr(self, attribute, getattr(episode_data, attribute))
-        # add the reboot method
+
+    def decorate_with_reboot(self, episode_data):
+        for attribute in [
+                elem
+                for elem in dir(episode_data)
+                if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
+             ]:
+            setattr(self, attribute, getattr(episode_data, attribute))
+        #add the reboot method
         setattr(self, "reboot", getattr(episode_data, "reboot"))
 
     def decorate_obs_act_spaces(self,agent_path):
