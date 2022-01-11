@@ -19,8 +19,6 @@ import pandas as pd
 import plotly.graph_objects as go
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
-from grid2op.Action import ActionSpace
-from grid2op.Observation import ObservationSpace
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 
@@ -276,7 +274,7 @@ def make_episode(agent, episode_name):
         return episode
 
 
-def make_episode_without_decorate(agent, episode_name):
+def make_episode_without_decorate(agent, episode_name,save=False):
     """
     Load episode from cache without decorating with the EpisodeData attributes
     This is needed to use multiprocessing which pickles/unpickles the results.
@@ -289,22 +287,16 @@ def make_episode_without_decorate(agent, episode_name):
         return get_from_ram_cache(episode_name, agent)
     elif is_in_fs_cache(episode_name, agent):
         beg = time.time()
-        path = get_fs_cached_file(episode_name, agent)
-        print(
-            f"Loading from filesystem cache agent {agent} on scenario {episode_name}..."
-        )
-        with open(path, "rb") as f:
-            episode_analytics = dill.load(f)
-        end = time.time()
-        print(
-            f"Agent {agent} on scenario {episode_name} loaded from filesystem cache in: {(end - beg):.1f} s"
-        )
+        episode_analytics=get_from_fs_cache(episode_name, agent)
         return episode_analytics
     else:
         episode_data = retrieve_episode_from_disk(episode_name, agent)
         if episode_data is not None:
             episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
-            save_in_fs_cache(episode_name, agent, episode_analytics)
+
+            if save:
+                episode_analytics.decorate(episode_data)
+                save_in_fs_cache(episode_name, agent, episode_analytics)
             return episode_analytics
         else:
             return None
@@ -372,13 +364,8 @@ def get_from_fs_cache(episode_name, agent):
 
     ######
     #add observation_space only to decorate as it could not be saved in pickle
-
     agent_path = os.path.join(agents_dir, agent)
-    OBS_SPACE = "dict_observation_space.json"
-    ACTION_SPACE = "dict_action_space.json"
-
-    episode_analytics.observation_space = ObservationSpace.from_dict(os.path.join(agent_path, OBS_SPACE)) #need to add action space maybe also, at least for simulation page
-    episode_analytics.action_space= ActionSpace.from_dict(os.path.join(agent_path, ACTION_SPACE))
+    episode_analytics.decorate_obs_act_spaces(agent_path)
     #episode_analytics.decorate(episode_data)
     #episode_analytics=decorate(episode_analytics,episode_data)
 
@@ -394,6 +381,7 @@ def compute_episode(episode_name, agent):
     beg = time.time()
     episode_data = retrieve_episode_from_disk(episode_name, agent)
     episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
+    episode_analytics.decorate(episode_data)
     save_in_fs_cache(episode_name, agent, episode_analytics)
     episode_analytics.decorate(episode_data)
     end = time.time()

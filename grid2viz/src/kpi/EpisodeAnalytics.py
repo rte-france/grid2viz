@@ -90,21 +90,6 @@ class EpisodeAnalytics:
             self, which="maintenances", kind="nb", aggr=True
         )
 
-        for attribute in [
-                elem
-                for elem in dir(episode_data)
-                if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
-             ]:
-            if(attribute=="observations"):
-                self.observations=list(episode_data.observations)#make thos objects pickable
-            if(attribute=="actions"):
-                self.actions=list(episode_data.actions)#make thos objects pickable
-            if(attribute=="reboot"):
-                self.reboot=episode_data.reboot
-            if(attribute in ["prod_names",  "line_names", "load_names", "meta"
-                          ]):
-                setattr(self, attribute, getattr(episode_data, attribute))
-
 
         end = time.time()
         print(f"end computing df: {end - beg}")
@@ -551,15 +536,29 @@ class EpisodeAnalytics:
         return ret
 
     def decorate(self, episode_data):
-        # Add EpisodeData attributes to EpisodeAnalytics
         for attribute in [
-            elem
-            for elem in dir(episode_data)
-            if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
-        ]:
-            setattr(self, attribute, getattr(episode_data, attribute))
+                elem
+                for elem in dir(episode_data)
+                if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
+             ]:
+            if(attribute=="observations"):
+                self.observations=list(episode_data.observations)#make thos objects pickable
+            if(attribute=="actions"):
+                self.actions=list(episode_data.actions)#make thos objects pickable
+            if(attribute in ["prod_names",  "line_names", "load_names", "meta"
+                          ]):
+                setattr(self, attribute, getattr(episode_data, attribute))
         # add the reboot method
         setattr(self, "reboot", getattr(episode_data, "reboot"))
+
+    def decorate_obs_act_spaces(self,agent_path):
+
+        OBS_SPACE = "dict_observation_space.json"
+        ACTION_SPACE = "dict_action_space.json"
+
+        self.observation_space = ObservationSpace.from_dict(
+            os.path.join(agent_path, OBS_SPACE))  # need to add action space maybe also, at least for simulation page
+        self.action_space = ActionSpace.from_dict(os.path.join(agent_path, ACTION_SPACE))
 
     def compute_action_impacts(
         self,

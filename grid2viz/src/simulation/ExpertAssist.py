@@ -241,7 +241,7 @@ class Assist(BaseAssistant):
             with redirect_stdout(None):
                 simulator = Grid2opSimulation(
                     obs,
-                    env,
+                    env.action_space,env.observation_space,
                     param_options=expert_config,
                     debug=False,
                     ltc=ltc,

@@ -184,7 +184,7 @@ def make_cache(agent_selection=None):
         make_episode_without_decorate,
         n_cores,
         retrieve_episode_from_disk,
-        save_in_ram_cache,
+        save_in_ram_cache,save_in_fs_cache,
         cache_dir,
     )
 
@@ -207,7 +207,7 @@ def make_cache(agent_selection=None):
         i = 0
         for agent_scenario in agent_scenario_list:
             agents_data.append(
-                make_episode_without_decorate(agent_scenario[0], agent_scenario[1])
+                make_episode_without_decorate(agent_scenario[0], agent_scenario[1],save=True)
             )
             i += 1
     else:
@@ -236,6 +236,7 @@ def make_cache(agent_selection=None):
             )
 
             agent_episode.decorate(episode_data)
+            save_in_fs_cache(episode_name, agent, agent_episode)
             save_in_ram_cache(
                 agent_episode.episode_name, agent_episode.agent, agent_episode
             )
