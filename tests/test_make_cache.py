@@ -3,7 +3,8 @@ import pathlib
 import shutil
 import subprocess
 import unittest
-from grid2viz.main import make_cache
+from grid2viz.src.manager import make_cache,scenarios,agents,n_cores,cache_dir,get_from_fs_cache
+
 
 # We need to make this below so that the manager.py finds the config.ini
 os.environ["GRID2VIZ_ROOT"] = os.path.join(
@@ -30,7 +31,14 @@ class TestMakeCache(unittest.TestCase):
     def test_make_cache(self):
         print(self.agent_path)
         try:
-            make_cache(agent_selection=[self.agent])#to run the test quicker
+            make_cache(scenarios,agents,n_cores,cache_dir,agent_selection=[self.agent])#to run the test quicker
+        except Exception as e:
+            print(e)
+            assert(False)
+
+        #try to load one then
+        try:
+            get_from_fs_cache(scenarios.pop(), self.agent)
         except Exception as e:
             print(e)
             assert(False)

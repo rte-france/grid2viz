@@ -26,7 +26,9 @@ from grid2viz.src.manager import (
     n_cores,
     retrieve_episode_from_disk,
     save_in_ram_cache,
+    save_in_fs_cache,
     cache_dir,
+    agents_dir,
     grid2viz_home_directory,
 )
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
@@ -79,7 +81,14 @@ def register_callbacks_episodes(app):
                     episode_data = retrieve_episode_from_disk(
                         best_agent_episode.episode_name, best_agent_episode.agent
                     )
-                    best_agent_episode.decorate(episode_data)
+                    best_agent_episode.decorate_light_without_reboot(episode_data)
+
+                    best_agent_episode.decorate_obs_act_spaces(os.path.join(agents_dir, best_agent_episode.agent))
+
+                    #save_in_fs_cache(best_agent_episode.episode_name,
+                    #    best_agent_episode.agent,
+                    #    best_agent_episode)
+
                     save_in_ram_cache(
                         best_agent_episode.episode_name,
                         best_agent_episode.agent,

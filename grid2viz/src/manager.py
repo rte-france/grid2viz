@@ -302,6 +302,7 @@ def make_episode_without_decorate(agent, episode_name,save=False):
             if save:
                 episode_analytics.decorate_light_without_reboot(episode_data)
                 save_in_fs_cache(episode_name, agent, episode_analytics)
+                return None #to avoid problem with picklalisable issues in multiprocess
             return episode_analytics
         else:
             return None
@@ -325,10 +326,6 @@ def get_fs_cached_file(episode_name, agent):
 
 def save_in_fs_cache(episode_name, agent, episode):
     path = get_fs_cached_file(episode_name, agent)
-
-    episode.rho.time=episode.rho.time.astype('int16')
-    episode.rho.equipment = episode.rho.equipment.astype('int16')
-    episode.flow_and_voltage_line=episode.flow_and_voltage_line.astype('float16')
 
     #####
     #to assess size of objects
@@ -506,6 +503,44 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     survival_df = survival_df.astype(int)
 
     return meta_json, best_agents, survival_df, attention_df
+
+def make_cache(scenarios,agents,n_cores,cache_dir,agent_selection=None):
+
+    if(agent_selection is not None):
+        agents=[agent for agent in agents if agent in agent_selection]
+
+    from pathos.multiprocessing import ProcessPool
+
+    if not os.path.exists(cache_dir):
+        print("Starting Multiprocessing for reading the best agent of each scenario")
+
+    # TODO: tous les agents n'ont pas forcément tourner sur exactement tous les mêmes scenarios
+    # Eviter une erreur si un agent n'a pas tourné sur un scenario
+    agent_scenario_list = [
+        (agent, scenario) for agent in agents for scenario in scenarios
+    ]
+
+    agents_data = []
+    if n_cores == 1:  # no multiprocess useful for debug if needed
+        i = 0
+        for agent_scenario in agent_scenario_list:
+            agents_data.append(
+                make_episode_without_decorate(agent_scenario[0], agent_scenario[1],save=True)
+            )
+            i += 1
+    else:
+        pool = ProcessPool(n_cores)
+        agents_data = list(
+            pool.imap(
+                make_episode_without_decorate,
+                [agent_scenario[0] for agent_scenario in agent_scenario_list],  # agents
+                [agent_scenario[1] for agent_scenario in agent_scenario_list],
+                [True for agent_scenario in agent_scenario_list],
+            )
+        )  # scenarios #we go over all agents and all scenarios for each agent
+        pool.close()
+        print("Multiprocessing done")
+
 
 """
 Initialisation routine
