@@ -18,9 +18,12 @@ class TestMakeCache(unittest.TestCase):
     def setUp(self):
         self.agent_path = agents_path
         self.agent="greedy-baseline"
-        cache_file_path=os.path.join(self.agent_path, "_cache", "000",self.agent+".dill")
-        if os.path.exists(cache_file_path):
-            os.remove(cache_file_path)
+        for scenario in ["000","001"]:
+            cache_file_path=os.path.join(self.agent_path, "_cache", scenario,self.agent+".dill")
+            if os.path.exists(cache_file_path):
+                os.remove(cache_file_path)
+            if os.path.exists(cache_file_path+".bz"):
+                os.remove(cache_file_path+".bz")
         #if os.path.isdir(os.path.join(self.agent_path, "_cache")):
         #    shutil.rmtree(os.path.join(self.agent_path, "_cache"))
 

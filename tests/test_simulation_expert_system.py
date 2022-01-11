@@ -81,6 +81,8 @@ class TestExpertAssistSimulation(unittest.TestCase):
             os.path.join(self.agents_path, self.agent_name), self.scenario_name
         )
         episode_analytics.decorate(self.episode_data)
+        episode_analytics.decorate_obs_act_spaces(os.path.join(self.agents_path, self.agent_name))
+
         self.episode = episode_analytics
         self.act = self.env.action_space()
         self.expert_config = {
@@ -120,7 +122,7 @@ class TestExpertAssistSimulation(unittest.TestCase):
         with redirect_stdout(None):
             simulator = Grid2opSimulation(
                 obs,
-                obs._obs_env,
+                self.env.action_space,self.env.observation_space,
                 param_options=self.expert_config,
                 debug=False,
                 ltc=ltc,
