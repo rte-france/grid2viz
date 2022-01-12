@@ -3,6 +3,7 @@ import dill
 import os
 import pathlib
 import unittest
+import gzip
 from contextlib import redirect_stdout
 
 # We need to make this below so that the manager.py finds the config.ini
@@ -56,10 +57,10 @@ class TestChooseSimulation(unittest.TestCase):
         self.params_for_reboot["parameters"] = p
 
         cache_file = os.path.join(
-            self.cache_dir, self.scenario_name, self.agent_name + ".dill"
+            self.cache_dir, self.scenario_name, self.agent_name + ".dill.bz"
         )
         try:
-            with open(cache_file, "rb") as f:
+            with gzip.open(cache_file, "rb") as f:
                 episode_analytics = dill.load(f)
         except:
             episode_analytics = EpisodeAnalytics(
