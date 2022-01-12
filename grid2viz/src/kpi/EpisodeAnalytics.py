@@ -245,7 +245,7 @@ class EpisodeAnalytics:
             alarm_zone = []
             if (("last_alarm" in episode_data.observations[1].__dict__.keys())):
                 #is_alarm=(obs.time_since_last_alarm[0]==0)#last_alarm[1]
-                is_alarm = (obs.time_since_last_alarm[0] == 0)
+                is_alarm = (obs.time_since_last_alarm[0] == 0) &(len(obs.last_alarm)!=0)
                 if is_alarm:
                     alarm_zone=[obs.alarms_area_names[zone_id]
                                 for zone_id,zone_value in enumerate(obs.last_alarm) if (int(zone_value)==time_step)]
