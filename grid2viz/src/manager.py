@@ -368,6 +368,12 @@ def get_from_fs_cache(episode_name, agent):
     #add observation_space only to decorate as it could not be saved in pickle
     agent_path = os.path.join(agents_dir, agent)
     episode_analytics.decorate_obs_act_spaces(agent_path)
+
+    ##########
+    ##Warning for compatibility with older cache version:
+    if("observations" not in dir(episode_analytics)):
+        print("WARNING: the cache management have been updated in grid2viz 1.3.1 for faster loading. "
+              "You Should delete the old _cache folder and recompute it with latest grid2viz version")
     #episode_analytics.decorate(episode_data)
     #episode_analytics=decorate(episode_analytics,episode_data)
 
