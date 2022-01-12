@@ -13,6 +13,13 @@ from tqdm import tqdm
 from . import EpisodeTrace, maintenances, consumption_profiles
 from .env_actions import env_actions
 
+import os
+import json
+from grid2op.Exceptions import Grid2OpException, EnvError, IncorrectNumberOfElements, NonFiniteElement
+from grid2op.Action import ActionSpace
+from grid2op.Observation import ObservationSpace
+
+
 # TODO: configure the reward key you want to visualize in agent overview.
 # Either as an argument or a dropdown list in the app from which we can choose.
 # The reward dataframe should get bigger with all keys available anyway
@@ -83,8 +90,11 @@ class EpisodeAnalytics:
             self, which="maintenances", kind="nb", aggr=True
         )
 
+
         end = time.time()
         print(f"end computing df: {end - beg}")
+
+
 
     @staticmethod
     def timestamp(obs):
@@ -235,7 +245,7 @@ class EpisodeAnalytics:
             alarm_zone = []
             if (("last_alarm" in episode_data.observations[1].__dict__.keys())):
                 #is_alarm=(obs.time_since_last_alarm[0]==0)#last_alarm[1]
-                is_alarm = (obs.time_since_last_alarm[0] == 0)
+                is_alarm = (obs.time_since_last_alarm[0] == 0) &(len(obs.last_alarm)!=0)
                 if is_alarm:
                     alarm_zone=[obs.alarms_area_names[zone_id]
                                 for zone_id,zone_value in enumerate(obs.last_alarm) if (int(zone_value)==time_step)]
@@ -295,10 +305,10 @@ class EpisodeAnalytics:
                     obs.a_or,
                     obs.v_or,
                 ]
-            ).flatten()
+            ).flatten().astype('float16')
 
-            target_redispatch.loc[time_step, :] = obs.target_dispatch
-            actual_redispatch.loc[time_step, :] = obs.actual_dispatch
+            target_redispatch.loc[time_step, :] = obs.target_dispatch.astype('float32')
+            actual_redispatch.loc[time_step, :] = obs.actual_dispatch.astype('float32')
 
         load_data["timestep"] = np.repeat(timesteps, episode_data.n_loads)
         load_data["equipment_name"] = np.tile(episode_data.load_names, size).astype(str)
@@ -312,7 +322,7 @@ class EpisodeAnalytics:
         production.loc[:, "equipment_name"] = np.tile(episode_data.prod_names, size)
         production.loc[:, "equipement_id"] = np.tile(range(episode_data.n_prods), size)
 
-        rho["time"] = np.repeat(timesteps, n_rho)
+        rho["time"] = np.repeat(timesteps, n_rho).astype('int16')
         rho["timestamp"] = np.repeat(self.timestamps, n_rho)
         rho["equipment"] = np.tile(range(n_rho), size)
 
@@ -320,9 +330,9 @@ class EpisodeAnalytics:
         action_data_table["timestamp"] = self.timestamps
         action_data_table["timestep_reward"] = episode_data.rewards[:size]
 
-        load_data["value"] = load_data["value"].astype(float)
-        production["value"] = production["value"].astype(float)
-        rho["value"] = rho["value"].astype(float)
+        load_data["value"] = load_data["value"].astype('float32')
+        production["value"] = production["value"].astype('float32')
+        rho["value"] = rho["value"].astype('float16')
 
         computed_rewards["timestep"] = self.timestamps
         computed_rewards["rewards"] = episode_data.rewards[:size]
@@ -525,16 +535,41 @@ class EpisodeAnalytics:
             ret[name] = types[idx]
         return ret
 
-    def decorate(self, episode_data):
-        # Add EpisodeData attributes to EpisodeAnalytics
+    #to be able to save a light pickle file and reload it.
+    #saving with reboot lead to pickle errors and reboot is only used in simulation tab
+    #better reload the episode data in the simulation tab if reboot is not an attribute of episode_analytics at that stage
+    def decorate_light_without_reboot(self, episode_data):
         for attribute in [
-            elem
-            for elem in dir(episode_data)
-            if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
-        ]:
+                elem
+                for elem in dir(episode_data)
+                if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
+             ]:
+            if(attribute=="observations"):
+                self.observations=list(episode_data.observations)#make thos objects pickable
+            if(attribute=="actions"):
+                self.actions=list(episode_data.actions)#make thos objects pickable
+            if(attribute in ["prod_names",  "line_names", "load_names", "meta",
+                          "rewards"]):
+                setattr(self, attribute, getattr(episode_data, attribute))
+
+    def decorate_with_reboot(self, episode_data):
+        for attribute in [
+                elem
+                for elem in dir(episode_data)
+                if not (elem.startswith("__") or callable(getattr(episode_data, elem)))
+             ]:
             setattr(self, attribute, getattr(episode_data, attribute))
-        # add the reboot method
+        #add the reboot method
         setattr(self, "reboot", getattr(episode_data, "reboot"))
+
+    def decorate_obs_act_spaces(self,agent_path):
+
+        OBS_SPACE = "dict_observation_space.json"
+        ACTION_SPACE = "dict_action_space.json"
+
+        self.observation_space = ObservationSpace.from_dict(
+            os.path.join(agent_path, OBS_SPACE))  # need to add action space maybe also, at least for simulation page
+        self.action_space = ActionSpace.from_dict(os.path.join(agent_path, ACTION_SPACE))
 
     def compute_action_impacts(
         self,
@@ -713,7 +748,6 @@ class EpisodeAnalytics:
         else:
             elements_formatted = " - ".join(elements)
         return elements_formatted
-
 
 class Test:
     def __init__(self):

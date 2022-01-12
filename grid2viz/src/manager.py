@@ -8,6 +8,8 @@ import json
 import os
 import time
 from pathlib import Path
+import pickle
+import gzip
 
 from colorama import Fore, Style
 import dill
@@ -251,7 +253,7 @@ def make_network_scenario_overview(episode):
 store = {}
 
 
-def make_episode(agent, episode_name):
+def make_episode(agent, episode_name,with_reboot=False):
     """
     Load episode from cache. If not already in, compute episode data
     and save it in cache.
@@ -261,18 +263,24 @@ def make_episode(agent, episode_name):
     :return: Episode with computed data
     """
     if is_in_ram_cache(episode_name, agent):
-        return get_from_ram_cache(episode_name, agent)
+        episode=get_from_ram_cache(episode_name, agent)
     elif is_in_fs_cache(episode_name, agent):
         episode = get_from_fs_cache(episode_name, agent)
         save_in_ram_cache(episode_name, agent, episode)
-        return episode
     else:
-        episode = compute_episode(episode_name, agent)
+        episode = compute_episode(episode_name, agent,with_reboot)
         save_in_ram_cache(episode_name, agent, episode)
-        return episode
+
+    if(with_reboot and "reboot" not in dir(episode)):
+        #in that case we need to reload the episode from episode data object
+        episode_data = retrieve_episode_from_disk(episode_name, agent)
+        episode.decorate_with_reboot(episode_data)
+        save_in_ram_cache(episode_name, agent, episode)
+
+    return episode
 
 
-def make_episode_without_decorate(agent, episode_name):
+def make_episode_without_decorate(agent, episode_name,save=False):
     """
     Load episode from cache without decorating with the EpisodeData attributes
     This is needed to use multiprocessing which pickles/unpickles the results.
@@ -285,22 +293,16 @@ def make_episode_without_decorate(agent, episode_name):
         return get_from_ram_cache(episode_name, agent)
     elif is_in_fs_cache(episode_name, agent):
         beg = time.time()
-        path = get_fs_cached_file(episode_name, agent)
-        print(
-            f"Loading from filesystem cache agent {agent} on scenario {episode_name}..."
-        )
-        with open(path, "rb") as f:
-            episode_analytics = dill.load(f)
-        end = time.time()
-        print(
-            f"Agent {agent} on scenario {episode_name} loaded from filesystem cache in: {(end - beg):.1f} s"
-        )
+        episode_analytics=get_from_fs_cache(episode_name, agent)
         return episode_analytics
     else:
         episode_data = retrieve_episode_from_disk(episode_name, agent)
         if episode_data is not None:
             episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
-            save_in_fs_cache(episode_name, agent, episode_analytics)
+            if save:
+                episode_analytics.decorate_light_without_reboot(episode_data)
+                save_in_fs_cache(episode_name, agent, episode_analytics)
+                return None #to avoid problem with picklalisable issues in multiprocess
             return episode_analytics
         else:
             return None
@@ -311,31 +313,64 @@ def clear_fs_cache():
 
 
 def is_in_fs_cache(episode_name, agent):
-    return os.path.isfile(get_fs_cached_file(episode_name, agent))
+    dill_path=get_fs_cached_file(episode_name, agent)
+    is_in_fs_cache=(os.path.isfile(dill_path) | os.path.isfile(dill_path+".bz"))
+    return is_in_fs_cache
 
 
 def get_fs_cached_file(episode_name, agent):
     episode_dir = os.path.join(cache_dir, episode_name)
     if not os.path.exists(episode_dir):
-        os.makedirs(episode_dir)
+        os.makedirs(episode_dir,exist_ok=True)
     return os.path.join(episode_dir, agent + ".dill")
-
 
 def save_in_fs_cache(episode_name, agent, episode):
     path = get_fs_cached_file(episode_name, agent)
-    with open(path, "wb") as f:
-        dill.dump(episode, f, protocol=4)
+
+    #####
+    #to assess size of objects
+
+    #from pympler import asizeof
+    #total_size=asizeof.asizeof(episode)
+    #for key,value in vars(episode).items():
+    #   print(key)
+    #   print(asizeof.asizeof(value))
+    #   print(int(asizeof.asizeof(value)/total_size*100))
+
+    #import bz2
+    #import zipfile
+    #bz2.BZ2File('bz2_test.pbz2', 'wb') as f:
+    with gzip.open(path+".bz", "wb") as f:
+    #with zipfile.ZipFile.write(path+".zip") as f:
+    #with open(path, "wb") as f:
+        #dill.dump(episode, f, protocol=4)
+        pickle.dump(episode, f, protocol=4)
+
 
 
 def get_from_fs_cache(episode_name, agent):
     beg = time.time()
     path = get_fs_cached_file(episode_name, agent)
     print(f"Loading from filesystem cache agent {agent} on scenario {episode_name}...")
-    episode_data = retrieve_episode_from_disk(episode_name, agent)
-    with open(path, "rb") as f:
-        episode_analytics = dill.load(f)
 
-    episode_analytics.decorate(episode_data)
+    start = time.time()
+
+    if(os.path.exists(path + ".bz")):
+
+        with gzip.open(path + ".bz", "rb") as f:
+            # with zipfile.ZipFile.open(path + ".zip") as f:
+            episode_analytics=pickle.load(f)
+    else:
+        with open(path, "rb") as f:
+            episode_analytics = pickle.load(f)
+
+    ######
+    #add observation_space only to decorate as it could not be saved in pickle
+    agent_path = os.path.join(agents_dir, agent)
+    episode_analytics.decorate_obs_act_spaces(agent_path)
+    #episode_analytics.decorate(episode_data)
+    #episode_analytics=decorate(episode_analytics,episode_data)
+
     end = time.time()
     print(
         f"Agent {agent} on scenario {episode_name} loaded from filesystem cache in: {(end - beg):.1f} s"
@@ -343,13 +378,17 @@ def get_from_fs_cache(episode_name, agent):
     return episode_analytics
 
 
-def compute_episode(episode_name, agent):
+def compute_episode(episode_name, agent,with_reboot=False):
     print(f"Loading from logs agent {agent} on scenario {episode_name}...")
     beg = time.time()
     episode_data = retrieve_episode_from_disk(episode_name, agent)
     episode_analytics = EpisodeAnalytics(episode_data, episode_name, agent)
-    save_in_fs_cache(episode_name, agent, episode_analytics)
-    episode_analytics.decorate(episode_data)
+    if with_reboot:
+        episode_analytics.decorate_with_reboot(episode_data)
+    else:
+        episode_analytics.decorate_light_without_reboot(episode_data)
+        save_in_fs_cache(episode_name, agent, episode_analytics)
+        episode_analytics.decorate_obs_act_spaces(os.path.join(agents_dir, agent))
     end = time.time()
     print(
         f"Agent {agent} on scenario {episode_name} loaded from logs in: {(end - beg):.1f} s"
@@ -464,6 +503,43 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
     survival_df = survival_df.astype(int)
 
     return meta_json, best_agents, survival_df, attention_df
+
+def make_cache(scenarios,agents,n_cores,cache_dir,agent_selection=None):
+
+    if(agent_selection is not None):
+        agents=[agent for agent in agents if agent in agent_selection]
+
+    from pathos.multiprocessing import ProcessPool
+
+    if not os.path.exists(cache_dir):
+        print("Starting Multiprocessing for reading the best agent of each scenario")
+
+    # TODO: tous les agents n'ont pas forcément tourner sur exactement tous les mêmes scenarios
+    # Eviter une erreur si un agent n'a pas tourné sur un scenario
+    agent_scenario_list = [
+        (agent, scenario) for agent in agents for scenario in scenarios
+    ]
+
+    agents_data = []
+    if n_cores == 1:  # no multiprocess useful for debug if needed
+        i = 0
+        for agent_scenario in agent_scenario_list:
+            agents_data.append(
+                make_episode_without_decorate(agent_scenario[0], agent_scenario[1],save=True)
+            )
+            i += 1
+    else:
+        pool = ProcessPool(n_cores)
+        agents_data = list(
+            pool.imap(
+                make_episode_without_decorate,
+                [agent_scenario[0] for agent_scenario in agent_scenario_list],  # agents
+                [agent_scenario[1] for agent_scenario in agent_scenario_list],
+                [True for agent_scenario in agent_scenario_list],
+            )
+        )  # scenarios #we go over all agents and all scenarios for each agent
+        pool.close()
+        print("Multiprocessing done")
 
 
 """

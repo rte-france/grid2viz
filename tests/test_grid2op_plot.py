@@ -15,6 +15,8 @@ agents_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "data", "ag
 from grid2op.Backend import PandaPowerBackend
 from grid2op.Episode.EpisodeData import EpisodeData
 from grid2op.Parameters import Parameters
+from grid2op.Action import ActionSpace
+from grid2op.Observation import ObservationSpace
 
 from grid2viz.src.kpi.EpisodeAnalytics import EpisodeAnalytics
 from grid2viz.src.manager import make_network
@@ -38,7 +40,15 @@ class TestPlotAgent(unittest.TestCase):
         self.episode_analytics = EpisodeAnalytics(
             self.episode_data, self.scenario_name, self.agent_name
         )
-        self.episode_analytics.decorate(self.episode_data)
+
+        self.episode_analytics.decorate_light_without_reboot(self.episode_data)
+        ######
+        # add observation_space only to decorate as it could not be saved in pickle
+        self.episode_analytics.decorate_obs_act_spaces(os.path.join(self.agents_path, self.agent_name))#.decorate(self.episode_data)
+
+        ######
+        # add observation_space only to decorate as it could not be saved in pickle
+
 
         make_network(self.episode_analytics).plot_obs(
             self.episode_analytics.observations[0]

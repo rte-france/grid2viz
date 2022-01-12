@@ -194,7 +194,7 @@ class Assist(BaseAssistant):
             # with redirect_stdout(None):
             if nb_simulations is not None:
                 expert_config["totalnumberofsimulatedtopos"] = nb_simulations
-            episode = make_episode(episode_name=scenario, agent=agent)
+            episode = make_episode(episode_name=scenario, agent=agent,with_reboot=True)
             if flow_ratio is not None and line_to_study is not None:
                 new_thermal_limit = thermal_limit.copy()
                 line_id = np.where(episode.line_names == line_to_study)[0][0]
@@ -241,7 +241,7 @@ class Assist(BaseAssistant):
             with redirect_stdout(None):
                 simulator = Grid2opSimulation(
                     obs,
-                    env,
+                    env.action_space,env.observation_space,
                     param_options=expert_config,
                     debug=False,
                     ltc=ltc,

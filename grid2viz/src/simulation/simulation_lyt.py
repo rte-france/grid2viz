@@ -486,7 +486,7 @@ def compare_line(episode, timestep):
 
 
 def layout(study_agent, scenario, user_timestep=None):
-    episode = make_episode(study_agent, scenario)
+    episode = make_episode(study_agent, scenario,with_reboot=True)
     if user_timestep is None:
         user_timestep = 1
     network_graph = make_network_agent_study(

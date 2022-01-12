@@ -165,7 +165,7 @@ def register_callbacks_simulation(app, assistant):
 
         if add_n_clicks is None:
             raise PreventUpdate
-        episode = make_episode(study_agent, scenario)
+        episode = make_episode(study_agent, scenario,with_reboot=True)
         if method_tab == "tab_method_dropdowns":
             # Dropdown
             if objet_tab == "tab_object_lines":
