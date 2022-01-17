@@ -16,7 +16,7 @@ def env_actions(episode, which="hazards", kind="ts", aggr=True):
             f"maintenances. {which} passed"
         )
     env_acts = getattr(episode, which)
-    env_acts = env_acts.fillna(0)
+    #env_acts = env_acts.fillna(0)
     env_acts = pd.pivot_table(
         env_acts, index="timestamp", columns=["line_name"], values="value"
     )
