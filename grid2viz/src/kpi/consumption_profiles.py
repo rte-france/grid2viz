@@ -24,7 +24,7 @@ def consumption_profiles(episode, freq="30T"):
             columns=["equipment_name"],
             values="value",
         )
-        .sum(axis=1)
+        .astype('float64').sum(axis=1)
         .resample(freq)
         .mean()
         .to_frame(name="load")

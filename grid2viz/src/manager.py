@@ -368,6 +368,7 @@ def get_from_fs_cache(episode_name, agent):
     #add observation_space only to decorate as it could not be saved in pickle
     agent_path = os.path.join(agents_dir, agent)
     episode_analytics.decorate_obs_act_spaces(agent_path)
+    episode_analytics.optimize_memory_footprint()
     #episode_analytics.decorate(episode_data)
     #episode_analytics=decorate(episode_analytics,episode_data)
 
