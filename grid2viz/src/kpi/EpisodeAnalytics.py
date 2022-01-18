@@ -390,19 +390,53 @@ class EpisodeAnalytics:
         list_actions.append(action)
         return len(list_actions) - 1, list_actions
 
-    def optimize_memory_footprint(self):
+    def optimize_memory_footprint(self,opt_obs_act=False):
         self.flow_and_voltage_line=self.flow_and_voltage_line.astype('float16')
         self.production.equipment_name=self.production.equipment_name.astype('category')
         self.production.value = self.production.value.astype('float16')
         self.production.timestamp = self.production.timestamp.astype('category')
+        self.production.timestep = self.production.timestep.astype('category')
+        self.production.equipement_id = self.production.equipement_id.astype('category')
+
         self.load.equipment_name = self.load.equipment_name.astype('category')
         self.load.value = self.load.value.astype('float16')
         self.load.timestamp=self.load.timestamp.astype('category')
+        self.load.timestep = self.load.timestep.astype('category')
+        self.load.equipement_id = self.load.equipement_id.astype('category')
 
         self.maintenances.line_name=self.maintenances.line_name.astype('category')
-        self.maintenances.timestamp=self.maintenances.timestamp.astype('category')
+        self.maintenances.timestep=self.maintenances.timestep.astype('category')
+        self.maintenances.timestamp = self.maintenances.timestamp.astype('category')
+        self.maintenances.line_id=self.maintenances.line_id.astype('category')
+        self.maintenances.value = self.maintenances.value.astype('bool')
+
         self.hazards.line_name = self.hazards.line_name.astype('category')
+        self.hazards.timestep = self.hazards.timestep.astype('category')
         self.hazards.timestamp = self.hazards.timestamp.astype('category')
+        self.hazards.line_id=self.hazards.line_id.astype('category')
+        self.hazards.value = self.hazards.value.astype('bool')
+
+        self.rho.value=self.rho.value.astype('float16')
+        self.rho.equipment = self.rho.equipment.astype('category')
+        self.rho.time=self.rho.time.astype('category')
+        self.rho.timestamp=self.rho.timestamp.astype('category')
+
+        #optimize observations with float16 instead of float32 here
+        #optimize observation and action footprint a bit
+        if opt_obs_act:
+            for t in range(len(self.observations)):
+                for key, value in self.observations[t].__dict__.items():
+                    if type(value) == np.ndarray:
+                        if value.dtype == 'float32':
+                            setattr(self.observations[t], key, value.astype('float16'))
+#
+            for t in range(len(self.actions)):
+                for key, value in self.actions[t].__dict__.items():
+                    if type(value) == np.ndarray:
+                        if value.dtype == 'float32':
+                            setattr(self.actions[t], key, value.astype('float16'))
+                        if value.dtype == 'int32':
+                            setattr(self.actions[t], key, value.astype('int8'))
 
 
 

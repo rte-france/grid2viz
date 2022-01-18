@@ -267,6 +267,10 @@ def make_episode(agent, episode_name,with_reboot=False):
     elif is_in_fs_cache(episode_name, agent):
         episode = get_from_fs_cache(episode_name, agent)
         save_in_ram_cache(episode_name, agent, episode)
+        #to see evolution of ram footprint
+        #from guppy import hpy
+        #h = hpy()
+        #print(h.heap())
     else:
         episode = compute_episode(episode_name, agent,with_reboot)
         save_in_ram_cache(episode_name, agent, episode)
@@ -375,7 +379,8 @@ def get_from_fs_cache(episode_name, agent):
     if("observations" not in dir(episode_analytics)):
         print("WARNING: the cache management have been updated in grid2viz 1.3.1 for faster loading. "
               "You Should delete the old _cache folder and recompute it with latest grid2viz version")
-    episode_analytics.optimize_memory_footprint()
+    episode_analytics.optimize_memory_footprint(opt_obs_act=True)#this adds a bit of 25% loading time overhead,
+    # in particular when resetting observations and actions, which only brings a 10% size decrease
 
     #episode_analytics.decorate(episode_data)
     #episode_analytics=decorate(episode_analytics,episode_data)
