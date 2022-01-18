@@ -61,7 +61,7 @@ def get_prod_share_trace(episode):
     prod_type_values = list(prod_types.values()) if len(prod_types.values()) > 0 else []
 
     share_prod = observation_model.get_prod(episode)
-    df = share_prod.groupby("equipment_name")["value"].sum()
+    df = share_prod.astype({"value":'float64'}).groupby("equipment_name")["value"].sum()
     unique_prod_types = np.unique(prod_type_values)
 
     labels = [*df.index.values, *np.unique(prod_type_values)]
@@ -173,7 +173,7 @@ def get_all_prod_trace(episode, prod_types, selection):
     prod_type_names = prod_types.values()
     trace = []
     if "total" in selection:
-        total_series = prod_with_type.groupby("timestamp")["value"].sum()
+        total_series = prod_with_type.astype({"value":'float64'}).groupby("timestamp")["value"].sum()
         trace.append(go.Scatter(x=total_series.index, y=total_series, name="total"))
     for name in prod_type_names:
         if name in selection:
@@ -185,7 +185,7 @@ def get_all_prod_trace(episode, prod_types, selection):
                     x=prod_with_type[prod_with_type.prod_type.values == name][
                         "timestamp"
                     ].drop_duplicates(),
-                    y=prod_with_type[prod_with_type.prod_type.values == name]
+                    y=prod_with_type[prod_with_type.prod_type.values == name].astype({"value":'float64'})
                     .groupby(["timestamp"])["value"]
                     .sum(),
                     name=name,
@@ -243,7 +243,7 @@ def get_load_trace_per_equipment(episode, equipements):
                     ],
                     "value": [
                         value
-                        for value in all_equipements.loc[idx_no_interco]
+                        for value in all_equipements.loc[idx_no_interco].astype({"value":'float64'})
                         .groupby("timestep")["value"]
                         .sum()
                     ],
@@ -287,7 +287,7 @@ def get_load_trace_per_equipment(episode, equipements):
                         ],
                         "value": [
                             value
-                            for value in all_equipements.loc[idx_interco]
+                            for value in all_equipements.loc[idx_interco].astype({"value":'float64'})
                             .groupby("timestep")["value"]
                             .sum()
                         ],

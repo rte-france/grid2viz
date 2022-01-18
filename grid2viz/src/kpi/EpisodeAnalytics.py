@@ -390,6 +390,22 @@ class EpisodeAnalytics:
         list_actions.append(action)
         return len(list_actions) - 1, list_actions
 
+    def optimize_memory_footprint(self):
+        self.flow_and_voltage_line=self.flow_and_voltage_line.astype('float16')
+        self.production.equipment_name=self.production.equipment_name.astype('category')
+        self.production.value = self.production.value.astype('float16')
+        self.production.timestamp = self.production.timestamp.astype('category')
+        self.load.equipment_name = self.load.equipment_name.astype('category')
+        self.load.value = self.load.value.astype('float16')
+        self.load.timestamp=self.load.timestamp.astype('category')
+
+        self.maintenances.line_name=self.maintenances.line_name.astype('category')
+        self.maintenances.timestamp=self.maintenances.timestamp.astype('category')
+        self.hazards.line_name = self.hazards.line_name.astype('category')
+        self.hazards.timestamp = self.hazards.timestamp.astype('category')
+
+
+
     def get_sub_name(self, act, obs):
         for sub in range(len(obs.sub_info)):
             effect = act.effect_on(substation_id=sub)

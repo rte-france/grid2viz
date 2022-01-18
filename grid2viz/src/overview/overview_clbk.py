@@ -165,8 +165,10 @@ def register_callbacks_overview(app):
         cols_to_add = [col for col in loads + prods if col not in df.columns]
         df = df.drop(cols_to_drop, axis=1)
         if cols_to_add:
+            df_col = observation_model.get_prod_and_conso(episode)[cols_to_add]
+            df_col.index = pd.to_datetime(df_col.index)
             df = df.merge(
-                observation_model.get_prod_and_conso(episode)[cols_to_add],
+                df_col,
                 left_on="timestamp",
                 right_index=True,
                 how="right",
@@ -183,6 +185,7 @@ def register_callbacks_overview(app):
             df, start_date=start_date_timestamp, end_date=end_date_timestamp
         )
         cols = [{"name": i, "id": i} for i in df.columns]
+        df.timestamp=df.timestamp.astype('category')
         return cols, df.to_dict("records")
 
     @app.callback(Output("nb_steps_card", "children"), [Input("scenario", "data")])
