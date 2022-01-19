@@ -20,7 +20,9 @@ Grid2Viz is a web application that offers several interactive views into the res
 
 ### Try it out in your browser with Heroku
 ------------------
+
 **WAnt to reproduce the analysis of the video above !?** Give it a try in your own browser through this url: https://grid2viz-neurips.herokuapp.com/ 
+
 ------------------
 
 ## Demo Gallery
