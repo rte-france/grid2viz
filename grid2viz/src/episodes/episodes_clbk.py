@@ -235,7 +235,7 @@ def register_callbacks_episodes(app):
                                     dbc.CardFooter(
                                         dbc.Button(
                                             "Open",
-                                            id=scenario,
+                                            id=scenario,#f"open_{scenario}",
                                             key=scenario,
                                             className="btn-block",
                                             style={"background-color": "#2196F3"},
