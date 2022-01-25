@@ -1,7 +1,7 @@
-click == 7.1.2
+click == 8.0.3
 colorama == 0.4.4
-dash[testing] == 1.17.0
-dash-bootstrap-components == 0.10.7
+dash[testing] == 2.0.0
+dash-bootstrap-components == 1.0.2
 dash-antd-components == 0.0.1-rc.2
 dill == 0.3.3
 Grid2Op == 1.6.4
