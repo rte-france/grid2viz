@@ -45,7 +45,7 @@ jobs:
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run: pip install -r requirements.txt --no-deps
       - run: pip uninstall attr
-      - run: pip install attrs
+      - run: pip install attrs py
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
