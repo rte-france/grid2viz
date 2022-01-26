@@ -66,7 +66,7 @@ pytz==2021.3
 requests==2.27.1
 scipy==1.7.3
 seaborn==0.11.2
-selenium==3.141.0
+selenium==4.1.0
 six==1.16.0
 sniffio==1.2.0
 sortedcontainers==2.4.0
