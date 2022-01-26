@@ -21,7 +21,7 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.8 container
     # Change the version below to your required version of python
     docker:
-      - image: cimg/python:3.8-browsers
+      - image: cimg/python:3.8-browsers #-stretch-node-browsers
     # Checkout the code as the first step. This is a dedicated CircleCI step.
     # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
     # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
@@ -50,7 +50,7 @@ jobs:
       - run: export PATH=$PATH:/usr/bin/chromedriver
       - run: pip install setuptools==45
       - run: pip install -r requirements.txt --no-deps #--ignore-installed grid2op #$(grep -v '^Grid2Op' requirements.txt | grep .) #--ignore-installed #--no-deps
-      #- run: pip install grid2op
+      - run: pip install grid2op==1.6.4
       #- run: pip uninstall attr
       #- run: pip install attrs py pluggy
       - run:
