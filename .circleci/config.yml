@@ -47,7 +47,7 @@ jobs:
       #    pkg-manager: poetry #pip
           # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-      #- run: sudo apt-get update
+      - run: sudo apt-get update
       - run: sudo apt-get install chromium-chromedriver
       #- run: sudo apt-get install firefox-geckodriver
       - run: dpkg -L chromium-chromedriver
