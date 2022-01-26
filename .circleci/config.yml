@@ -34,20 +34,21 @@ jobs:
           name: Download Selenium
           command: |
             curl -O http://selenium-release.storage.googleapis.com/3.5/selenium-server-standalone-3.5.3.jar
-      - run:
-          name: Start Selenium
-          command: |
-            java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
-          background: true
+      #- run:
+      #    name: Start Selenium
+      #    command: |
+      #      java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
+      #    background: true
       #- python/install-packages:
       #    pkg-manager: poetry #pip
           # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run: sudo apt-get update
       - run: sudo apt-get install chromium-chromedriver
+      - run: dpkg -L chromium-chromedriver
       - run: pip install setuptools==45
       - run: pip install -r requirements.txt --no-deps #--ignore-installed grid2op #$(grep -v '^Grid2Op' requirements.txt | grep .) #--ignore-installed #--no-deps
-      - run: pip install grid2op
+      #- run: pip install grid2op
       #- run: pip uninstall attr
       #- run: pip install attrs py pluggy
       - run:
