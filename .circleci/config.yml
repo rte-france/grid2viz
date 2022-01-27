@@ -21,7 +21,7 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.8 container
     # Change the version below to your required version of python
     docker:
-      - image: circleci/python:3.8-node-browsers-legacy
+      - image: cimg/python:3.8
       #circleci/python:3.8-node-browsers-legacy
       
       #circleci/python:3.7.6-stretch-node-browsers
@@ -47,11 +47,11 @@ jobs:
       #    pkg-manager: poetry #pip
           # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-      #- run: sudo apt-get update
-      #- run: sudo apt-get install chromium-chromedriver
-      #- run: sudo apt-get install firefox-geckodriver
-      #- run: dpkg -L chromium-chromedriver
-      #- run: export PATH=$PATH:/usr/bin/chromedriver
+      - run: sudo apt-get update
+      - run: sudo apt-get install chromium-chromedriver
+      - run: sudo apt-get install firefox-geckodriver
+      - run: dpkg -L chromium-chromedriver
+      - run: export PATH=$PATH:/usr/bin/chromedriver
       - run: pip install setuptools==45
       - run: pip install -r requirements.txt --no-deps #--ignore-installed grid2op #$(grep -v '^Grid2Op' requirements.txt | grep .) #--ignore-installed #--no-deps
       - run: pip install grid2op==1.6.4
@@ -60,7 +60,7 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: pytest --webdriver Firefox tests -k test_navigation_scenario_1 --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py -v
+          command: pytest --webdriver Chrome tests -k test_navigation_scenario_1 --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py -v
       - store_artifacts:
           path: test-reports/
           destination: tr1
