@@ -42,7 +42,7 @@ jobs:
           name: Start Selenium
           command: |
             java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
-      #    background: true
+          background: true
       #- python/install-packages:
       #    pkg-manager: poetry #pip
           # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
