@@ -37,7 +37,7 @@ def test_navigation_scenario_1(dash_duo):
 
     #####
     #loading front page scenario selection
-    dash_duo.wait_for_page("http://localhost:8050/")
+    #dash_duo.wait_for_page("http://localhost:8050/")
     dash_duo.wait_for_text_to_equal("#scen_lbl", "")#, timeout=15)
     #assert False
     print("elapsed time is: " + str(time.time() - start_time))
@@ -45,33 +45,39 @@ def test_navigation_scenario_1(dash_duo):
     dash_duo.wait_for_text_to_equal("#scen_lbl", "", timeout=15)
     dash_duo.wait_for_text_to_equal("#select_ref_agent", "Ref Agent", timeout=5)
     dash_duo.wait_for_text_to_equal("#select_study_agent", "Study Agent", timeout=5)
+    #dash_duo.wait_for_text_to_equal("#scen_lbl", "000", timeout=200)
 
     dash_duo.wait_for_element("#collapse-button", timeout=15)
+    #dash_duo.multiple_click("#nav_agent_study", 1)
     #dash_duo.wait_for_element("#scenarios_filter", timeout=15)
     #assert (not dash_duo.wait_for_element_by_id("scenarios_filter").is_displayed())
 
     print(app._layout)
     #dash_duo.wait_for_page("http://localhost:8050/episodes", timeout=20)
 
-    dash_duo.wait_for_element("#card_000",timeout=15)
-    dash_duo.wait_for_element("#card_001", timeout=15)
+    #dash_duo.wait_for_element("#card_000",timeout=15)
+    dash_duo.wait_for_element_by_id("000",timeout=15)
+
+    #dash_duo.wait_for_element("#card_001", timeout=15)
+    dash_duo.wait_for_element_by_id("001",timeout=15)
+
     assert (not dash_duo.wait_for_element_by_id("select_ref_agent").is_enabled())
     assert (not dash_duo.wait_for_element_by_id("select_study_agent").is_enabled())
 
     ####@
     #test collapse button and open to dispaly heatmap and scenario filtering
     #ideally flter only one scenario and test interaction. But don't seem possible, scenario_filter is said to be non interactable
-    assert (not dash_duo.wait_for_element_by_id("scenarios_filter").is_displayed())
-    assert (not dash_duo.wait_for_element_by_id("heatmap attention").is_displayed())
-    assert (not dash_duo.wait_for_element_by_id("heatmap survival").is_displayed())
-
-    dash_duo.multiple_click("#collapse-button", 1)
-    dash_duo.wait_for_text_to_equal("#scenarios_filter",'000\n001',timeout=15)
-    #dash_duo.wait_for_element_by_id("scenarios_filter").click().send_keys(Keys.DELETE)
-    #dash_duo.clear_input("#scenarios_filter")
-    assert (dash_duo.wait_for_element_by_id("scenarios_filter").is_displayed())
-    assert (dash_duo.wait_for_element_by_id("heatmap attention").is_displayed())
-    assert (dash_duo.wait_for_element_by_id("heatmap survival").is_displayed())
+    #assert (not dash_duo.wait_for_element_by_id("scenarios_filter").is_displayed())
+    #assert (not dash_duo.wait_for_element_by_id("heatmap attention").is_displayed())
+    #assert (not dash_duo.wait_for_element_by_id("heatmap survival").is_displayed())
+#
+    #dash_duo.multiple_click("#collapse-button", 1)
+    #dash_duo.wait_for_text_to_equal("#scenarios_filter",'000\n001',timeout=15)
+    ##dash_duo.wait_for_element_by_id("scenarios_filter").click().send_keys(Keys.DELETE)
+    ##dash_duo.clear_input("#scenarios_filter")
+    #assert (dash_duo.wait_for_element_by_id("scenarios_filter").is_displayed())
+    #assert (dash_duo.wait_for_element_by_id("heatmap attention").is_displayed())
+    #assert (dash_duo.wait_for_element_by_id("heatmap survival").is_displayed())
 
 
     ####
