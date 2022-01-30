@@ -83,6 +83,11 @@ def test_navigation_scenario_1(dash_duo):
     ####
     #switch to page overview scenario
     #dash_duo.wait_for_element_by_id("001").click()
+    #dash_duo.click_at_coord_fractions("#card_001", 0.5, 0.9)
+    #dash_duo.wait_for_text_to_equal("#scen_lbl", "000", timeout=200)
+    dash_duo.wait_for_element("#open_001")
+    dash_duo.multiple_click("#open_001", 1)
+
     y=0.8
     while (dash_duo.wait_for_element("#scen_lbl", timeout=15).text == ""):
         dash_duo.click_at_coord_fractions("#card_001", 0.5, y)

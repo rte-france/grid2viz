@@ -235,8 +235,8 @@ def register_callbacks_episodes(app):
                                     dbc.CardFooter(
                                         dbc.Button(
                                             "Open",
-                                            id=scenario,#f"open_{scenario}",
-                                            key=scenario,
+                                            id="open_"+scenario,
+                                            key=scenario,#f"open_{scenario}",#scenario,
                                             className="btn-block",
                                             style={"background-color": "#2196F3"},
                                         )
@@ -254,10 +254,28 @@ def register_callbacks_episodes(app):
         )
         return cards_list
 
+
+
+    #for scenario in scenarios:
+    #    @app.callback(
+    #        [Output("scenario", "data"), Output("url", "pathname")],
+    #        # [Input("open_"+scenario, "n_clicks") for scenario in scenarios],
+    #        [Input("open_" + scenario, "n_clicks")],
+    #        [State("open_" + scenario, "key")],)
+##
+    #    def open_scenario(n, key):  # (*input_state):
+    #        if n:
+    #            scenario = key
+##
+    #            return scenario, "/overview"
+    #        else:
+    #            raise PreventUpdate
+
     @app.callback(
         [Output("scenario", "data"), Output("url", "pathname")],
-        [Input(scenario, "n_clicks") for scenario in scenarios],
-        [State(scenario, "key") for scenario in scenarios],
+        #[Input("open_"+scenario, "n_clicks") for scenario in scenarios],
+        [Input("open_" + scenario, "n_clicks") for scenario in scenarios],
+        [State("open_" + scenario, "key") for scenario in scenarios ],
     )
     def open_scenario(*input_state):
         """
@@ -270,8 +288,8 @@ def register_callbacks_episodes(app):
         .. note:: you may need to see https://dash.plot.ly/faqs to get how I determine which Input has changed
         """
 
-        ctx = callback_context
 
+        ctx = callback_context
         # No clicks
         if not ctx.triggered:
             raise PreventUpdate
@@ -279,12 +297,12 @@ def register_callbacks_episodes(app):
         # https://github.com/plotly/dash/issues/684
         if ctx.triggered[0]["value"] is None:
             raise PreventUpdate
-
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
         input_key = ctx.states[input_id + ".key"]
         scenario = input_key
 
         return scenario, "/overview"
+
 
     @app.callback(
         [
