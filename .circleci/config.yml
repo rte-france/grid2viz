@@ -9,7 +9,7 @@ orbs:
   # Orb commands and jobs help you with common scripting around a language/tool
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
-  browser-tools: circleci/browser-tools@1.1
+  browser-tools: circleci/python@1.2
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -21,7 +21,7 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.8 container
     # Change the version below to your required version of python
     docker:
-      - image:  cimg/python:3.8-browsers 
+      - image:  circleci/python:3.8-node-browsers-legacy  
       #cimg/python:3.8
       #circleci/python:3.8-node-browsers-legacy
       
@@ -35,7 +35,7 @@ jobs:
     steps:
       - checkout
       - run: mkdir test-reports
-      - browser-tools/install-browser-tools
+      #- browser-tools/install-browser-tools
       - checkout
       - run: |
           python --version
