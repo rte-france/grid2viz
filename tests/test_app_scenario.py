@@ -55,10 +55,10 @@ def test_navigation_scenario_1(dash_duo):
     print(app._layout)
     #dash_duo.wait_for_page("http://localhost:8050/episodes", timeout=20)
 
-    #dash_duo.wait_for_element("#card_000",timeout=15)
+    dash_duo.wait_for_element("#card_000",timeout=15)
     #dash_duo.wait_for_element_by_id("000",timeout=15)
 
-    #dash_duo.wait_for_element("#card_001", timeout=15)
+    dash_duo.wait_for_element("#card_001", timeout=15)
     #dash_duo.wait_for_element_by_id("001",timeout=15)
 
     assert (not dash_duo.wait_for_element_by_id("select_ref_agent").is_enabled())
