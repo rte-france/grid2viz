@@ -84,6 +84,10 @@ def test_navigation_scenario_1(dash_duo):
     #switch to page overview scenario
     #dash_duo.wait_for_element_by_id("001").click()
     dash_duo.click_at_coord_fractions("#card_001", 0.5, 0.95)
+    if(dash_duo.wait_for_element("#scen_lbl",timeout=15).text==""):
+        while (dash_duo.wait_for_element("#scen_lbl",timeout=15).text==""):
+            print("waiting for text scenario to update after choosing scenario")
+    print(dash_duo.wait_for_element("#scen_lbl",timeout=15).text)
     dash_duo.wait_for_text_to_equal("#scen_lbl", "001", timeout=20)
     dash_duo.wait_for_text_to_equal("#select_ref_agent", "do-nothing-baseline", timeout=20)
     #dash_duo.wait_for_page("http://localhost:8050/overview/") #this loads the page rather than just checking the url
