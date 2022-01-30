@@ -83,7 +83,10 @@ def test_navigation_scenario_1(dash_duo):
     ####
     #switch to page overview scenario
     #dash_duo.wait_for_element_by_id("001").click()
-    dash_duo.click_at_coord_fractions("#card_001", 0.5, 0.95)
+    y=0.8
+    while (dash_duo.wait_for_element("#scen_lbl", timeout=15).text == ""):
+        dash_duo.click_at_coord_fractions("#card_001", 0.5, y)
+        y+=0.05
     #if(dash_duo.wait_for_element("#scen_lbl",timeout=15).text==""):
     #    while (dash_duo.wait_for_element("#scen_lbl",timeout=15).text==""):
     #        print("waiting for text scenario to update after choosing scenario")
