@@ -9,7 +9,7 @@ orbs:
   # Orb commands and jobs help you with common scripting around a language/tool
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
-  browser-tools: circleci/python@1.2
+  browser-tools: circleci/browser-tools@1.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -21,7 +21,7 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.8 container
     # Change the version below to your required version of python
     docker:
-      - image:  circleci/python:3.8-node-browsers-legacy  
+      - image:  cimg/python:3.8-browsers 
       #cimg/python:3.8
       #circleci/python:3.8-node-browsers-legacy
       
@@ -35,13 +35,16 @@ jobs:
     steps:
       - checkout
       - run: mkdir test-reports
-      #- browser-tools/install-browser-tools
+      - run: sudo apt-get update
+      - browser-tools/install-browser-tools
       - checkout
       - run: |
           python --version
           node --version
           java --version
           google-chrome --version
+      - run: sudo apt-get --only-upgrade install google-chrome-stable
+      - run: google-chrome --version
       - run: pip install setuptools==45
       - run: pip install -r requirements.txt --no-deps #--ignore-installed grid2op #$(grep -v '^Grid2Op' requirements.txt | grep .) #--ignore-installed #--no-deps
       - run: pip install grid2op==1.6.4
