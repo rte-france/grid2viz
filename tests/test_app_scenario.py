@@ -63,7 +63,6 @@ def test_navigation_scenario_1(dash_duo):
 
     assert (not dash_duo.wait_for_element_by_id("select_ref_agent").is_enabled())
     assert (not dash_duo.wait_for_element_by_id("select_study_agent").is_enabled())
-    dash_duo.click_at_coord_fractions("#card_001", 0.9, 0.9)
 
     ####@
     #test collapse button and open to dispaly heatmap and scenario filtering
@@ -84,7 +83,7 @@ def test_navigation_scenario_1(dash_duo):
     ####
     #switch to page overview scenario
     #dash_duo.wait_for_element_by_id("001").click()
-    dash_duo.click_at_coord_fractions("#card_001", 0.9, 0.9)
+    dash_duo.click_at_coord_fractions("#card_001", 0.5, 0.95)
     dash_duo.wait_for_text_to_equal("#scen_lbl", "001", timeout=20)
     dash_duo.wait_for_text_to_equal("#select_ref_agent", "do-nothing-baseline", timeout=20)
     #dash_duo.wait_for_page("http://localhost:8050/overview/") #this loads the page rather than just checking the url
