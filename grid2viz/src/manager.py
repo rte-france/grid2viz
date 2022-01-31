@@ -294,8 +294,12 @@ def make_episode_without_decorate(agent, episode_name,save=False):
     :return: Episode with computed data (without EpisodeData attributes), EpisodeData instance
     """
     if is_in_ram_cache(episode_name, agent):
+        if save:
+            return None
         return get_from_ram_cache(episode_name, agent)
     elif is_in_fs_cache(episode_name, agent):
+        if save:
+            return None
         beg = time.time()
         episode_analytics=get_from_fs_cache(episode_name, agent)
         return episode_analytics
@@ -544,7 +548,7 @@ def make_cache(scenarios,agents,n_cores,cache_dir,agent_selection=None):
             i += 1
     else:
         pool = ProcessPool(n_cores)
-        agents_data = list(
+        list(
             pool.imap(
                 make_episode_without_decorate,
                 [agent_scenario[0] for agent_scenario in agent_scenario_list],  # agents
