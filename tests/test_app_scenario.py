@@ -130,7 +130,7 @@ def test_navigation_scenario_1(dash_duo):
     #dash_duo.wait_for_page("http://localhost:8050/macro")
 
 
-    dash_duo.wait_for_element_by_id("rewards_timeserie").click()
+    dash_duo.wait_for_element_by_id("rewards_timeserie",timeout=10).click()
     while(dash_duo.wait_for_element_by_id("timeseries_table",timeout=10).text=='Timestamps'):
         dash_duo.click_at_coord_fractions("#rewards_timeserie", 0.2, 0.2)
     timestamps_str=dash_duo.wait_for_element_by_id("timeseries_table",timeout=10).text#print(dash_duo.wait_for_element_by_id("timeseries_table",timeout=10).text)
