@@ -118,6 +118,7 @@ def test_navigation_scenario_1(dash_duo):
     dash_duo.multiple_click("#nav_agent_over", 1)
     ######
     # closing agent overview helper screenshot and don't show it again after
+    #dash_duo.wait_for_element("#modal_macro", timeout=10)
     try:
         dash_duo.wait_for_element("#dont_show_again_macro",timeout=10)
         dash_duo.multiple_click("#dont_show_again_macro", 1)
@@ -125,7 +126,25 @@ def test_navigation_scenario_1(dash_duo):
     except:
         pass
 
+    #make sure that loading mode is done before clicking further on graphs so that it does not overlap
+    from selenium.common.exceptions import TimeoutException
+    try:
+        i = 0
+        while (True) or (i<10):
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            from selenium.webdriver.common.by import By
+            enter_number_of_seconds_to_wait=10
+            element = WebDriverWait(dash_duo.driver, enter_number_of_seconds_to_wait).until(
+                EC.visibility_of_element_located((By.XPATH, "ENTER_XPATH_HERE")))
+            print("{} True".format(i))
+            i += 1
+    except TimeoutException:
+        print("Loading Mode is Timeout")
+    #dash_duo.wait_for_element("#loading_modal", timeout=10)
     assert ( dash_duo.wait_for_element_by_id("select_study_agent").is_enabled())
+
+
     dash_duo.wait_for_element_by_id("rewards_timeserie",timeout=10)
     #dash_duo.wait_for_page("http://localhost:8050/macro")
 
