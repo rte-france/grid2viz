@@ -85,8 +85,20 @@ def test_navigation_scenario_1(dash_duo):
     #dash_duo.wait_for_element_by_id("001").click()
     #dash_duo.click_at_coord_fractions("#card_001", 0.5, 0.9)
     #dash_duo.wait_for_text_to_equal("#scen_lbl", "000", timeout=200)
+    #driver.execute_script("arguments[0].click();", WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "label[for='documentType-0']"))))
+    #WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.ID, pagination_div))).click()
     dash_duo.wait_for_element("#open_001")
-    dash_duo.multiple_click("#open_001", 1)
+    from selenium.webdriver.common.action_chains import ActionChains
+    ActionChains(dash_duo.driver).move_to_element(dash_duo._get_element("#open_001")).click().perform()
+    #dash_duo.multiple_click("#open_001", 1)
+
+    #waitUntilElementIsPresent(locator)
+    #WebElement element = driver.findElement(locator)
+    #Actions actions = new Actions(driver)
+    #actions.moveToElement(element).click().perform()
+
+    #WebDriverWait wait = new WebDriverWait(driver, 15);
+    #wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#submitButton")));
 
     y=0.8
     while (dash_duo.wait_for_element("#scen_lbl", timeout=15).text == ""):
