@@ -53,7 +53,7 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: pytest --webdriver Chrome tests -k --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py -v
+          command: pytest --webdriver Chrome tests --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py -v
       - store_artifacts:
           path: test-reports/
           destination: tr1
