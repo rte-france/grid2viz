@@ -81,8 +81,8 @@ def test_navigation_scenario_1(dash_duo):
     #dash_duo.wait_for_element_by_id("scenarios_filter").click().send_keys(Keys.DELETE)
     #dash_duo.clear_input("#scenarios_filter")
     assert (dash_duo.wait_for_element_by_id("scenarios_filter",timeout=15).is_displayed())
-    assert (dash_duo.wait_for_element_by_id("heatmap attention",timeout=15).is_displayed())
-    assert (dash_duo.wait_for_element_by_id("heatmap survival",timeout=15).is_displayed())
+    assert (dash_duo.wait_for_element_by_id("heatmap attention",timeout=20).is_displayed())
+    assert (dash_duo.wait_for_element_by_id("heatmap survival",timeout=20).is_displayed())
 
 
     ####
