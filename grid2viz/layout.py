@@ -100,6 +100,7 @@ def navbar(
                             dbc.Select(
                                 id="select_ref_agent",
                                 bs_size="sm",
+                                #size="sm",
                                 disabled=True,
                                 placeholder="Ref Agent",
                             )
@@ -117,6 +118,7 @@ def navbar(
                             dbc.Select(
                                 id="select_study_agent",
                                 bs_size="sm",
+                                #size="sm",
                                 disabled=True,
                                 placeholder="Study Agent",
                             )

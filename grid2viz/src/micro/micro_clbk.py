@@ -24,6 +24,8 @@ from grid2viz.src.utils.graph_utils import (
 
 
 def register_callbacks_micro(app):
+
+
     @app.callback(
         [
             Output("slider", "min"),
@@ -54,8 +56,12 @@ def register_callbacks_micro(app):
             value = new_episode.timestamps.index(
                 dt.datetime.strptime(selected_timestamp, "%Y-%m-%d %H:%M")
             )
+        timestamp_range = new_episode.timestamps[min_:(max_+1)]
+        timestamp_range = [timestamp.time() for timestamp in timestamp_range]
+        is_actions = list(new_episode.action_data_table.is_action[min_:(max_+1)].values)
 
-        marks = dict(enumerate(map(lambda x: x.time(), new_episode.timestamps)))
+        marks = {int(min_ + idx): {'label': t, 'style': {'color': 'orange'}} if is_act else {'label': t, 'style': {
+            'color': 'black'}} for idx, (t, is_act) in enumerate(zip(timestamp_range, is_actions))}
 
         return min_, max_, value, marks
 
