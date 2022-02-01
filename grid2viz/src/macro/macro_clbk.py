@@ -45,9 +45,10 @@ def register_callbacks_macro(app):
         [
             Input("agent_study", "modified_timestamp"),
             Input("agent_ref", "data"),
+
             Input("relayoutStoreMacro", "data"),
         ],
-        [
+        [   State("select_study_agent", "disabled"),
             State("rewards_timeserie", "figure"),
             State("cumulated_rewards_timeserie", "figure"),
             State("overflow_graph_study", "figure"),
@@ -62,6 +63,7 @@ def register_callbacks_macro(app):
         agent_study_ts,
         ref_agent,
         relayout_data_store,
+        disabled,
         rew_figure,
         cumrew_figure,
         overflow_figure,
@@ -71,6 +73,9 @@ def register_callbacks_macro(app):
         study_agent,
         relayoutStoreMacro_ts,
     ):
+
+        if disabled :
+            raise PreventUpdate
 
         figures = [
             rew_figure,
@@ -131,9 +136,12 @@ def register_callbacks_macro(app):
     @app.callback(
         Output("agent_study_pie_chart", "figure"),
         [Input("agent_study", "data")],
-        [State("agent_study_pie_chart", "figure"), State("scenario", "data")],
+        [State("select_study_agent", "disabled"),
+        State("agent_study_pie_chart", "figure"), State("scenario", "data")],
     )
-    def update_action_repartition_pie(study_agent, figure, scenario):
+    def update_action_repartition_pie(study_agent,disabled, figure, scenario):
+        if disabled:
+            raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
         figure["data"] = action_repartition_pie(new_episode)
         figure["layout"].update(
@@ -165,9 +173,12 @@ def register_callbacks_macro(app):
     @app.callback(
         Output("network_actions", "figure"),
         [Input("agent_study", "data")],
-        [State("scenario", "data")],
+        [State("select_study_agent", "disabled"),
+         State("scenario", "data")],
     )
-    def update_network_graph(study_agent, scenario):
+    def update_network_graph(study_agent,disabled, scenario):
+        if disabled:# is None:
+            raise PreventUpdate
         episode = make_episode(study_agent, scenario)
 
         return make_network_agent_overview(episode)
@@ -228,9 +239,13 @@ def register_callbacks_macro(app):
             Output("indicator_nb_action", "children"),
             Output("indicator_nb_maintenances", "children"),
         ],
-        [Input("agent_study", "data"), Input("scenario", "data")],
+        [
+         Input("agent_study", "data"), Input("scenario", "data")],
+        [State("select_study_agent", "disabled")]
     )
-    def update_nbs(study_agent, scenario):
+    def update_nbs(study_agent, scenario,disabled):
+        if disabled:
+            raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
         score = f"{get_score_agent(new_episode):,}"
         survival_time = (
@@ -295,8 +310,12 @@ def register_callbacks_macro(app):
     @app.callback(
         [Output("inspector_datable", "columns"), Output("inspector_datable", "data")],
         [Input("agent_study", "data"), Input("scenario", "data")],
+        [State("select_study_agent", "disabled")],
+
     )
-    def update_agent_log_action_table(study_agent, scenario):
+    def update_agent_log_action_table(study_agent, scenario,disabled):
+        if disabled:# is None:
+            raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
         table = actions_model.get_action_table_data(new_episode)
         table["id"] = table["timestep"]
@@ -317,6 +336,7 @@ def register_callbacks_macro(app):
         ],
         [Input("agent_study", "data"), Input("agent_ref", "data")],
         [
+            State("select_study_agent", "disabled"),
             State("distribution_substation_action_chart", "figure"),
             State("distribution_line_action_chart", "figure"),
             State("distribution_redisp_action_chart", "figure"),
@@ -324,8 +344,10 @@ def register_callbacks_macro(app):
         ],
     )
     def update_agent_log_action_graphs(
-        study_agent, ref_agent, figure_sub, figure_switch_line, figure_redisp, scenario
+        study_agent, ref_agent, disabled, figure_sub, figure_switch_line, figure_redisp, scenario
     ):
+        if disabled:# is None:
+            raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
         ref_episode = make_episode(ref_agent, scenario)
         y_max = None

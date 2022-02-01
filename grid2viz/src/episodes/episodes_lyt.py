@@ -9,6 +9,9 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.figure_factory as ff
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import seaborn as sn
 
 from grid2viz.src.manager import survival_df, attention_df, grid2viz_home_directory, scenarios

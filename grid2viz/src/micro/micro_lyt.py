@@ -372,9 +372,13 @@ def slider_params(user_selected_timestamp, episode):
     n_clicks_right = 0
     min_ = max([0, (value - 10 - 5 * n_clicks_left)])
     max_ = min([(value + 10 + 5 * n_clicks_right), len(episode.timestamps)])
-    timestamp_range = episode.timestamps[min_:max_]
+    timestamp_range = episode.timestamps[min_:(max_)]
     timestamp_range = [timestamp.time() for timestamp in timestamp_range]
-    marks = dict(enumerate(timestamp_range))
+    is_actions=list(episode.action_data_table.is_action[min_:(max_)].values)
+
+    marks ={int(min_+idx):{'label': t, 'style': {'color': 'orange'}} if is_act else {'label': t, 'style': {'color': 'black'}} for idx, (t,is_act) in enumerate(zip(timestamp_range,is_actions)) }
+    #marks=dict(enumerate(timestamp_range))
+
     return SliderParams(min_, max_, marks, value)
 
 

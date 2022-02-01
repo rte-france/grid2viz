@@ -14,6 +14,8 @@ import dash_antd_components as dac
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
@@ -137,11 +139,12 @@ def indicators_line(encoded_image):
                                 "Max prod & laod values and dashed lines in maintenance on Power grid",
                                 style={"margin-top": "2%"},
                             ),
+                            #dcc.Graph(id="network_actions", figure=encoded_image),
                             html.Img(
                                 src="data:image/png;base64,{}".format(encoded_image)
                             ),
                         ],
-                        className="col-xl-12",
+                        className="col-xl-8",
                     ),
                 ],
                 className="card-body row",
@@ -313,19 +316,21 @@ def layout(scenario, ref_agent):
     if ref_agent is None:
         ref_agent = agent_scenario[scenario][0]
 
-    network_graph = make_network_scenario_overview(episode)
-
-    # /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained
-    # It calls a deprecated function of matplotlib.
-    # Work around below : insert the image.
-    # https://stackoverflow.com/questions/63120058/plotly-mpl-to-plotly-error-spine-object-has-no-attribute-is-frame-like
+    #fig = plt.figure()
+    make_network_scenario_overview(episode)
+#
+    ## /!\ As of 2020/10/29 the mpl_to_plotly functions is broken and not maintained
+    ## It calls a deprecated function of matplotlib.
+    ## Work around below : insert the image.
+    ## https://stackoverflow.com/questions/63120058/plotly-mpl-to-plotly-error-spine-object-has-no-attribute-is-frame-like
     buf = io.BytesIO()
-    plt.figure(network_graph.number)
+    #plt.figure(network_graph.number)
+    #plt.close(fig)
     plt.savefig(buf, format="png")
     buf.seek(0)
     encoded_image = base64.b64encode(buf.read())
     buf.close()
-
+#
     open_help = should_help_open(
         Path(grid2viz_home_directory) / DONT_SHOW_FILENAME("overview")
     )

@@ -9,7 +9,7 @@ orbs:
   # Orb commands and jobs help you with common scripting around a language/tool
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
-  python: circleci/python@1.2
+  browser-tools: circleci/browser-tools@1.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -21,7 +21,13 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.8 container
     # Change the version below to your required version of python
     docker:
-      - image: cimg/python:3.8-browsers
+      - image:  cimg/python:3.8-browsers 
+      #cimg/python:3.8
+      #circleci/python:3.8-node-browsers-legacy
+      
+      #circleci/python:3.7.6-stretch-node-browsers
+      #cimg/python:3.8
+
     # Checkout the code as the first step. This is a dedicated CircleCI step.
     # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
     # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
@@ -30,23 +36,29 @@ jobs:
     steps:
       - checkout
       - run: mkdir test-reports
+      - run: sudo apt-get update
+      - browser-tools/install-browser-tools
+      - checkout
+      - run: |
+          python --version
+          node --version
+          java --version
+          google-chrome --version
+      - run: sudo apt-get --only-upgrade install google-chrome-stable
+      - run: google-chrome --version
+      - run: pip install setuptools==45
+      - run: pip install -r requirements.txt --no-deps #--ignore-installed grid2op #$(grep -v '^Grid2Op' requirements.txt | grep .) #--ignore-installed #--no-deps
+      - run: pip install grid2op==1.6.4
+      #- run: pip uninstall attr
+      #- run: pip install attrs py pluggy
       - run:
-          name: Download Selenium
-          command: |
-            curl -O http://selenium-release.storage.googleapis.com/3.5/selenium-server-standalone-3.5.3.jar
-      - run:
-          name: Start Selenium
-          command: |
-            java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
-          background: true
-      - python/install-packages:
-          pkg-manager: pip
-          # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
-          # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-      - run:
-          name: Run tests
+          name: Run UNI tests
           # This assumes pytest is installed via the install-package step above
-          command: pytest tests --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py -v
+          command: pytest --webdriver Chrome tests --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py --ignore tests/test_app_scenario.py -v
+      - run:
+          name: Run iNTEGRATION tests
+          # This assumes pytest is installed via the install-package step above
+          command: pytest --webdriver Chrome tests -k test_navigation_scenario_1 --ignore tests/test_simulation.py --ignore tests/test_simulation_expert_system.py -v
       - store_artifacts:
           path: test-reports/
           destination: tr1
