@@ -58,10 +58,20 @@ def register_callbacks_micro(app):
             )
         timestamp_range = new_episode.timestamps[min_:(max_+1)]
         timestamp_range = [timestamp.time() for timestamp in timestamp_range]
-        is_actions = list(new_episode.action_data_table.is_action[min_:(max_+1)].values)
 
-        marks = {int(min_ + idx): {'label': t, 'style': {'color': 'orange'}} if is_act else {'label': t, 'style': {
-            'color': 'black'}} for idx, (t, is_act) in enumerate(zip(timestamp_range, is_actions))}
+        if("is_action" in new_episode.action_data_table.columns):
+            is_actions = list(new_episode.action_data_table.is_action[min_:(max_+1)].values)
+
+            marks = {int(min_ + idx): {'label': t, 'style': {'color': 'orange'}} if is_act else {'label': t, 'style': {
+                'color': 'black'}} for idx, (t, is_act) in enumerate(zip(timestamp_range, is_actions))}
+
+            if ("is_alarm" in new_episode.action_data_table.columns):
+                is_alarm = list(new_episode.action_data_table.is_alarm[min_:(max_ + 1)].values)
+                for idx, mark_key in enumerate(marks.keys()):
+                    if is_alarm[idx]:
+                        marks[mark_key]['style']['background-color']='lightcoral'
+        else:
+            marks = {int(min_ + idx): {'label': t, 'style': {'color': 'black'}} for idx, t in enumerate(timestamp_range)}
 
         return min_, max_, value, marks
 
