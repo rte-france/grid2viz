@@ -5,6 +5,7 @@
 import datetime as dt
 
 import dash_core_components as dcc
+from dash import callback_context
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -25,7 +26,6 @@ from grid2viz.src.utils.graph_utils import (
 
 def register_callbacks_micro(app):
 
-
     @app.callback(
         [
             Output("slider", "min"),
@@ -33,26 +33,58 @@ def register_callbacks_micro(app):
             Output("slider", "value"),
             Output("slider", "marks"),
         ],
-        [Input("window", "data")],
+        [Input("window", "data"),Input("url", "pathname"),Input('auto-stepper', 'n_intervals'),Input("card-tabs", "active_tab")], #Input("card-tabs", "active_tab")
         [
-            State("slider", "value"),
+            State('my-toggle-switch', "on"),
+            #State("slider", "min"),
+            #State("slider", "max"),
+            #State("slider", "marks"),
             State("user_timestamps", "value"),
             State("agent_study", "data"),
+            State("agent_ref", "data"),
             State("scenario", "data"),
         ],
     )
-    def update_slider(window, value, selected_timestamp, study_agent, scenario):
+    def update_slider(window,url,n_intervals,active_tab,togle_value, selected_timestamp, agent_study,agent_ref, scenario):
         if window is None:
             raise PreventUpdate
-        new_episode = make_episode(study_agent, scenario)
+        if(type(url) is not str):
+            raise PreventUpdate
+        url_split = url.split("/")
+        url_split = url_split[len(url_split) - 1]
 
+        if(url_split!="micro"):
+            raise PreventUpdate
+
+        ctx = callback_context
+        # No clicks
+        if not ctx.triggered:
+            raise PreventUpdate
+        # No clicks again
+        # https://github.com/plotly/dash/issues/684
+        if ctx.triggered[0]["value"] is None:
+            raise PreventUpdate
+
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        new_episode = make_episode(
+            agent_study if active_tab == "tab-0" else agent_ref, scenario
+        )
         min_ = new_episode.timestamps.index(
             dt.datetime.strptime(window[0], "%Y-%m-%dT%H:%M:%S")
         )
         max_ = new_episode.timestamps.index(
             dt.datetime.strptime(window[1], "%Y-%m-%dT%H:%M:%S")
         )
-        if value not in range(min_, max_):
+        if(button_id == "auto-stepper"):
+            if not togle_value:
+                raise PreventUpdate
+            else:
+                value=min_+(n_intervals)%(max_-min_)
+
+        else:
+
+            #if value not in range(min_, max_):
             value = new_episode.timestamps.index(
                 dt.datetime.strptime(selected_timestamp, "%Y-%m-%d %H:%M")
             )
@@ -74,6 +106,26 @@ def register_callbacks_micro(app):
             marks = {int(min_ + idx): {'label': t, 'style': {'color': 'black'}} for idx, t in enumerate(timestamp_range)}
 
         return min_, max_, value, marks
+#
+
+    @app.callback(
+        [
+            Output('auto-stepper', 'interval'),
+            Output('auto-stepper', 'n_intervals'),
+        ],
+        Input('my-toggle-switch', "on"),
+        State('auto-stepper', 'n_intervals'),
+    )
+    def activate_stepper(value,n_intervals):
+#
+        if(value):
+            #disable_stepper=False
+            interval=2750
+            return interval,n_intervals
+        else:
+            disable_stepper=True
+            interval = 30000000
+            return interval,0
 
     @app.callback(
         Output("relayoutStoreMicro", "data"),
@@ -426,6 +478,8 @@ def register_callbacks_micro(app):
         [
             Output("card-content", "children"),
             Output("tooltip_table_micro", "children"),
+            Output("slider","disabled"),
+            Output("my-toggle-switch", "disabled"),
         ],
         [Input("slider", "value"), Input("card-tabs", "active_tab")],
         [
@@ -443,7 +497,9 @@ def register_callbacks_micro(app):
 
         try:
             act = episode.actions[slider_value]
-        except Grid2OpException as ex:
+        except:# Grid2OpException as ex:
+            disabled_Power_Button=True
+            disabled_Slider=True
             return (
                 dcc.Graph(
                     figure=go.Figure(
@@ -453,7 +509,12 @@ def register_callbacks_micro(app):
                     )
                 ),
                 "",
+                disabled_Slider,
+                disabled_Power_Button
             )
+
+        disabled_Power_Button = False
+        disabled_Slider = False
         if any(act.get_types()):
             act_as_str = str(act)
         else:
@@ -461,6 +522,8 @@ def register_callbacks_micro(app):
         return (
             dcc.Graph(figure=make_network_agent_study(episode, timestep=slider_value)),
             act_as_str,
+            disabled_Slider,
+            disabled_Power_Button
         )
 
     @app.callback(

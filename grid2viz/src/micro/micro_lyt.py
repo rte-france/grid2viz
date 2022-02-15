@@ -10,6 +10,7 @@ import dash_antd_components as dac
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_daq as daq
 import dash_table as dt
 import plotly.graph_objects as go
 
@@ -110,8 +111,10 @@ def card_for_network_graphs(network_graph):
                 children=[
                     dcc.Graph(
                         id="interactive_graph",
-                        figure=network_graph,
-                    )
+                        figure=dict(dict(data=network_graph["data"],layout=network_graph["layout"])),#network_graph,
+                    ),
+                    #dcc.Interval(id='auto-stepper', interval=1000, n_intervals=0),
+                    #dcc.Store(id='offset', data=0), dcc.Store(id='store', data=network_graph["data"])
                 ],
             ),
         ]
@@ -141,13 +144,44 @@ def flux_inspector_line(network_graph=None, slider_params=None):
                                                 children="Grid State evolution overtime & highlighted subs with action (yellow) - with 2 nodes (green) ",
                                             ),
                                             card_for_network_graphs(network_graph),
-                                            dcc.Slider(
-                                                id="slider",
-                                                min=slider_params.min,
-                                                max=slider_params.max,
-                                                step=None,
-                                                marks=slider_params.marks,
-                                                value=slider_params.value,
+
+                                            #daq.ToggleSwitch(
+                                            #    id="toggle",
+                                            #    velue=False#,
+                                            #    #label='Animate',
+                                            #    #labelPosition='bottom'
+                                            #),
+                                            html.Div(
+                                                className="row",
+                                                children=[
+                                                    html.Div(
+                                                        className="col-1",
+                                                        children=[
+                                                                daq.PowerButton(
+                                                                    id='my-toggle-switch',
+                                                                    on=False,#,
+                                                                    label='Power On for Auto',
+                                                                    disabled=False
+                                                                ),
+                                                                html.Div(id='my-toggle-switch-output'),
+                                                            ],
+                                                    ),
+                                                    html.Div(
+                                                        className="col-10",
+                                                        children=[
+                                                            dcc.Slider(
+                                                                id="slider",
+                                                                min=slider_params.min,
+                                                                max=slider_params.max,
+                                                                step=None,
+                                                                marks=slider_params.marks,
+                                                                value=slider_params.value,
+                                                                disabled=False
+                                                            ),
+                                                            ],
+                                                    ),
+                                                    dcc.Interval(id='auto-stepper', interval=3000000, n_intervals=0),#,disabled=True),
+                                                ],
                                             ),
                                             html.P(
                                                 id="tooltip_table_micro",
@@ -355,6 +389,8 @@ all_info_line = html.Div(
 )
 
 
+
+
 def center_index(user_selected_timestamp, episode):
     if user_selected_timestamp is not None:
         center_indx = episode.timestamps.index(
@@ -372,12 +408,21 @@ def slider_params(user_selected_timestamp, episode):
     n_clicks_right = 0
     min_ = max([0, (value - 10 - 5 * n_clicks_left)])
     max_ = min([(value + 10 + 5 * n_clicks_right), len(episode.timestamps)])
-    timestamp_range = episode.timestamps[min_:(max_)]
+    timestamp_range = episode.timestamps[min_:(max_+1)]
     timestamp_range = [timestamp.time() for timestamp in timestamp_range]
-    is_actions=list(episode.action_data_table.is_action[min_:(max_)].values)
+    if ("is_action" in episode.action_data_table.columns):
+        is_actions = list(episode.action_data_table.is_action[min_:(max_ + 1)].values)
 
-    marks ={int(min_+idx):{'label': t, 'style': {'color': 'orange'}} if is_act else {'label': t, 'style': {'color': 'black'}} for idx, (t,is_act) in enumerate(zip(timestamp_range,is_actions)) }
-    #marks=dict(enumerate(timestamp_range))
+        marks = {int(min_ + idx): {'label': t, 'style': {'color': 'orange'}} if is_act else {'label': t, 'style': {
+            'color': 'black'}} for idx, (t, is_act) in enumerate(zip(timestamp_range, is_actions))}
+
+        if ("is_alarm" in episode.action_data_table.columns):
+            is_alarm = list(episode.action_data_table.is_alarm[min_:(max_ + 1)].values)
+            for idx, mark_key in enumerate(marks.keys()):
+                if is_alarm[idx]:
+                    marks[mark_key]['style']['background-color'] = 'lightcoral'
+    else:
+        marks = {int(min_ + idx): {'label': t, 'style': {'color': 'black'}} for idx, t in enumerate(timestamp_range)}
 
     return SliderParams(min_, max_, marks, value)
 
