@@ -14,10 +14,10 @@ nav_items = [
             "Scenario Selection", active=True, href="/episodes", id="nav_scen_select"
         )
     ),
-    dbc.NavItem(dbc.NavLink("Scenario Overview", href="/overview", id="nav_scen_over")),
-    dbc.NavItem(dbc.NavLink("Agent Overview", href="/macro", id="nav_agent_over")),
-    dbc.NavItem(dbc.NavLink("Agent Study", href="/micro", id="nav_agent_study")),
-    dbc.NavItem(dbc.NavLink("Simulation", href="/simulation", id="nav_simulation")),
+    dbc.NavItem(dbc.NavLink("Scenario Overview", href="/overview", id="nav_scen_over", n_clicks=0)),
+    dbc.NavItem(dbc.NavLink("Agent Overview", href="/macro", id="nav_agent_over", n_clicks=0)),
+    dbc.NavItem(dbc.NavLink("Agent Study", href="/micro", id="nav_agent_study", n_clicks=0)),
+    dbc.NavItem(dbc.NavLink("Simulation", href="/simulation", id="nav_simulation", n_clicks=0)),
     dbc.DropdownMenu(
         label="Help",
         color="link",
@@ -250,6 +250,17 @@ def make_layout(
                 timestamp_dropdown_value=user_timestamp[0]["value"],
                 items=items,
             ),
+            dbc.Button(
+                [dbc.Spinner(size="md", id="loading-2",fullscreen=True,
+                             children=html.Div(id="loading-output-2")), " Loading data on page ..."],  # all the scenarios..."],
+                id="loading-episode-button",
+                color="grey",
+                disabled=True,
+                block=True,
+                style=dict()
+            ),
+            dcc.Interval(id='loading-stepper-episode', interval=2000, n_intervals=0),
             body(page),
+
         ]
     )
