@@ -178,7 +178,7 @@ def test_navigation_scenario_1(dash_duo):
         txt_slider = dash_duo.wait_for_element_by_css_selector("#slider").text
     slider_hours=txt_slider.split('\n')
     print(slider_hours)
-    assert(len(slider_hours)==20)#asserting number of timesteps in slider
+    assert(len(slider_hours)==21)#asserting number of timesteps in slider
     timestamp_hour=timestamp_first.split(" ")[1]
     assert(slider_hours[10]==timestamp_hour+':00')#checking that it is centered on the user_timestamp
 
