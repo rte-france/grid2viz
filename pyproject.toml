@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grid2viz"
-version = "1.3.2.post1"
+version = "1.3.4.post1"
 description = "Grid2Op Visualization companion app."
 readme = "README.md"
 authors = [
@@ -37,7 +37,7 @@ dash-bootstrap-components = "^0.10.7"
 dash-antd-components = "^0.0.1-rc.2"
 dash-daq = "^0.5.0"
 dill = "^0.3.3"
-Grid2Op = "^1.6.4"
+Grid2Op = "1.6.4"
 gunicorn = "^20.0.4"
 imageio = "^2.9.0"
 jupyter-dash = { version = "^0.3.1", optional = true }
