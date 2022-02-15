@@ -513,7 +513,7 @@ def layout(timestamps, scenario, study_agent, ref_agent, from_scenario_selection
     )
 
     return html.Div(
-        id="overview_page",
+        id="macro_page",
         children=[
             dcc.Store(id="relayoutStoreMacro"),
             indicator_line(scenario, study_agent, ref_agent),
