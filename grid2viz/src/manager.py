@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from scipy.spatial import ConvexHull
 from grid2op.Episode import EpisodeData
 from grid2op.PlotGrid import PlotPlotly, PlotMatplot
 
@@ -68,6 +69,32 @@ def add_substation_color_plotly(subs, plot_helper, fig, color="gold"):
             )
         )
     return fig
+
+def add_alarm_area_plotly(line_subs, plot_helper, fig, color="gold"):
+
+    x=[]
+    y=[]
+    for id_sub in line_subs:
+        subName = "sub_" + str(id_sub)
+        x_center, y_center = plot_helper._grid_layout[subName]
+        x.append(x_center)
+        y.append(y_center)
+
+    points = [[lx, ly] for lx, ly in zip(x, y)]
+    hull = ConvexHull(points)
+    hull_vertices_x = [x[i] for i in hull.vertices]
+    hull_vertices_y = [y[i] for i in hull.vertices]
+    fig.add_trace(go.Scatter(
+        x=hull_vertices_x,
+        y=hull_vertices_y,
+        marker=dict(color=color, size=2),
+        mode="markers",
+        # name="Women",
+        fill="toself",
+        opacity=0.5
+    ))
+    return fig
+
 
 
 def make_network(episode, responsive=True):
@@ -137,6 +164,30 @@ def make_network_agent_study(episode, timestep, responsive=False):
     fig = add_substation_color_plotly(
         sub_2buses, graph, fig, color="green"
     )  # also other color for subs not in ref topo
+
+    if ("is_alarm" in episode.action_data_table.columns):
+        alarms_lines_area = episode.observations[timestep].alarms_lines_area
+
+        light_colors_plotly = ["lightcoral", "lightsalmon", "lightpink"]
+        n_colors = len(light_colors_plotly)
+
+        if (episode.action_data_table.is_alarm[timestep]):
+
+            alarm_zones = episode.action_data_table.alarm_zone[timestep]
+
+            for i_zone,zone in enumerate(alarm_zones):
+                id_lines_alarm = []
+                for idx, line_name in enumerate(episode.observations[timestep].name_line):
+                    line_alarm_zones = alarms_lines_area[line_name]
+                    if(zone in line_alarm_zones):
+                        id_lines_alarm.append(idx)
+                line_subs = [episode.observations[timestep].line_ex_to_subid[l_idx] for l_idx in id_lines_alarm]
+                line_subs += [episode.observations[timestep].line_or_to_subid[l_idx] for l_idx in id_lines_alarm]
+                line_subs = np.unique(line_subs)
+
+                area_color= i_zone % n_colors
+                fig = add_alarm_area_plotly(line_subs, graph, fig, color=light_colors_plotly[area_color])
+
     return fig
 
 

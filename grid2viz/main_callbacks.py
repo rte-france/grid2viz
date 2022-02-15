@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import datetime as dt
+import time
+from dash import callback_context
 
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
@@ -391,3 +393,57 @@ def register_callbacks_main(app):
         return common_graph.compute_windows_range(
             new_episode, center_indx, n_clicks_left, n_clicks_right
         )
+
+    #making dbc button disappear when not needed
+    @app.callback(
+        Output("loading-episode-button", "style"),
+        [Input("loading-stepper-episode", "n_intervals"),Input("url", "pathname")],#,Input("nav_agent_over","active"),#Input("loading-stepper-episode", "n_intervals")],
+        [State("page-content", "children"),State("url", "pathname"),State("nav_agent_over","active"),State("nav_agent_study","active")]#, State("dont_show_again_episodes", "checked"),],#,State("indicator_line", "children")],
+    )
+    def collapse_loading_button(n_intervals,url_input,children_pg,url_state,agent_ov_active,agent_st_active):
+
+        children_of_interest=None
+        if(children_pg is not None):
+            if(children_pg['props']['id']=="scenario_page"):
+                children_of_interest=children_pg['props']['children'][3]['props']["children"]
+            elif(children_pg['props']['id']=="overview_page"):
+                children_of_interest=children_pg['props']['children'][3]['props']["children"]
+
+        ctx = callback_context
+        url_split = url_state.split("/")
+        url_split = url_split[len(url_split) - 1]
+
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        if(url_split=="macro"):
+            if(agent_ov_active):
+                style = dict(display='none')
+            else:
+                style = dict()
+        elif(url_split=="micro"):
+            if(agent_st_active):
+                style = dict(display='none')
+            else:
+                style = dict()
+        elif (children_of_interest is not None) and (len(children_of_interest)>=1):# or (children_ov is not None ):
+            style = dict(display='none')
+        else:
+            style = dict()
+        return style
+
+    @app.callback(
+
+        Output("loading-output-2", "children"),
+        #Output("loading-episode-button", "style"),
+        [Input("loading-stepper-episode", "n_intervals")],
+        State("cards_container", "children"),
+                  )
+                    #,Input(f"card_{scenario_1}", "className")],)
+    def input_triggers_nested(n_intervals,children):
+        time.sleep(2)
+
+        #dict(display='none')
+        #else:
+        #    print("ok")
+
+        return "Wait"
