@@ -52,6 +52,7 @@ def test_navigation_scenario_1(dash_duo):
         dash_duo.wait_for_element("#dont_show_again_episodes",timeout=10)
         dash_duo.multiple_click("#dont_show_again_episodes", 1)
         dash_duo.multiple_click("#close_episodes", 1)
+        print("closed modal episodes")
     except:
         pass
 
@@ -76,7 +77,8 @@ def test_navigation_scenario_1(dash_duo):
     assert (not dash_duo.wait_for_element_by_id("heatmap attention").is_displayed())
     assert (not dash_duo.wait_for_element_by_id("heatmap survival").is_displayed())
 
-    dash_duo.multiple_click("#collapse-button", 1)
+    dash_duo.wait_for_element_by_id("collapse-button",timeout=10).click()
+    #dash_duo.multiple_click("#collapse-button", 1)
     dash_duo.wait_for_text_to_equal("#scenarios_filter",'000\n001',timeout=15)
     #dash_duo.wait_for_element_by_id("scenarios_filter").click().send_keys(Keys.DELETE)
     #dash_duo.clear_input("#scenarios_filter")
@@ -102,6 +104,7 @@ def test_navigation_scenario_1(dash_duo):
         dash_duo.wait_for_element("#dont_show_again_overview",timeout=10)
         dash_duo.multiple_click("#dont_show_again_overview", 1)
         dash_duo.multiple_click("#close_overview", 1)
+        print("closed modal overview")
     except:
         pass
 
@@ -123,6 +126,7 @@ def test_navigation_scenario_1(dash_duo):
         dash_duo.wait_for_element("#dont_show_again_macro",timeout=10)
         dash_duo.multiple_click("#dont_show_again_macro", 1)
         dash_duo.multiple_click("#close_macro", 1)
+        print("closed modal macro")
     except:
         pass
 
@@ -168,6 +172,7 @@ def test_navigation_scenario_1(dash_duo):
         dash_duo.wait_for_element("#dont_show_again_micro",timeout=10)
         dash_duo.multiple_click("#dont_show_again_micro", 1)
         dash_duo.multiple_click("#close_micro", 1)
+        print("closed modal micro")
     except:
         pass
 
