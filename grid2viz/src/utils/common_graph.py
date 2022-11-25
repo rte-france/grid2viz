@@ -234,7 +234,7 @@ def make_action_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"
     else:# (graph_type=="Topology")
         action_events_df=topology_trace_event_df(study_action_df, col="is_action")
 
-    action_text = ["<br>-".join(str(act).split("-"))[0:1000] for act in agent_episode.actions]
+    action_text = ["<br>-".join(str(act).split("-"))[0:800] for act in agent_episode.actions]
 
     marker_type="Actions"
     action_trace=make_marker_trace(action_events_df.iloc[:max_ts],marker_name=agent_name+" "+marker_type,

@@ -31,9 +31,10 @@ def indicator_line(scenario, study_agent, ref_agent):
 
     network_graph = make_network_agent_overview(episode)
 
-    nb_actions = episode.action_data_table[
-        ["action_line", "action_subs", "action_redisp"]
-    ].sum()
+    actions_table = episode.action_data_table[
+        ["action_line", "action_subs", "action_redisp","action_curtail"]
+    ]
+    nb_actions=(actions_table>0).sum()
 
     if nb_actions.sum() == 0:
         pie_figure = go.Figure(layout=layout_no_data("No Actions for this Agent"))
@@ -46,12 +47,15 @@ def indicator_line(scenario, study_agent, ref_agent):
                         "Actions on Lines",
                         "Actions on Substations",
                         "Redispatching Actions",
+                        "Curtailment Actions"
                     ],
                     values=[
                         nb_actions["action_line"],
                         nb_actions["action_subs"],
                         nb_actions["action_redisp"],
+                        nb_actions["action_curtail"]
                     ],
+                    sort=False,
                 )
             ],
         )

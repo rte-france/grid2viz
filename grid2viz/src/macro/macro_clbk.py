@@ -23,6 +23,7 @@ from grid2viz.src.manager import (
 )
 from grid2viz.src.utils.callbacks_helpers import toggle_modal_helper
 from grid2viz.src.utils.common_graph import make_action_ts, make_rewards_ts
+from grid2viz.src.utils.graph_utils import layout_def, layout_no_data
 from grid2viz.src.utils.constants import DONT_SHOW_FILENAME
 from grid2viz.src.utils.graph_utils import (
     get_axis_relayout,
@@ -143,32 +144,42 @@ def register_callbacks_macro(app):
         if disabled:
             raise PreventUpdate
         new_episode = make_episode(study_agent, scenario)
-        figure["data"] = action_repartition_pie(new_episode)
-        figure["layout"].update(
-            actions_model.update_layout(
-                figure["data"][0].values == (0, 0, 0), "No Actions for this Agent"
-            )
-        )
+        figure = action_repartition_pie(new_episode)
+
         return figure
 
-    def action_repartition_pie(agent):
-        nb_actions = agent.action_data_table[
-            ["action_line", "action_subs", "action_redisp"]
-        ].sum()
-        return [
-            go.Pie(
-                labels=[
-                    "Actions on Lines",
-                    "Actions on Substations",
-                    "Redispatching Actions",
-                ],
-                values=[
-                    nb_actions["action_line"],
-                    nb_actions["action_subs"],
-                    nb_actions["action_redisp"],
+    def action_repartition_pie(episode):
+
+        actions_table = episode.action_data_table[
+            ["action_line", "action_subs", "action_redisp", "action_curtail"]
+        ]
+        nb_actions = (actions_table > 0).sum()
+
+        if nb_actions.sum() == 0:
+            pie_figure = go.Figure(layout=layout_no_data("No Actions for this Agent"))
+        else:
+            pie_figure = go.Figure(
+                layout=layout_def,
+                data=[
+                    go.Pie(
+                        labels=[
+                            "Actions on Lines",
+                            "Actions on Substations",
+                            "Redispatching Actions",
+                            "Curtailment Actions"
+                        ],
+                        values=[
+                            nb_actions["action_line"],
+                            nb_actions["action_subs"],
+                            nb_actions["action_redisp"],
+                            nb_actions["action_curtail"]
+                        ],
+                        sort=False
+                    )
                 ],
             )
-        ]
+
+        return pie_figure
 
     @app.callback(
         Output("network_actions", "figure"),
@@ -297,10 +308,13 @@ def register_callbacks_macro(app):
         action_line="Action on line",
         action_subs="Action on sub",
         action_redisp="Action of redispatch",
+        action_curtail="Action of curtailment",
         redisp_impact="Redispatch impact",
+        curtail_impact="Curtailment impact",
         line_name="Line name",
         sub_name="Sub name",
         gen_name="Gen name",
+        ren_name="Renewable plant name",
         action_id="Action id",
         distance="Topological distance",
         is_alarm="is_alarm",
@@ -320,7 +334,7 @@ def register_callbacks_macro(app):
         table = actions_model.get_action_table_data(new_episode)
         table["id"] = table["timestep"]
         table.set_index("id", inplace=True, drop=False)
-        cols_to_exclude = ["id", "lines_modified", "subs_modified", "gens_modified","is_action"]
+        cols_to_exclude = ["id","gen_name","ren_name", "lines_modified", "subs_modified", "gens_modified","gens_modified","rens_modified","is_action"]
         cols = [
             {"name": action_table_name_converter[col], "id": col}
             for col in table.columns
