@@ -234,7 +234,7 @@ def make_action_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"
     else:# (graph_type=="Topology")
         action_events_df=topology_trace_event_df(study_action_df, col="is_action")
 
-    action_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
+    action_text = ["<br>-".join(str(act).split("-"))[0:1000] for act in agent_episode.actions]
 
     marker_type="Actions"
     action_trace=make_marker_trace(action_events_df.iloc[:max_ts],marker_name=agent_name+" "+marker_type,
@@ -243,21 +243,21 @@ def make_action_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"
     return action_trace
 
 
-    actions_ts = get_actions_sum(agent_episode)
-
-    action_events_df = pd.DataFrame(
-        index=actions_ts.index, data=np.nan, columns=["action_events"]
-    )
-    action_events_df.loc[
-        (actions_ts["Nb Actions"] > 0).values, "action_events"
-    ] = agent_episode.action_data_table.loc[
-        (actions_ts["Nb Actions"] > 0).values, "distance"
-    ].values
-    study_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
-
-    action_trace = make_marker_trace(action_events_df.iloc[:max_ts], marker_name=agent_name + " "+marker_type,
-                                     color=color, text=study_text[:max_ts])
-    return action_trace
+    #actions_ts = get_actions_sum(agent_episode)
+#
+    #action_events_df = pd.DataFrame(
+    #    index=actions_ts.index, data=np.nan, columns=["action_events"]
+    #)
+    #action_events_df.loc[
+    #    (actions_ts["Nb Actions"] > 0).values, "action_events"
+    #] = agent_episode.action_data_table.loc[
+    #    (actions_ts["Nb Actions"] > 0).values, "distance"
+    #].values
+    #study_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
+#
+    #action_trace = make_marker_trace(action_events_df.iloc[:max_ts], marker_name=agent_name + " "+marker_type,
+    #                                 color=color, text=study_text[:max_ts])
+    #return action_trace
 
 def reward_trace_event_df(agent_episode,col="is_action"):#else is_alarm
     df = observation_model.get_df_computed_reward(agent_episode)
