@@ -2,13 +2,14 @@ import os
 import pathlib
 import unittest
 import copy
+import shutil
 
 # We need to make this below so that the manager.py finds the config.ini
 os.environ["GRID2VIZ_ROOT"] = os.path.join(
     pathlib.Path(__file__).parent.absolute(), "data"
 )
 
-agents_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "data", "agents")
+agents_path = os.path.join(pathlib.Path(__file__).parent.absolute(), "data", "agents_test_generate")
 
 config_file_path = os.path.join(os.environ["GRID2VIZ_ROOT"], "config.ini")
 
@@ -35,6 +36,9 @@ class TestGenerateAgent(unittest.TestCase):
         self.scenario_name = "000"
 
     def test_generate_and_read_agent_redisp(self):
+        if os.path.exists(self.agents_path):
+            shutil.rmtree(self.agents_path)
+        os.makedirs(self.agents_path)
         with make_from_dataset_path(self.case, param=self.param, backend=self.backend) as env:
             agent = RandomRedispatchAgent(env.action_space, env)
             runner = Runner(
