@@ -29,12 +29,40 @@ def get_action_redispatch(new_epsiode):
     count = get_modified_gens(new_epsiode)
     return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
 
+def get_action_curtail(new_epsiode):
+    count = get_modified_curtails(new_epsiode)
+    return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
+
+def get_action_storage(new_epsiode):
+    count = get_modified_storages(new_epsiode)
+    return [go.Bar(x=count.index, y=count.values, name=new_epsiode.agent)]
+
 
 def get_modified_gens(new_episode):
     data = get_action_table_data(new_episode)
     # Below to flatten the series of lists "lines_modified"
     try:
         s = data[(data["action_redisp"] > 0)]["gens_modified"].apply(pd.Series).stack()
+        count = s.value_counts()
+    except (IndexError, AttributeError):
+        count = pd.Series(dtype=np.float64)
+    return count
+
+def get_modified_curtails(new_episode):
+    data = get_action_table_data(new_episode)
+    # Below to flatten the series of lists "lines_modified"
+    try:
+        s = data[(data["action_curtail"] > 0)]["rens_modified"].apply(pd.Series).stack()
+        count = s.value_counts()
+    except (IndexError, AttributeError):
+        count = pd.Series(dtype=np.float64)
+    return count
+
+def get_modified_storages(new_episode):
+    data = get_action_table_data(new_episode)
+    # Below to flatten the series of lists "lines_modified"
+    try:
+        s = data[(data["action_storage"] > 0)]["storages_modified"].apply(pd.Series).stack()
         count = s.value_counts()
     except (IndexError, AttributeError):
         count = pd.Series(dtype=np.float64)

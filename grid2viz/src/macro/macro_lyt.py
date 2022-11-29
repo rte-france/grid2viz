@@ -181,35 +181,89 @@ def indicator_line(scenario, study_agent, ref_agent):
                         ],
                     ),
                     html.Div(
-                        className="col-4",
+                        className="col-6",
                         children=[
-                            html.H6(className="text-center", children="On Substations"),
-                            dcc.Graph(
-                                id="distribution_substation_action_chart",
-                                figure=figures_distribution.on_subs,
+                            html.H6(
+                                className="text-center",
+                                children="Line & Substation Topology action distributions",
+                            ),
+                            dbc.Tabs(
+                                children=[
+                                    dbc.Tab(
+                                        label="Substation",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_substation_action_chart",
+                                                figure=figures_distribution.on_subs,
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Line",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_line_action_chart",
+                                                figure=figures_distribution.on_lines,
+
+                                            )
+                                        ],
+                                    ),
+                                ]
                             ),
                         ],
                     ),
                     html.Div(
-                        className="col-4",
+                        className="col-6",
                         children=[
-                            html.H6(className="text-center", children="On Lines"),
-                            dcc.Graph(
-                                id="distribution_line_action_chart",
-                                figure=figures_distribution.on_lines,
+                            html.H6(
+                                className="text-center",
+                                children="Redispatch & Curtailment & Storage action distributions",
+                            ),
+                            dbc.Tabs(
+                                children=[
+                                    dbc.Tab(
+                                        label="Redispatch",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_redisp_action_chart",
+                                                figure=figures_distribution.redisp,
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Curtailment",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_curtailement_action_chart",
+                                                figure=figures_distribution.curtail,
+
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Storage",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_storage_action_chart",
+                                                figure=figures_distribution.storage,
+
+                                            )
+                                        ],
+                                    ),
+                                ]
                             ),
                         ],
                     ),
-                    html.Div(
-                        className="col-4",
-                        children=[
-                            html.H6(className="text-center", children="Redispatching"),
-                            dcc.Graph(
-                                id="distribution_redisp_action_chart",
-                                figure=figures_distribution.redisp,
-                            ),
-                        ],
-                    ),
+                    #html.Div(
+                    #    className="col-4",
+                    #    children=[
+                    #        html.H6(className="text-center", children="Redispatching"),
+                    #        dcc.Graph(
+                    #            id="distribution_redisp_action_chart",
+                    #            figure=figures_distribution.redisp,
+                    #        ),
+                    #    ],
+                    #),
                 ],
             ),
         ],
@@ -447,7 +501,7 @@ def get_table(episode):
 
 
 ActionsDistribution = namedtuple(
-    "ActionsDistribution", ["on_subs", "on_lines", "redisp"]
+    "ActionsDistribution", ["on_subs", "on_lines", "redisp","curtail","storage"]
 )
 
 
@@ -492,13 +546,46 @@ def action_distrubtion(episode, ref_episode):
         if max(map(max_or_zero, [trace.y for trace in actions_redisp])) > y_max:
             y_max = max(map(max_or_zero, [trace.y for trace in actions_redisp])) + 1
 
+    ###########
+    actions_curtail = actions_model.get_action_curtail(episode)
+    actions_curtail.append(actions_model.get_action_curtail(ref_episode)[0])
+
+    if len(actions_curtail[0]["y"]) == 0:
+        figure_curtail = go.Figure(
+            layout=layout_no_data("No curtailment actions for this Agent")
+        )
+    else:
+        figure_curtail = go.Figure(layout=layout_def, data=actions_curtail)
+        if y_max is None:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_curtail])) + 1
+        if max(map(max_or_zero, [trace.y for trace in actions_curtail])) > y_max:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_curtail])) + 1
+
+    ###
+    actions_storage = actions_model.get_action_storage(episode)
+    actions_storage.append(actions_model.get_action_storage(ref_episode)[0])
+
+    if len(actions_curtail[0]["y"]) == 0:
+        figure_storage = go.Figure(
+            layout=layout_no_data("No storage actions for this Agent")
+        )
+    else:
+        figure_storage = go.Figure(layout=layout_def, data=actions_storage)
+        if y_max is None:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_storage])) + 1
+        if max(map(max_or_zero, [trace.y for trace in actions_storage])) > y_max:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_storage])) + 1
+
+
     if y_max:
         figure_subs.update_yaxes(range=[0, y_max])
         figure_lines.update_yaxes(range=[0, y_max])
         figure_redisp.update_yaxes(range=[0, y_max])
+        figure_curtail.update_yaxes(range=[0, y_max])
+        figure_storage.update_yaxes(range=[0, y_max])
 
     return ActionsDistribution(
-        on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp
+        on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp,curtail=figure_curtail,storage=figure_storage
     )
 
 
