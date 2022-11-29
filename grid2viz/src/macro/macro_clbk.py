@@ -151,7 +151,7 @@ def register_callbacks_macro(app):
     def action_repartition_pie(episode):
 
         actions_table = episode.action_data_table[
-            ["action_line", "action_subs", "action_redisp", "action_curtail"]
+            ["action_line", "action_subs", "action_redisp", "action_curtail","action_storage"]
         ]
         nb_actions = (actions_table > 0).sum()
 
@@ -166,13 +166,15 @@ def register_callbacks_macro(app):
                             "Actions on Lines",
                             "Actions on Substations",
                             "Redispatching Actions",
-                            "Curtailment Actions"
+                            "Curtailment Actions",
+                            "Storage Actions"
                         ],
                         values=[
                             nb_actions["action_line"],
                             nb_actions["action_subs"],
                             nb_actions["action_redisp"],
-                            nb_actions["action_curtail"]
+                            nb_actions["action_curtail"],
+                            nb_actions["action_storage"]
                         ],
                         sort=False
                     )
@@ -309,12 +311,15 @@ def register_callbacks_macro(app):
         action_subs="Action on sub",
         action_redisp="Action of redispatch",
         action_curtail="Action of curtailment",
+        action_storage="Action of storage",
         redisp_impact="Redispatch impact",
         curtail_impact="Curtailment impact",
+        storage_impact="Storage impact",
         line_name="Line name",
         sub_name="Sub name",
         gen_name="Gen name",
         ren_name="Renewable plant name",
+        storage_name="Storage name",
         action_id="Action id",
         distance="Topological distance",
         is_alarm="is_alarm",
@@ -334,7 +339,8 @@ def register_callbacks_macro(app):
         table = actions_model.get_action_table_data(new_episode)
         table["id"] = table["timestep"]
         table.set_index("id", inplace=True, drop=False)
-        cols_to_exclude = ["id","gen_name","ren_name", "lines_modified", "subs_modified", "gens_modified","gens_modified","rens_modified","is_action"]
+        cols_to_exclude = ["id","gen_name","ren_name","storage_name",
+                           "lines_modified", "subs_modified", "gens_modified","rens_modified","storages_modified","is_action"]
         cols = [
             {"name": action_table_name_converter[col], "id": col}
             for col in table.columns
