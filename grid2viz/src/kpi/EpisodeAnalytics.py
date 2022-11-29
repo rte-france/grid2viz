@@ -156,8 +156,8 @@ class EpisodeAnalytics:
                 "action_line",
                 "action_subs",
                 "action_redisp",
-                "action_storage",
                 "action_curtail",
+                "action_storage",
                 "redisp_impact",
                 "curtail_impact",
                 "storage_impact",
@@ -877,7 +877,7 @@ class EpisodeAnalytics:
         if "storage_power" in action_dict:
             n_storage_modified = (action_dict["storage_power"] != 0).sum()
             storage_modified_ids = np.where(action_dict["storage_power"] != 0)[0]
-            storage_modified_names = action.name_gen[storage_modified_ids]
+            storage_modified_names = action.name_storage[storage_modified_ids]
 
             volume_stored = round(
                     (action._storage_power-observation.storage_power).sum()
