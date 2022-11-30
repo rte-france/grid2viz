@@ -41,7 +41,8 @@ def register_callbacks_macro(app):
             Output("cumulated_rewards_timeserie", "figure"),
             Output("overflow_graph_study", "figure"),
             Output("usage_rate_graph_study", "figure"),
-            Output("action_timeserie", "figure"),
+            Output("action_topology_timeserie", "figure"),
+            Output("action_dispatch_timeserie", "figure"),
         ],
         [
             Input("agent_study", "modified_timestamp"),
@@ -54,7 +55,8 @@ def register_callbacks_macro(app):
             State("cumulated_rewards_timeserie", "figure"),
             State("overflow_graph_study", "figure"),
             State("usage_rate_graph_study", "figure"),
-            State("action_timeserie", "figure"),
+            State("action_topology_timeserie", "figure"),
+            State("action_dispatch_timeserie", "figure"),
             State("scenario", "data"),
             State("agent_study", "data"),
             State("relayoutStoreMacro", "modified_timestamp"),
@@ -69,7 +71,8 @@ def register_callbacks_macro(app):
         cumrew_figure,
         overflow_figure,
         usage_rate_figure,
-        actions_figure,
+        actions_topology_figure,
+        actions_dispatch_figure,
         scenario,
         study_agent,
         relayoutStoreMacro_ts,
@@ -83,7 +86,8 @@ def register_callbacks_macro(app):
             cumrew_figure,
             overflow_figure,
             usage_rate_figure,
-            actions_figure,
+            actions_topology_figure,
+            actions_dispatch_figure
         ]
 
         episode = make_episode(study_agent, scenario)
@@ -122,8 +126,8 @@ def register_callbacks_macro(app):
 
         usage_rate_figure["data"] = episode.usage_rate_trace
 
-        new_action_fig = make_action_ts(
-            study_agent, ref_agent, scenario, actions_figure["layout"]
+        new_topology_action_fig,new_dispatch_action_fig = make_action_ts(
+            study_agent, ref_agent, scenario, actions_topology_figure["layout"],actions_dispatch_figure
         )
 
         return (
@@ -131,7 +135,8 @@ def register_callbacks_macro(app):
             new_cumreward_fig,
             overflow_figure,
             usage_rate_figure,
-            new_action_fig,
+            new_topology_action_fig,
+            new_dispatch_action_fig
         )
 
     @app.callback(

@@ -370,22 +370,59 @@ def overview_line(timestamps=None, from_scenario_selection=True):
                             html.Div(
                                 className="row",
                                 children=[
+
                                     html.Div(
                                         className="col-6",
                                         children=[
                                             html.H6(
                                                 className="text-center",
-                                                children="Distance from reference grid configuration",
+                                                children="Distance from reference configuration",
                                             ),
-                                            dcc.Graph(
-                                                id="action_timeserie",
-                                                figure=go.Figure(
-                                                    layout=layout_def,
-                                                    data=[dict(type="scatter")],
-                                                ),
+                                            dbc.Tabs(
+                                                children=[
+                                                    dbc.Tab(
+                                                        label="Topology",
+                                                        children=[
+                                                            dcc.Graph(
+                                                                id="action_topology_timeserie",
+                                                                figure=go.Figure(
+                                                                    layout=layout_def,
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    dbc.Tab(
+                                                        label="Dispatch",
+                                                        children=[
+                                                            dcc.Graph(
+                                                                id="action_dispatch_timeserie",
+                                                                figure=go.Figure(
+                                                                    layout=layout_def,
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                             ),
                                         ],
                                     ),
+
+                                    #html.Div(
+                                    #    className="col-6",
+                                    #    children=[
+                                    #        html.H6(
+                                    #            className="text-center",
+                                    #            children="Distance from reference configuration",
+                                    #        ),
+                                    #        dcc.Graph(
+                                    #            id="action_timeserie",#action_topology_timeserie,action_dispatch_timeserie
+                                    #            figure=go.Figure(
+                                    #                layout=layout_def,
+                                    #                data=[dict(type="scatter")],
+                                    #            ),
+                                    #        ),
+                                    #    ],
+                                    #),
                                     html.Div(
                                         className="col-6",
                                         children=[

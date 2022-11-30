@@ -809,20 +809,28 @@ class EpisodeAnalytics:
         n_gens_modified = 0
         gens_modified_ids = []
         gens_modified_names = []
+        volume_redispatched=round(observation.actual_dispatch.sum(),2)
         if "redispatch" in action_dict:
             n_gens_modified = (action_dict["redispatch"] != 0).sum()
             gens_modified_ids = np.where(action_dict["redispatch"] != 0)[0]
             gens_modified_names = action.name_gen[gens_modified_ids]
 
+            #idx_redispathed=list(np.where(observation.target_dispatch > 0.0))
+            #if(len(idx_redispathed))!=0:
+            #    volume_redispatched = round(
+            #        # np.absolute(
+            #        # actual_dispatch_previous_ts[gens_modified_previous_time_step].sum()-
+            #        # observation.actual_dispatch[gens_modified_ids].sum(),
+            #        # ).sum(),
+            #        #action_dict["redispatch"].sum(),#+actual_dispatch_previous_ts.sum(),  # -
+            #        observation.actual_dispatch[idx_redispathed].sum(),
+            #        #observation.actual_dispatch.sum(),
+            #        2,
+            #    )
+
         str_gens_modified = " - ".join(gens_modified_names)
 
-        volume_redispatched = round(
-            np.absolute(
-                observation.actual_dispatch[gens_modified_previous_time_step]
-                - actual_dispatch_previous_ts[gens_modified_previous_time_step]
-            ).sum(),
-            2,
-        )
+
 
         return (
             n_gens_modified,
@@ -841,18 +849,21 @@ class EpisodeAnalytics:
         n_ren_modified = 0
         ren_modified_names = []
         ren_modified_ids = []
-        volume_curtailed=0
+        volume_curtailed=observation.curtailment_mw.sum()
         if "curtailment" in action_dict:
-            n_ren_modified = (action_dict["curtailment"] != 0).sum()
-            ren_modified_ids = np.where(action_dict["curtailment"] != 0)[0]
+            n_ren_modified = (action_dict["curtailment"] >0.001).sum()
+            ren_modified_ids = np.where(action_dict["curtailment"] >0.001)[0]
             ren_modified_names = action.name_gen[ren_modified_ids]
 
-            volume_curtailed = round(
-                np.absolute(
-                    observation.curtailment_mw.sum() - action_dict["curtailment"].sum()
-                ),
-                2,
-            )
+            #volume_curtailed = round(
+            #    #action_dict["curtailment"].sum(),
+            #    observation.curtailment_mw.sum(),
+            #    #action.curtail_mw.sum(),
+            #    #np.absolute(
+            #    #    action_dict["curtailment"].sum(),#-observation.curtailment_mw.sum(),
+            #    #),
+            #    2,
+            #)
 
         str_ren_modified = " - ".join(ren_modified_names)
 
@@ -873,17 +884,17 @@ class EpisodeAnalytics:
         n_storage_modified = 0
         storage_modified_names = []
         storage_modified_ids = []
-        volume_stored=0
+        volume_stored=observation.storage_power.sum()
         if "storage_power" in action_dict:
             n_storage_modified = (action_dict["storage_power"] != 0).sum()
             storage_modified_ids = np.where(action_dict["storage_power"] != 0)[0]
             storage_modified_names = action.name_storage[storage_modified_ids]
 
-            volume_stored = round(
-                    (action._storage_power-observation.storage_power).sum()
-                ,
-                2,
-            )
+            #volume_stored = round(
+            #        observation.storage_power.sum(),#action_dict["storage_power"].sum()#-observation.storage_power).sum()
+#
+            #    2,
+            #)
 
         str_storage_modified = " - ".join(storage_modified_names)
 
