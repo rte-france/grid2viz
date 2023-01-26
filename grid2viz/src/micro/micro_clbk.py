@@ -135,7 +135,8 @@ def register_callbacks_micro(app):
             Input("overflow_ts", "relayoutData"),
             Input("rewards_ts", "relayoutData"),
             Input("cumulated_rewards_ts", "relayoutData"),
-            Input("actions_ts", "relayoutData"),
+            Input("action_topology_ts", "relayoutData"),
+            Input("action_dispatch_ts", "relayoutData"),
             Input("voltage_flow_graph", "relayoutData"),
         ],
         [State("relayoutStoreMicro", "data")],
@@ -148,7 +149,8 @@ def register_callbacks_micro(app):
         [
             Output("rewards_ts", "figure"),
             Output("cumulated_rewards_ts", "figure"),
-            Output("actions_ts", "figure"),
+            Output("action_topology_ts", "figure"),
+            Output("action_dispatch_ts", "figure"),
         ],
         [
             Input("relayoutStoreMicro", "data"),
@@ -158,7 +160,8 @@ def register_callbacks_micro(app):
         [
             State("rewards_ts", "figure"),
             State("cumulated_rewards_ts", "figure"),
-            State("actions_ts", "figure"),
+            State("action_topology_ts", "figure"),
+            State("action_dispatch_ts", "figure"),
             State("agent_ref", "data"),
             State("scenario", "data"),
         ],
@@ -169,12 +172,13 @@ def register_callbacks_micro(app):
         study_agent,
         rew_figure,
         cumrew_figure,
-        actions_figure,
+        topology_action_fig,
+        dispatch_action_fig,
         agent_ref,
         scenario,
     ):
 
-        figures = [rew_figure, cumrew_figure, actions_figure]
+        figures = [rew_figure, cumrew_figure, topology_action_fig,dispatch_action_fig]
 
         condition = (
             relayout_data_store is not None and relayout_data_store["relayout_data"]
@@ -194,11 +198,11 @@ def register_callbacks_micro(app):
             study_agent, agent_ref, scenario, rew_figure, cumrew_figure
         )
 
-        actions_figure = common_graph.make_action_ts(
-            study_agent, agent_ref, scenario, actions_figure["layout"]
+        new_topology_action_fig,new_dispatch_action_fig = common_graph.make_action_ts(
+            study_agent, agent_ref, scenario, topology_action_fig["layout"]
         )
-
-        figures = [rew_figure, cumrew_figure, actions_figure]
+        #TO DO
+        figures = [rew_figure, cumrew_figure, new_topology_action_fig,new_dispatch_action_fig]
 
         if window is not None:
             start_datetime = dt.datetime.strptime(window[0], "%Y-%m-%dT%H:%M:%S")
@@ -476,20 +480,24 @@ def register_callbacks_micro(app):
 
     @app.callback(
         [
-            Output("card-content", "children"),
+            #Output("card-content", "children"),
+            Output("interactive_graph", "figure"),
             Output("tooltip_table_micro", "children"),
             Output("slider","disabled"),
             Output("my-toggle-switch", "disabled"),
         ],
-        [Input("slider", "value"), Input("card-tabs", "active_tab")],
+        [Input("slider", "value"), Input("card-tabs", "active_tab")],Input("my-toggle-switch", "off"),
         [
+
             State("agent_study", "data"),
             State("scenario", "data"),
             State("agent_ref", "data"),
+            State("interactive_graph", "figure"),
+            #State("card-content", "children"),
         ],
     )
     def update_interactive_graph(
-        slider_value, active_tab, agent_study, scenario, agent_ref
+        slider_value, active_tab,Power_Button_off, agent_study, scenario, agent_ref,current_network_fig,#,card_content#,
     ):
         episode = make_episode(
             agent_study if active_tab == "tab-0" else agent_ref, scenario
@@ -512,15 +520,20 @@ def register_callbacks_micro(app):
                 disabled_Slider,
                 disabled_Power_Button
             )
-
+        #current_network_fig=None#card_content[0]['props']['figure']#None
+        if(current_network_fig):
+            print("fig here")
         disabled_Power_Button = False
         disabled_Slider = False
+        redraw_full_graph = not bool(Power_Button_off)
         if any(act.get_types()):
             act_as_str = str(act)
         else:
             act_as_str = "NO ACTION"
         return (
-            dcc.Graph(figure=make_network_agent_study(episode, timestep=slider_value)),
+            #dcc.Graph(figure=make_network_agent_study(episode, timestep=slider_value,figure_obs=current_network_fig)),
+            #yes in case the power button is turned off
+            make_network_agent_study(episode, timestep=slider_value, figure_obs=current_network_fig,redraw=redraw_full_graph),
             act_as_str,
             disabled_Slider,
             disabled_Power_Button

@@ -71,18 +71,42 @@ def indicator_line():
                             ),
                         ],
                     ),
+                    #html.Div(
+                    #    className="row",
+                    #    children=[
+
                     html.Div(
                         className="col-6",
                         children=[
                             html.H6(
                                 className="text-center",
-                                children="Distance from reference grid configuration",
+                                children="Distance from reference configuration",
                             ),
-                            dcc.Graph(
-                                id="actions_ts",
-                                figure=go.Figure(
-                                    layout=layout_def, data=[dict(type="scatter")]
-                                ),
+                            dbc.Tabs(
+                                children=[
+                                    dbc.Tab(
+                                        label="Topology",
+                                        children=[
+                                            dcc.Graph(
+                                                id="action_topology_ts",
+                                                figure=go.Figure(
+                                                    layout=layout_def,
+                                                ),
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Dispatch",
+                                        children=[
+                                            dcc.Graph(
+                                                id="action_dispatch_ts",#"action_dispatch_timeserie",
+                                                figure=go.Figure(
+                                                    layout=layout_def,
+                                                ),
+                                            )
+                                        ],
+                                    ),
+                                ],
                             ),
                         ],
                     ),
@@ -111,7 +135,7 @@ def card_for_network_graphs(network_graph):
                 children=[
                     dcc.Graph(
                         id="interactive_graph",
-                        figure=dict(dict(data=network_graph["data"],layout=network_graph["layout"])),#network_graph,
+                        figure=network_graph,#dict(dict(data=network_graph["data"],layout=network_graph["layout"])),#network_graph,
                     ),
                     #dcc.Interval(id='auto-stepper', interval=1000, n_intervals=0),
                     #dcc.Store(id='offset', data=0), dcc.Store(id='store', data=network_graph["data"])
