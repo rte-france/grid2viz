@@ -114,7 +114,7 @@ def make_network(episode, responsive=True):
     return graph
 
 
-def make_network_matplotlib(episode):
+def make_network_matplotlib(episode,timestep=0):
     global graph_matplotlib
     if graph_matplotlib is None:
         graph_matplotlib = PlotMatplot(
@@ -130,17 +130,96 @@ def make_network_matplotlib(episode):
 ######
 # we want a non responsive graph for now in agent_study
 # so we have to define it differently from the global graph in make_network that we don't use here
-def make_network_agent_study(episode, timestep, responsive=False):
+import base64
+import io
+def make_network_agent_study(episode, timestep, figure_obs=None, responsive=False,redraw=False):
     # subs_on_bus_2 = np.repeat(False, episode_data.observations[0].n_sub)
-    graph = PlotPlotly(
-        grid_layout=episode.observation_space.grid_layout,
-        observation_space=episode.observation_space,
-        responsive=responsive,
-    )
+    #graph=None
+    #if(isMatplotLib):########not working for now. Was trying to use matplotlib to accelerate ploting time
+     #   buf = io.BytesIO()
+     #   make_network_scenario_overview(episode,timestep=timestep)
+#
+#
+     #   # plt.figure(network_graph.number)
+     #   # plt.close(fig)
+     #   plt.savefig(buf, format="png")
+     #   buf.seek(0)
+     #   #encoded_image = base64.b64encode(buf.read())
+#
+     #   #fig=encoded_image.decode()
+     #   data = base64.b64encode(buf.getbuffer()).decode("utf8")  # encode to html elements
+     #   buf.close()
+     #   return "data:image/png;base64,{}".format(data)
+
+    observation=episode.observations[timestep]
+
+    graph=make_network(episode, responsive)
     graph._sub_radius = 30  # instead of 25 by default
     graph._bus_radius = 10  # instead of 4 by default
+    if(figure_obs)and not redraw:# don't redraw it from scratch, just change what is needed
 
-    fig = graph.plot_obs(episode.observations[timestep])
+        import plotly.colors as pc
+        data_fig=figure_obs["data"]#go.Figure(figure_obs)
+
+        rho_lines=observation.rho
+        n_lines=len(rho_lines)
+
+        id_line=0
+        i_traces=0
+        previous_trace=None
+        while id_line<n_lines:
+            trace=data_fig[i_traces]
+
+            if "line" in trace.keys():#update line color
+                color_scheme = (
+                        pc.sequential.Blues_r[:4]
+                        + pc.sequential.Oranges[4:6]
+                        + pc.sequential.Reds[-3:-1]
+                )
+                rho=rho_lines[id_line]
+                capacity = np.clip(rho, 0.0, 1.0)
+                color = color_scheme[int(capacity * float(len(color_scheme) - 1))]
+                trace["line"]['color']=str(color)
+                if(previous_trace) and ("text" in previous_trace.keys()):
+                    previous_trace["text"]=[str(np.round(rho*100,2))+" %"]
+
+                id_line+=1
+            i_traces+=1
+            previous_trace=trace
+
+        #remove contextual trace such as color sub for specific topology and alarm zone
+
+        #remove alarm first
+        n_traces=len(data_fig)-1
+        for i_traces in range(n_traces,-1,-1):
+            trace = data_fig[i_traces]
+            if "fill" in trace.keys():
+                data_fig.pop(i_traces)
+            elif "sub" in str(trace["text"]):
+                break
+
+        #update topology traces at substations
+        n_traces=len(data_fig)-1
+        for i_traces in range(n_traces,-1,-1):
+            trace = data_fig[i_traces]
+            if "sub" in str(trace["text"]):
+                if "marker" in trace.keys():
+                    if trace["marker"]["color"]!='PaleTurquoise':
+                        data_fig.pop(i_traces)
+                    else:
+                        break
+
+        fig=go.Figure(figure_obs)
+
+    else:
+        #if graph is None:
+        #    graph = PlotPlotly(
+        #        grid_layout=episode.observation_space.grid_layout,
+        #        observation_space=episode.observation_space,
+        #        responsive=responsive,
+        #    )
+        fig = graph.plot_obs(episode.observations[timestep])#,redraw=redraw,figure=figure_obs)
+
 
     ##########
     # We color subs where we had actions
@@ -151,7 +230,7 @@ def make_network_agent_study(episode, timestep, responsive=False):
         int(str.split("_")[1])
         for str in episode.action_data_table.subs_modified[timestep]
     ]
-    fig = add_substation_color_plotly(sub_id_modified, graph, fig)
+    fig = add_substation_color_plotly(sub_id_modified, graph,fig)
 
     # coloring subs not in reference topologie
     nb_bus_subs = [
@@ -245,7 +324,7 @@ def make_network_agent_overview(episode):
     return fig
 
 
-def make_network_scenario_overview(episode):
+def make_network_scenario_overview(episode,timestep=0):
     max_loads = (
         episode.load[["value", "equipement_id"]]
         .groupby("equipement_id")
@@ -268,7 +347,7 @@ def make_network_scenario_overview(episode):
     # we will use plot_obs instead of plot_info for now
     ####
     # For that we override an observation with the desired values
-    obs_colored = episode.observations[0]
+    obs_colored = episode.observations[timestep]
 
     # having a rho with value 0.1 give us a blue line while 0.5 gives us an orange line
     # line in maintenance would display as dashed lines
@@ -418,6 +497,7 @@ def get_from_fs_cache(episode_name, agent):
 
         with gzip.open(path + ".bz", "rb") as f:
             # with zipfile.ZipFile.open(path + ".zip") as f:
+            print(path)
             episode_analytics=pickle.load(f)
     else:
         with open(path, "rb") as f:
