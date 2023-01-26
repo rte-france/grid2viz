@@ -234,7 +234,7 @@ def make_action_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"
     else:# (graph_type=="Topology")
         action_events_df=topology_trace_event_df(study_action_df, col="is_action")
 
-    action_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
+    action_text = ["<br>-".join(str(act).split("-"))[0:800] for act in agent_episode.actions]
 
     marker_type="Actions"
     action_trace=make_marker_trace(action_events_df.iloc[:max_ts],marker_name=agent_name+" "+marker_type,
@@ -243,21 +243,21 @@ def make_action_trace( agent_name,agent_episode,max_ts,color,graph_type="Reward"
     return action_trace
 
 
-    actions_ts = get_actions_sum(agent_episode)
-
-    action_events_df = pd.DataFrame(
-        index=actions_ts.index, data=np.nan, columns=["action_events"]
-    )
-    action_events_df.loc[
-        (actions_ts["Nb Actions"] > 0).values, "action_events"
-    ] = agent_episode.action_data_table.loc[
-        (actions_ts["Nb Actions"] > 0).values, "distance"
-    ].values
-    study_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
-
-    action_trace = make_marker_trace(action_events_df.iloc[:max_ts], marker_name=agent_name + " "+marker_type,
-                                     color=color, text=study_text[:max_ts])
-    return action_trace
+    #actions_ts = get_actions_sum(agent_episode)
+#
+    #action_events_df = pd.DataFrame(
+    #    index=actions_ts.index, data=np.nan, columns=["action_events"]
+    #)
+    #action_events_df.loc[
+    #    (actions_ts["Nb Actions"] > 0).values, "action_events"
+    #] = agent_episode.action_data_table.loc[
+    #    (actions_ts["Nb Actions"] > 0).values, "distance"
+    #].values
+    #study_text = ["<br>-".join(str(act).split("-")) for act in agent_episode.actions]
+#
+    #action_trace = make_marker_trace(action_events_df.iloc[:max_ts], marker_name=agent_name + " "+marker_type,
+    #                                 color=color, text=study_text[:max_ts])
+    #return action_trace
 
 def reward_trace_event_df(agent_episode,col="is_action"):#else is_alarm
     df = observation_model.get_df_computed_reward(agent_episode)
@@ -351,7 +351,7 @@ def make_marker_trace( events_df,marker_name,color,text):
     return event_trace
 
 
-def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
+def make_action_ts(study_agent, ref_agent, scenario, layout_topology_def=None,layout_dispatch_def=None):
     """
     Make the action timeseries trace of study and reference agents.
 
@@ -386,35 +386,87 @@ def make_action_ts(study_agent, ref_agent, scenario, layout_def=None):
     ref_alarm_trace=make_alarm_trace( ref_agent,ref_episode,max_ts,"purple",graph_type="Topology")
 
 
-    distance_trace = go.Scatter(
+    topology_distance_trace = go.Scatter(
         x=study_action_df.timestamp,
         y=study_action_df["distance"],
         name=study_agent,
     )
 
-    ref_distance_trace = go.Scatter(
+    ref_topology_distance_trace = go.Scatter(
         x=ref_action_df.timestamp[:max_ts],
         y=ref_action_df["distance"][:max_ts],
         name=ref_agent,
     )
 
-    layout_def.update(xaxis=dict(range=[distance_trace.x[0], distance_trace.x[-1]]))
+    layout_topology_def.update(xaxis=dict(range=[topology_distance_trace.x[0], topology_distance_trace.x[-1]]))
 
-    figure = {
+    figure_topology = {
         "data": [
-            distance_trace,
+            topology_distance_trace,
             action_trace,
-            ref_distance_trace,
+            ref_topology_distance_trace,
             ref_action_trace,
         ],
-        "layout": layout_def,
+        "layout": layout_topology_def,
     }
 
     if alarm_trace is not None:
-        figure["data"].append(alarm_trace)
-        figure["data"].append(ref_alarm_trace)
+        figure_topology["data"].append(alarm_trace)
+        figure_topology["data"].append(ref_alarm_trace)
 
-    return figure
+    #####################
+    dispatch_distance_trace = go.Scatter(
+        x=study_action_df.timestamp,
+        y=study_action_df["redisp_impact"],#.cumsum(),#cumulative redispatchinh over time
+        name=study_agent+"dispatch",
+    )
+
+    curtail_distance_trace = go.Scatter(
+        x=study_action_df.timestamp,
+        y=study_action_df["curtail_impact"],#.cumsum(),
+        name=study_agent+"curtail",
+    )
+
+    storage_distance_trace = go.Scatter(
+        x=study_action_df.timestamp,
+        y=study_action_df["storage_impact"],  # .cumsum(),#cumulative redispatchinh over time
+        name=study_agent+"storage",
+    )
+
+    ref_dispatch_distance_trace = go.Scatter(
+        x=ref_action_df.timestamp,
+        y=ref_action_df["redisp_impact"],#.cumsum(),#cumulative redispatchinh over time
+        name=ref_agent+"dispatch",
+    )
+
+    ref_curtail_distance_trace = go.Scatter(
+        x=ref_action_df.timestamp,
+        y=ref_action_df["curtail_impact"],#.cumsum(),
+        name=ref_agent+"curtail",
+    )
+
+    ref_storage_distance_trace = go.Scatter(
+        x=ref_action_df.timestamp,
+        y=ref_action_df["storage_impact"],#.cumsum(),#cumulative redispatchinh over time
+        name=ref_agent+"storage",
+    )
+
+    #layout_dispatch_def.update(xaxis=dict(range=[dispatch_distance_trace.x[0], dispatch_distance_trace.x[-1]]))
+    figure_dispatch = {
+        "data": [
+            dispatch_distance_trace,
+            curtail_distance_trace,
+            storage_distance_trace,
+            action_trace,
+            ref_dispatch_distance_trace,
+            ref_curtail_distance_trace,
+            ref_storage_distance_trace,
+            ref_action_trace
+        ],
+        "layout": layout_topology_def,
+    }
+
+    return figure_topology,figure_dispatch
 
 
 def make_rewards_ts(

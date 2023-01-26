@@ -36,19 +36,32 @@ class ActionImpacts:
         action_line,
         action_subs,
         action_redisp,
+        action_curtail,
+        action_storage,
         redisp_impact,
+        curtail_impact,
+        storage_impact,
         line_name,
         sub_name,
         gen_name,
+        ren_name,
+        storage_name,
         action_id,
     ):
+
         self.action_line = action_line
         self.action_subs = action_subs
         self.action_redisp = action_redisp
+        self.action_curtail=action_curtail
+        self.action_storage = action_storage
         self.redisp_impact = redisp_impact
+        self.curtail_impact=curtail_impact
+        self.storage_impact = storage_impact
         self.line_name = line_name
         self.sub_name = sub_name
         self.gen_name = gen_name
+        self.ren_name = ren_name
+        self.storage_name = storage_name
         self.action_id = action_id
 
 
@@ -138,43 +151,34 @@ class EpisodeAnalytics:
 
         rho = pd.DataFrame(index=range(rho_size), columns=["value"])
 
-        cols_loop_action_data_table = [
-            "action_line",
-            "action_subs",
-            "action_redisp",
-            "redisp_impact",
-            "line_name",
-            "sub_name",
-            "gen_name",
-            "action_id",
-            "distance",
-            "lines_modified",
-            "subs_modified",
-            "gens_modified",
-            "is_alarm",
-            "alarm_zone"
-        ]
-        action_data_table = pd.DataFrame(
-            index=range(size),
-            columns=[
-                "timestep",
-                "timestamp",
-                "timestep_reward",
+        cols_loop_action_data_table =[
+                "action_id",
                 "action_line",
                 "action_subs",
                 "action_redisp",
+                "action_curtail",
+                "action_storage",
                 "redisp_impact",
+                "curtail_impact",
+                "storage_impact",
                 "line_name",
                 "sub_name",
                 "gen_name",
-                "action_id",
+                "ren_name",
+                "storage_name",
                 "distance",
                 "lines_modified",
                 "subs_modified",
-                "gens_modified",
                 "is_alarm",
-                "alarm_zone"
-            ],
+                "alarm_zone",
+                "gens_modified",
+                "rens_modified",
+                "storages_modified"
+            ]
+        action_data_table = pd.DataFrame(
+            index=range(size),
+            columns=["timestep","timestamp","timestep_reward"] + cols_loop_action_data_table
+ ,
         )
 
         computed_rewards = pd.DataFrame(
@@ -238,6 +242,11 @@ class EpisodeAnalytics:
                 subs_modified,
                 gens_modified_names,
                 gens_modified_ids,
+                ren_modified_names,
+                ren_modified_ids,
+                storage_modified_names,
+                storage_modified_ids
+
             ) = self.compute_action_impacts(
                 act, list_actions, obs, gens_modified_ids, actual_redispatch_previous_ts
             )
@@ -278,21 +287,30 @@ class EpisodeAnalytics:
             )
 
             action_data_table.loc[pos, cols_loop_action_data_table] = [
+                action_impacts.action_id,
                 action_impacts.action_line,
                 action_impacts.action_subs,
                 action_impacts.action_redisp,
+                action_impacts.action_curtail,
+                action_impacts.action_storage,
                 action_impacts.redisp_impact,
+                action_impacts.curtail_impact,
+                action_impacts.storage_impact,
                 action_impacts.line_name,
                 action_impacts.sub_name,
                 action_impacts.gen_name,
-                action_impacts.action_id,
+                action_impacts.ren_name,
+                action_impacts.storage_name,
                 distance,
                 lines_modified,
                 subs_modified,
-                gens_modified_names,
                 is_alarm,
-                alarm_zone
+                alarm_zone,
+                gens_modified_names,
+                ren_modified_names,
+                storage_modified_names
             ]
+
 
             flow_voltage_line_table.loc[time_step, :] = np.array(
                 [
@@ -649,6 +667,29 @@ class EpisodeAnalytics:
             action, observation, gens_modified_ids, actual_dispatch_previous_ts
         )
 
+        (
+            n_ren_modified,
+            str_ren_modified,
+            ren_modified_names,
+            ren_modified_ids,
+            volume_curtailed,
+        ) = self.get_curtailment_modifications(
+            action, observation
+        )
+
+        (
+            n_storage_modified,
+            str_storage_modified,
+            storage_modified_names,
+            storage_modified_ids,
+            volume_stored,
+
+        ) = self.get_storage_modifications(
+            action,
+            observation
+        )
+
+
         action_id, list_actions = self.get_action_id(action, list_actions)
 
         return (
@@ -656,10 +697,16 @@ class EpisodeAnalytics:
                 action_line=n_lines_modified,
                 action_subs=n_subs_modified,
                 action_redisp=n_gens_modified,
+                action_curtail=n_ren_modified,
+                action_storage=n_storage_modified,
                 redisp_impact=redisp_volume,
+                curtail_impact=volume_curtailed,
+                storage_impact=volume_stored,
                 line_name=str_lines_modified,
                 sub_name=str_subs_modified,
                 gen_name=str_gens_modified,
+                ren_name=str_ren_modified,
+                storage_name=str_storage_modified,
                 action_id=action_id,
             ),
             list_actions,
@@ -667,6 +714,10 @@ class EpisodeAnalytics:
             subs_modified,
             gens_modified_names,
             gens_modified_ids,
+            ren_modified_names,
+            ren_modified_ids,
+            storage_modified_names,
+            storage_modified_ids
         )
 
     def get_lines_modifications(self, action):
@@ -758,20 +809,28 @@ class EpisodeAnalytics:
         n_gens_modified = 0
         gens_modified_ids = []
         gens_modified_names = []
+        volume_redispatched=round(observation.actual_dispatch.sum(),2)
         if "redispatch" in action_dict:
             n_gens_modified = (action_dict["redispatch"] != 0).sum()
             gens_modified_ids = np.where(action_dict["redispatch"] != 0)[0]
             gens_modified_names = action.name_gen[gens_modified_ids]
 
+            #idx_redispathed=list(np.where(observation.target_dispatch > 0.0))
+            #if(len(idx_redispathed))!=0:
+            #    volume_redispatched = round(
+            #        # np.absolute(
+            #        # actual_dispatch_previous_ts[gens_modified_previous_time_step].sum()-
+            #        # observation.actual_dispatch[gens_modified_ids].sum(),
+            #        # ).sum(),
+            #        #action_dict["redispatch"].sum(),#+actual_dispatch_previous_ts.sum(),  # -
+            #        observation.actual_dispatch[idx_redispathed].sum(),
+            #        #observation.actual_dispatch.sum(),
+            #        2,
+            #    )
+
         str_gens_modified = " - ".join(gens_modified_names)
 
-        volume_redispatched = round(
-            np.absolute(
-                observation.actual_dispatch[gens_modified_previous_time_step]
-                - actual_dispatch_previous_ts[gens_modified_previous_time_step]
-            ).sum(),
-            2,
-        )
+
 
         return (
             n_gens_modified,
@@ -780,6 +839,74 @@ class EpisodeAnalytics:
             gens_modified_ids,
             volume_redispatched,
         )
+
+    def get_curtailment_modifications(
+        self,
+        action,
+        observation
+    ):
+        action_dict = action.as_dict()
+        n_ren_modified = 0
+        ren_modified_names = []
+        ren_modified_ids = []
+        volume_curtailed=observation.curtailment_mw.sum()
+        if "curtailment" in action_dict:
+            n_ren_modified = (action_dict["curtailment"] >0.001).sum()
+            ren_modified_ids = np.where(action_dict["curtailment"] >0.001)[0]
+            ren_modified_names = action.name_gen[ren_modified_ids]
+
+            #volume_curtailed = round(
+            #    #action_dict["curtailment"].sum(),
+            #    observation.curtailment_mw.sum(),
+            #    #action.curtail_mw.sum(),
+            #    #np.absolute(
+            #    #    action_dict["curtailment"].sum(),#-observation.curtailment_mw.sum(),
+            #    #),
+            #    2,
+            #)
+
+        str_ren_modified = " - ".join(ren_modified_names)
+
+        return (
+            n_ren_modified,
+            str_ren_modified,
+            ren_modified_names,
+            ren_modified_ids,
+            volume_curtailed,
+        )
+
+    def get_storage_modifications(
+        self,
+        action,
+        observation
+    ):
+        action_dict = action.as_dict()
+        n_storage_modified = 0
+        storage_modified_names = []
+        storage_modified_ids = []
+        volume_stored=observation.storage_power.sum()
+        if "storage_power" in action_dict:
+            n_storage_modified = (action_dict["storage_power"] != 0).sum()
+            storage_modified_ids = np.where(action_dict["storage_power"] != 0)[0]
+            storage_modified_names = action.name_storage[storage_modified_ids]
+
+            #volume_stored = round(
+            #        observation.storage_power.sum(),#action_dict["storage_power"].sum()#-observation.storage_power).sum()
+#
+            #    2,
+            #)
+
+        str_storage_modified = " - ".join(storage_modified_names)
+
+        return (
+            n_storage_modified,
+            str_storage_modified,
+            storage_modified_names,
+            storage_modified_ids,
+            volume_stored,
+        )
+
+
 
     def get_subs_and_lines_impacted(self, action):
         line_impact, sub_impact = action.get_topological_impact()

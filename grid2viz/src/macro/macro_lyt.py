@@ -31,9 +31,10 @@ def indicator_line(scenario, study_agent, ref_agent):
 
     network_graph = make_network_agent_overview(episode)
 
-    nb_actions = episode.action_data_table[
-        ["action_line", "action_subs", "action_redisp"]
-    ].sum()
+    actions_table = episode.action_data_table[
+        ["action_line", "action_subs", "action_redisp","action_curtail"]
+    ]
+    nb_actions=(actions_table>0).sum()
 
     if nb_actions.sum() == 0:
         pie_figure = go.Figure(layout=layout_no_data("No Actions for this Agent"))
@@ -46,12 +47,15 @@ def indicator_line(scenario, study_agent, ref_agent):
                         "Actions on Lines",
                         "Actions on Substations",
                         "Redispatching Actions",
+                        "Curtailment Actions"
                     ],
                     values=[
                         nb_actions["action_line"],
                         nb_actions["action_subs"],
                         nb_actions["action_redisp"],
+                        nb_actions["action_curtail"]
                     ],
+                    sort=False,
                 )
             ],
         )
@@ -177,35 +181,89 @@ def indicator_line(scenario, study_agent, ref_agent):
                         ],
                     ),
                     html.Div(
-                        className="col-4",
+                        className="col-6",
                         children=[
-                            html.H6(className="text-center", children="On Substations"),
-                            dcc.Graph(
-                                id="distribution_substation_action_chart",
-                                figure=figures_distribution.on_subs,
+                            html.H6(
+                                className="text-center",
+                                children="Line & Substation Topology action distributions",
+                            ),
+                            dbc.Tabs(
+                                children=[
+                                    dbc.Tab(
+                                        label="Substation",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_substation_action_chart",
+                                                figure=figures_distribution.on_subs,
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Line",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_line_action_chart",
+                                                figure=figures_distribution.on_lines,
+
+                                            )
+                                        ],
+                                    ),
+                                ]
                             ),
                         ],
                     ),
                     html.Div(
-                        className="col-4",
+                        className="col-6",
                         children=[
-                            html.H6(className="text-center", children="On Lines"),
-                            dcc.Graph(
-                                id="distribution_line_action_chart",
-                                figure=figures_distribution.on_lines,
+                            html.H6(
+                                className="text-center",
+                                children="Redispatch & Curtailment & Storage action distributions",
+                            ),
+                            dbc.Tabs(
+                                children=[
+                                    dbc.Tab(
+                                        label="Redispatch",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_redisp_action_chart",
+                                                figure=figures_distribution.redisp,
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Curtailment",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_curtailement_action_chart",
+                                                figure=figures_distribution.curtail,
+
+                                            )
+                                        ],
+                                    ),
+                                    dbc.Tab(
+                                        label="Storage",
+                                        children=[
+                                            dcc.Graph(
+                                                id="distribution_storage_action_chart",
+                                                figure=figures_distribution.storage,
+
+                                            )
+                                        ],
+                                    ),
+                                ]
                             ),
                         ],
                     ),
-                    html.Div(
-                        className="col-4",
-                        children=[
-                            html.H6(className="text-center", children="Redispatching"),
-                            dcc.Graph(
-                                id="distribution_redisp_action_chart",
-                                figure=figures_distribution.redisp,
-                            ),
-                        ],
-                    ),
+                    #html.Div(
+                    #    className="col-4",
+                    #    children=[
+                    #        html.H6(className="text-center", children="Redispatching"),
+                    #        dcc.Graph(
+                    #            id="distribution_redisp_action_chart",
+                    #            figure=figures_distribution.redisp,
+                    #        ),
+                    #    ],
+                    #),
                 ],
             ),
         ],
@@ -312,22 +370,59 @@ def overview_line(timestamps=None, from_scenario_selection=True):
                             html.Div(
                                 className="row",
                                 children=[
+
                                     html.Div(
                                         className="col-6",
                                         children=[
                                             html.H6(
                                                 className="text-center",
-                                                children="Distance from reference grid configuration",
+                                                children="Distance from reference configuration",
                                             ),
-                                            dcc.Graph(
-                                                id="action_timeserie",
-                                                figure=go.Figure(
-                                                    layout=layout_def,
-                                                    data=[dict(type="scatter")],
-                                                ),
+                                            dbc.Tabs(
+                                                children=[
+                                                    dbc.Tab(
+                                                        label="Topology",
+                                                        children=[
+                                                            dcc.Graph(
+                                                                id="action_topology_timeserie",
+                                                                figure=go.Figure(
+                                                                    layout=layout_def,
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                    dbc.Tab(
+                                                        label="Dispatch",
+                                                        children=[
+                                                            dcc.Graph(
+                                                                id="action_dispatch_timeserie",
+                                                                figure=go.Figure(
+                                                                    layout=layout_def,
+                                                                ),
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
                                             ),
                                         ],
                                     ),
+
+                                    #html.Div(
+                                    #    className="col-6",
+                                    #    children=[
+                                    #        html.H6(
+                                    #            className="text-center",
+                                    #            children="Distance from reference configuration",
+                                    #        ),
+                                    #        dcc.Graph(
+                                    #            id="action_timeserie",#action_topology_timeserie,action_dispatch_timeserie
+                                    #            figure=go.Figure(
+                                    #                layout=layout_def,
+                                    #                data=[dict(type="scatter")],
+                                    #            ),
+                                    #        ),
+                                    #    ],
+                                    #),
                                     html.Div(
                                         className="col-6",
                                         children=[
@@ -443,7 +538,7 @@ def get_table(episode):
 
 
 ActionsDistribution = namedtuple(
-    "ActionsDistribution", ["on_subs", "on_lines", "redisp"]
+    "ActionsDistribution", ["on_subs", "on_lines", "redisp","curtail","storage"]
 )
 
 
@@ -488,13 +583,46 @@ def action_distrubtion(episode, ref_episode):
         if max(map(max_or_zero, [trace.y for trace in actions_redisp])) > y_max:
             y_max = max(map(max_or_zero, [trace.y for trace in actions_redisp])) + 1
 
+    ###########
+    actions_curtail = actions_model.get_action_curtail(episode)
+    actions_curtail.append(actions_model.get_action_curtail(ref_episode)[0])
+
+    if len(actions_curtail[0]["y"]) == 0:
+        figure_curtail = go.Figure(
+            layout=layout_no_data("No curtailment actions for this Agent")
+        )
+    else:
+        figure_curtail = go.Figure(layout=layout_def, data=actions_curtail)
+        if y_max is None:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_curtail])) + 1
+        if max(map(max_or_zero, [trace.y for trace in actions_curtail])) > y_max:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_curtail])) + 1
+
+    ###
+    actions_storage = actions_model.get_action_storage(episode)
+    actions_storage.append(actions_model.get_action_storage(ref_episode)[0])
+
+    if len(actions_curtail[0]["y"]) == 0:
+        figure_storage = go.Figure(
+            layout=layout_no_data("No storage actions for this Agent")
+        )
+    else:
+        figure_storage = go.Figure(layout=layout_def, data=actions_storage)
+        if y_max is None:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_storage])) + 1
+        if max(map(max_or_zero, [trace.y for trace in actions_storage])) > y_max:
+            y_max = max(map(max_or_zero, [trace.y for trace in actions_storage])) + 1
+
+
     if y_max:
         figure_subs.update_yaxes(range=[0, y_max])
         figure_lines.update_yaxes(range=[0, y_max])
         figure_redisp.update_yaxes(range=[0, y_max])
+        figure_curtail.update_yaxes(range=[0, y_max])
+        figure_storage.update_yaxes(range=[0, y_max])
 
     return ActionsDistribution(
-        on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp
+        on_subs=figure_subs, on_lines=figure_lines, redisp=figure_redisp,curtail=figure_curtail,storage=figure_storage
     )
 
 
