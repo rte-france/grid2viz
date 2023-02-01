@@ -6,9 +6,9 @@ from collections import namedtuple
 from pathlib import Path
 
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_table as dt
+from dash import dcc
+from dash import html
+from dash import dash_table as dt
 import plotly.graph_objects as go
 
 from grid2viz.src.kpi import actions_model

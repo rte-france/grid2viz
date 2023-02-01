@@ -79,7 +79,7 @@ Grid2Viz
 optional arguments:
   -h, --help            show this help message and exit
   --agents_path AGENTS_PATH
-                        The path where the log of the Agents experiences are
+                        The path where the episode logs of the Agents to compare are
                         stored. (default to None to study the example agents
                         provided with the package)
   --env_path ENV_PATH   The path where the environment config is stored.
@@ -88,7 +88,8 @@ optional arguments:
   --port PORT           The port to serve grid2viz on. (default to 8050)
   --debug               Enable debug mode for developers. (default to False)
   --n_cores             Number of cores to generate cache or load cache faster (default to 1)
-  --cache               Create upfront all necessary cache for grid2viz, to avoid waiting for some cache generation online (default to False)
+  --cache               Create upfront all necessary cache for grid2viz, to avoid waiting for some cache generation online 
+  --warm-start          "If True, the application is warm started based on the parameters defined in the WARMSTART section of the config.ini file. (default to False)
 ```
 
 For example:
@@ -102,13 +103,13 @@ grid2viz --port 8000
 will be computed and then registered in cache. Depending on your agents it could take between 5 to 15min. You can follow the progress in the console.
 You can however generate all the cache over all agents and scenarios before end with `--cache=True`
 ```commandline
-grid2viz --port 8000 --agents_path AGENTS_PATH --n_cores Max_Cores --cache True
+grid2viz --port 8000 --agents_path AGENTS_PATH --n_cores Max_Cores --cache 
 ```
 
 ## Getting started
 
 In order to use this tool, you need to have serialized the RL process of grid2op. The expected file system is :
-- root_dir
+- root_dir (agents_path)
     - agent_1
         - scenario_1
         - scenario_2

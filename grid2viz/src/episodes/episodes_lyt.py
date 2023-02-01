@@ -6,8 +6,8 @@ from pathlib import Path
 
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import plotly.figure_factory as ff
 import matplotlib
 matplotlib.use('Agg')
@@ -132,7 +132,8 @@ def comparison_button():
                 color="info",
                 size="lg",
                 outline=True,
-                block=True,
+                #=True,
+                className="d-grid gap-2 col-12 mx-auto"
             )
         ],
     )

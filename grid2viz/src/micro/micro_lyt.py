@@ -8,10 +8,10 @@ from pathlib import Path
 
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_daq as daq
-import dash_table as dt
+from dash import dash_table as dt
 import plotly.graph_objects as go
 
 from grid2viz.src.manager import grid2viz_home_directory
@@ -126,7 +126,7 @@ def card_for_network_graphs(network_graph):
                         dbc.Tab(label="Reference Agent", tab_id="tab-1"),
                     ],
                     id="card-tabs",
-                    card=True,
+                    #card=True,
                     active_tab="tab-0",
                 )
             ),
@@ -141,7 +141,9 @@ def card_for_network_graphs(network_graph):
                     #dcc.Store(id='offset', data=0), dcc.Store(id='store', data=network_graph["data"])
                 ],
             ),
-        ]
+
+        ],
+        className = "w-95 mb-3",
     )
 
 

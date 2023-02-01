@@ -1,8 +1,8 @@
 from abc import abstractmethod, ABC
 from itertools import chain
 
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 
 
 class BaseAssistant(ABC):
@@ -133,8 +133,8 @@ class EmptyAssist(BaseAssistant):
 
 if __name__ == "__main__":
     import dash
-    import dash_core_components as dcc
-    import dash_html_components as html
+    from dash import dcc
+    from dash import html
     from dash.dependencies import Input, Output
 
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
