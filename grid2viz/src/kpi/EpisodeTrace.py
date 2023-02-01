@@ -30,7 +30,7 @@ def get_total_overflow_trace(episode_analytics, episode_data):
     return [
         go.Scatter(
             x=df["time"],
-            y=df["value"],
+            y=np.array(df["value"].tolist()),
             text=[
                 "lines " + str(episode_data.line_names[liste]) if len(liste) > 0 else ""
                 for liste in df["line_ids"]
@@ -328,13 +328,13 @@ def get_usage_rate_trace(episode):
     trace = [
         go.Scatter(
             x=df["timestamp"],
-            y=df["value"]["quantile10"],
+            y=np.array(df["value"]["quantile10"].tolist()),
             name="quantile 10",
             line=line,
         ),
         go.Scatter(
             x=df["timestamp"],
-            y=df["value"]["quantile25"],
+            y=np.array(df["value"]["quantile25"].tolist()),
             name="quantile 25",
             fill="tonexty",
             fillcolor="rgba(159, 197, 232, 0.63)",
@@ -342,7 +342,7 @@ def get_usage_rate_trace(episode):
         ),
         go.Scatter(
             x=df["timestamp"],
-            y=df["value"]["median"],
+            y=np.array(df["value"]["median"].tolist()),
             name="median",
             fill="tonexty",
             fillcolor="rgba(31, 119, 180, 0.5)",
@@ -350,7 +350,7 @@ def get_usage_rate_trace(episode):
         ),
         go.Scatter(
             x=df["timestamp"],
-            y=df["value"]["quantile75"],
+            y=np.array(df["value"]["quantile75"].tolist()),
             name="quantile 75",
             fill="tonexty",
             fillcolor="rgba(31, 119, 180, 0.5)",
@@ -358,7 +358,7 @@ def get_usage_rate_trace(episode):
         ),
         go.Scatter(
             x=df["timestamp"],
-            y=df["value"]["quantile90"],
+            y=np.array(df["value"]["quantile90"].tolist()),
             name="quantile 90",
             fill="tonexty",
             fillcolor="rgba(159, 197, 232, 0.63)",
@@ -366,7 +366,7 @@ def get_usage_rate_trace(episode):
         ),
         go.Scatter(
             x=df["timestamp"],
-            y=df["value"]["max"],
+            y=np.array(df["value"]["max"].tolist()),
             name="Max",
             line={"shape": "spline", "smoothing": 1, "color": "rgba(255,0,0,0.5)"},
         ),
