@@ -8,7 +8,7 @@ from pathlib import Path
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-import dash_table as dt
+from dash import dash_table as dt
 import plotly.graph_objects as go
 
 from grid2viz.src.kpi import actions_model

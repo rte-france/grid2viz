@@ -13,7 +13,7 @@ from pathlib import Path
 import dash_antd_components as dac
 from dash import dcc
 from dash import html
-import dash_table as dt
+from dash import dash_table as dt
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
