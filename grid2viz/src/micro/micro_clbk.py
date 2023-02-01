@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from grid2op.Exceptions import Grid2OpException
 from pathlib import Path
+import numpy as np
 
 from grid2viz.src.manager import grid2viz_home_directory
 from grid2viz.src.manager import make_episode, make_network_agent_study
@@ -324,7 +325,7 @@ def register_callbacks_micro(app):
                     go.Scatter(
                         x=new_episode.timestamps,
                         # remove the first 3 char to get the line name and round to 3 dec
-                        y=voltage["ex"]["voltage"][line_name[3:]],
+                        y=np.array(voltage["ex"]["voltage"][line_name[3:]].tolist()),
                         name=line_name,
                     )
                 )
@@ -332,7 +333,7 @@ def register_callbacks_micro(app):
                 traces.append(
                     go.Scatter(
                         x=new_episode.timestamps,
-                        y=voltage["or"]["voltage"][line_name[3:]],
+                        y=np.array(voltage["or"]["voltage"][line_name[3:]].tolist()),
                         name=line_name,
                     )
                 )
@@ -373,11 +374,11 @@ def register_callbacks_micro(app):
             ]  # the name is the 2nd part of the string: 'type_name'
             if line_side == "ex":
                 traces.append(
-                    go.Scatter(x=x, y=flow["ex"][flow_type][line_name], name=value)
+                    go.Scatter(x=x, y=np.array(flow["ex"][flow_type][line_name].tolist()), name=value)
                 )
             elif line_side == "or":
                 traces.append(
-                    go.Scatter(x=x, y=flow["or"][flow_type][line_name], name=value)
+                    go.Scatter(x=x, y=np.array(flow["or"][flow_type][line_name].tolist()), name=value)
                 )
             else:  # this concern usage rate
                 name = value.split("_", 2)[2]  # get the powerline name
@@ -386,7 +387,7 @@ def register_callbacks_micro(app):
                     new_episode.rho["equipment"] == index_powerline
                 ]["value"]
 
-                traces.append(go.Scatter(x=x, y=usage_rate_powerline, name=name))
+                traces.append(go.Scatter(x=x, y=np.array(usage_rate_powerline.tolist()), name=name))
 
         return traces
 

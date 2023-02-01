@@ -143,7 +143,7 @@ def card_for_network_graphs(network_graph):
             ),
 
         ],
-        className = "w-95 mb-3",
+        className = "w-80 mb-3",
     )
 
 
