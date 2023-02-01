@@ -23,7 +23,7 @@ n_cores={n_cores}
 """
 
 ARG_AGENTS_PATH_DESC = (
-    "The path where the log of the Agents experiences are stored."
+    "The path where the episode logs of the Agents to compare are stored."
     " (default to None to study the example agents provided with the package)"
 )
 ARG_ENV_PATH_DESC = (
@@ -34,9 +34,9 @@ ARG_PORT_DESC = "The port to serve grid2viz on. (default to 8050)"
 ARG_DEBUG_DESC = "Enable debug mode for developers. (default to False)"
 ARG_N_CORES_DESC = "The number of cores to use for the first loading of the best agents of each scenario"
 
-ARG_CACHE_DESC = "Enable the building of  all the cache data for all agents at once before relaunching grid2viz. (default to False)"
+ARG_CACHE_DESC = "Enable the building of  all the cache data for all agents at once before relaunching grid2viz."
 
-ARG_WARM_START_DESC = "If True, the application is warm started based on the parameters defined in the WARMSTART section of the config.ini file. (default to False)"
+ARG_WARM_START_DESC = "Enable the application to warm start to a given section based on the parameters defined in the WARMSTART section of the config.ini file."
 
 ARG_CONFIG_PATH_DESC = "Path to the configuration file config.ini."
 
