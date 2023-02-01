@@ -6,7 +6,7 @@ from pathlib import Path
 
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
+from dash import dcc
 from dash import html
 import plotly.figure_factory as ff
 import matplotlib

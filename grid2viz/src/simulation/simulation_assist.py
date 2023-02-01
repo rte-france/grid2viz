@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from itertools import chain
 
-import dash_core_components as dcc
+from dash import dcc
 from dash import html
 
 
@@ -133,7 +133,7 @@ class EmptyAssist(BaseAssistant):
 
 if __name__ == "__main__":
     import dash
-    import dash_core_components as dcc
+    from dash import dcc
     from dash import html
     from dash.dependencies import Input, Output
 

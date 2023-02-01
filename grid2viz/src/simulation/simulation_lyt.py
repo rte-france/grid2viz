@@ -1,6 +1,6 @@
 import dash_antd_components as dac
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
+from dash import dcc
 from dash import html
 import datetime as dt
 from grid2viz.src.manager import make_episode, make_network_agent_study

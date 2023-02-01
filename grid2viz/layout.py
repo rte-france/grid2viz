@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
+from dash import dcc
 from dash import html
 
 from grid2viz.src.manager import make_episode
