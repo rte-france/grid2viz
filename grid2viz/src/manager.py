@@ -637,6 +637,7 @@ def check_all_tree_and_get_meta_and_best(base_dir, agents):
         survival_dic[agent] = survival_dic_agent
         attention_dic[agent] = attention_dic_agent
 
+    scenarios=list(scenarios)#instead of set, to avoid type errors when using pandas for instance
     survival_df = pd.DataFrame(columns=agents, index=scenarios)
     attention_df = pd.DataFrame(columns=agents, index=scenarios)#, dtype=np.int64)
     for agent in agents:
