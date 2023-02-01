@@ -132,7 +132,8 @@ def comparison_button():
                 color="info",
                 size="lg",
                 outline=True,
-                block=True,
+                #=True,
+                className="d-grid gap-2 col-12 mx-auto"
             )
         ],
     )

@@ -219,7 +219,7 @@ def register_callbacks_main(app):
         pathName_split = pathname.split("/")
         pathName_split = pathName_split[len(pathName_split) - 1]
 
-        class_name = "ml-4 row"
+        class_name = "row"#"ml-4 row"
         if pathName_split not in ["micro", "simulation"]:
             class_name = " ".join([class_name, "hidden"])
         return class_name

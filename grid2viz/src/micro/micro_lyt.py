@@ -126,7 +126,7 @@ def card_for_network_graphs(network_graph):
                         dbc.Tab(label="Reference Agent", tab_id="tab-1"),
                     ],
                     id="card-tabs",
-                    card=True,
+                    #card=True,
                     active_tab="tab-0",
                 )
             ),
@@ -141,7 +141,9 @@ def card_for_network_graphs(network_graph):
                     #dcc.Store(id='offset', data=0), dcc.Store(id='store', data=network_graph["data"])
                 ],
             ),
-        ]
+
+        ],
+        className = "w-95 mb-3",
     )
 
 

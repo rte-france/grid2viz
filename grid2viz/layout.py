@@ -99,8 +99,8 @@ def navbar(
                         children=[
                             dbc.Select(
                                 id="select_ref_agent",
-                                bs_size="sm",
-                                #size="sm",
+                                #bs_size="sm",
+                                size="sm",
                                 disabled=True,
                                 placeholder="Ref Agent",
                             )
@@ -117,8 +117,8 @@ def navbar(
                         children=[
                             dbc.Select(
                                 id="select_study_agent",
-                                bs_size="sm",
-                                #size="sm",
+                                #bs_size="sm",
+                                size="sm",
                                 disabled=True,
                                 placeholder="Study Agent",
                             )
@@ -128,16 +128,17 @@ def navbar(
                 ],
                 className="reminder float-left",
             ),
-            html.Div(
+            html.Div(dbc.Nav(
                 [
                     html.Div(
                         children=[
-                            dbc.Badge("TS:", color="secondary", className="ml-1"),
+                            dbc.Badge("TS:", color="secondary"),# className="ml-1"),
                             dbc.Badge(
-                                ts, color="light", className="ml-1", id="badge_ts"
+                                ts, color="yellow",  id="badge_ts",text_color="black",#className="ml-1",
                             ),
                         ],
-                        className="reminder float-left mt-2",
+                        #className="reminder float-left",# mt-2",
+                        #id="user_timestamp_div",
                     ),
                     html.Div(
                         [
@@ -145,18 +146,18 @@ def navbar(
                                 id="enlarge_left",
                                 children="-5",
                                 color="dark",
-                                className="float-left mr-1",
+                                #className="reminder float-left",# mr-1",
                             ),
                             dbc.Tooltip(
                                 "Enlarge left",
                                 target="enlarge_left",
-                                placement="bottom",
+                                placement="auto",
                             ),
                         ]
                     ),
                     dcc.Dropdown(
                         id="user_timestamps",
-                        className="",
+                        #className="reminder float-left",
                         style={"width": "200px"},
                         options=timestamp_dropdown_options,
                         value=timestamp_dropdown_value,
@@ -167,21 +168,24 @@ def navbar(
                                 id="enlarge_right",
                                 children="+5",
                                 color="dark",
-                                className="float-left ml-1",
+                                #className="reminder float-left"# ml-1",
                             ),
                             dbc.Tooltip(
                                 "Enlarge right",
                                 target="enlarge_right",
-                                placement="bottom",
+                                placement="auto",
                             ),
                         ]
                     ),
                 ],
+
+                #className="row",#"col-xl-5",
+                ),
                 id="user_timestamp_div",
-                className="col-xl-1",
             ),
             html.Div(dbc.Nav(items, navbar=True, pills=True), className="nav_menu"),
         ],
+
         color="#2196F3",
         sticky="top",
         dark=True,
@@ -256,7 +260,8 @@ def make_layout(
                 id="loading-episode-button",
                 color="grey",
                 disabled=True,
-                block=True,
+                #block=True,
+                className="d-grid gap-2 col-12 mx-auto",
                 style=dict()
             ),
             dcc.Interval(id='loading-stepper-episode', interval=2000, n_intervals=0),
