@@ -7,7 +7,7 @@ from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
-import dash_html_components as html
+from dash import html
 import dash_table as dt
 import plotly.graph_objects as go
 
