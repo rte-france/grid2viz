@@ -237,7 +237,7 @@ def register_callbacks_episodes(app):
                                             "Open",
                                             id="open_"+scenario,
                                             key=scenario,#f"open_{scenario}",#scenario,
-                                            className="btn-block",
+                                            className="d-grid gap-2 col-12 mx-auto",#"btn-block",
                                             style={"background-color": "#2196F3"},
                                         )
                                     ),
