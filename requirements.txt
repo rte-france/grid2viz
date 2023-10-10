@@ -64,3 +64,4 @@ tomli==2.0.1
 tornado==6.2
 tqdm==4.62.3
 urllib3==1.24.3
+werkzeug==2.2.2
